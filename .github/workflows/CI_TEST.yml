@@ -1,0 +1,52 @@
+name: CI TEST
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - develop
+
+jobs:
+  CI:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup MySQL
+        uses: mirromutth/mysql-action@v1.1
+        with:
+          host port: 3308
+          mysql database: 'TESTDB'
+          mysql user: 'fontory'
+          mysql password: 'fontoryPW'
+
+      - name: Setup Redis
+        uses: supercharge/redis-github-action@1.7.0
+        with:
+          redis-version: 6
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+
+      - name: Get short SHA
+        id: slug
+        run: echo "sha7=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Generate application.properties
+        run: |
+          # add properties
+
+      - name: Build with Gradle Wrapper
+        run: ./gradlew build
+
