@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: fontory-mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: rootPW
+      MYSQL_DATRABASE: FONTORY
+      MYSQL_USER: fontory
+      MYSQL_PASSWORD: fontoryPW
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/vat/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - backend
+
+  redis:
+    image: redis:latest
+    container_name: fontory-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  mysql_data:

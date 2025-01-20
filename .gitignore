@@ -40,4 +40,4 @@ out/
 .DS_STORE
 
 ### yml ###
-*.yml
+application-dev.properties
