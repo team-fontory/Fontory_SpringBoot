@@ -1,0 +1,73 @@
+package org.fontory.fontorybe.member.infrastructure.entity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import java.time.LocalDate;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.fontory.fontorybe.common.domain.BaseEntity;
+import org.fontory.fontorybe.member.domain.Member;
+
+@Entity
+@Getter
+@Builder
+@Table(name = "member")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class MemberEntity extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "member_id")
+    private Long id;
+
+    private String nickname;
+
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
+
+    private LocalDate birth;
+
+    private Boolean terms;
+
+    private String profileImage;
+
+    private Long provideId;
+
+    public Member toModel() {
+        return Member.builder()
+                .id(id)
+                .nickname(nickname)
+                .gender(gender)
+                .birth(birth)
+                .terms(terms)
+                .profileImage(profileImage)
+                .provideId(provideId)
+                .createdAt(getCreatedAt())
+                .updatedAt(getUpdatedAt())
+                .build();
+    }
+
+    public static MemberEntity from(Member member) {
+        return MemberEntity.builder()
+                .id(member.getId())
+                .nickname(member.getNickname())
+                .gender(member.getGender())
+                .birth(member.getBirth())
+                .terms(member.isTerms())
+                .profileImage(member.getProfileImage())
+                .provideId(member.getProvideId())
+                .build();
+    }
+}
