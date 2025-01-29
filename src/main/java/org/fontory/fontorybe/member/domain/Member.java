@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.fontory.fontorybe.member.domain.dto.MemberCreateDto;
+import org.fontory.fontorybe.member.domain.dto.MemberUpdateDto;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.fontory.fontorybe.provide.infrastructure.entity.ProvideEntity;
@@ -44,6 +45,19 @@ public class Member {
                 .terms(memberCreateDto.getTerms())
                 .profileImage(memberCreateDto.getProfileImage())
                 .provideId(provide.getId())
+                .build();
+    }
+
+    public Member update(MemberUpdateDto memberUpdateDto) {
+        return Member.builder()
+                .id(this.id)
+                .nickname(memberUpdateDto.getNickname())
+                .gender(memberUpdateDto.getGender())
+                .birth(memberUpdateDto.getBirth())
+                .terms(memberUpdateDto.getTerms())
+                .profileImage(memberUpdateDto.getProfileImage())
+                .createdAt(this.createdAt)
+                .provideId(this.provideId)
                 .build();
     }
 }

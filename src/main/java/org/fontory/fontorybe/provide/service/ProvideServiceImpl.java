@@ -13,7 +13,7 @@ public class ProvideServiceImpl implements ProvideService {
     private final ProvideRepository provideRepository;
 
     @Override
-    public Provide getById(Long id) {
+    public Provide getOrThrownById(Long id) {
         return provideRepository.findById(id)
                 .orElseThrow(RuntimeException::new);
     }

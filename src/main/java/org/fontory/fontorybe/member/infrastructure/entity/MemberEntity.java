@@ -16,15 +16,16 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.fontory.fontorybe.common.domain.BaseEntity;
 import org.fontory.fontorybe.member.domain.Member;
 
 @Entity
 @Getter
-@Builder
 @Table(name = "member")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@SuperBuilder
 public class MemberEntity extends BaseEntity {
 
     @Id
@@ -68,6 +69,7 @@ public class MemberEntity extends BaseEntity {
                 .terms(member.isTerms())
                 .profileImage(member.getProfileImage())
                 .provideId(member.getProvideId())
+                .createdAt(member.getCreatedAt())
                 .build();
     }
 }

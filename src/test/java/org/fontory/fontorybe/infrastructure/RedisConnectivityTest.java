@@ -8,7 +8,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-public class RedisConnectivityTest {
+class RedisConnectivityTest {
 
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
