@@ -5,6 +5,7 @@ import org.fontory.fontorybe.member.controller.dto.MemberCreate;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdate;
+import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
 import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.domain.exception.MemberOwnerMismatchException;
@@ -42,22 +43,40 @@ public class MemberServiceImpl implements MemberService {
         }
 
         Provide provide = provideService.getOrThrownById(provideId);
-        Member member = Member.from(memberCreate, provide);
-
-        return memberRepository.save(member);
+        return memberRepository.save(Member.from(memberCreate, provide));
     }
 
     @Override
     @Transactional
     public Member update(Long requestMemberId, Long memberId, MemberUpdate memberUpdate) {
-        Member member = getOrThrowById(memberId);
+        Member targetMember = getOrThrowById(memberId);
+        checkMemberOwnership(requestMemberId, memberId);
 
-        if (!requestMemberId.equals(member.getId())) {
-            throw new MemberOwnerMismatchException();
-        } else if (isDuplicateNameExists(memberUpdate.getNickname())) {
+        if (!targetMember.getNickname().equals(memberUpdate.getNickname()) &&
+                isDuplicateNameExists(memberUpdate.getNickname())) {
             throw new MemberDuplicateNameExistsException();
         }
 
-        return memberRepository.save(member.update(memberUpdate));
+        return memberRepository.save(targetMember.update(memberUpdate));
+    }
+
+    @Override
+    @Transactional
+    public Member disable(Long requestMemberId, Long memberId) {
+        Member targetMember = getOrThrowById(memberId);
+        checkMemberOwnership(requestMemberId, memberId);
+
+        if (targetMember.getDeletedAt() != null) {
+            throw new MemberAlreadyDisabledException();
+        }
+
+        targetMember.disable();
+        return memberRepository.save(targetMember);
+    }
+
+    private void checkMemberOwnership(Long requestMemberId, Long targetMemberId) {
+        if (!requestMemberId.equals(targetMemberId)) {
+            throw new MemberOwnerMismatchException();
+        }
     }
 }

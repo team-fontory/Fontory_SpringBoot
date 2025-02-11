@@ -2,11 +2,8 @@ package org.fontory.fontorybe.member.domain;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+
+import lombok.*;
 import org.fontory.fontorybe.member.controller.dto.MemberCreate;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdate;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
@@ -33,6 +30,8 @@ public class Member {
 
     private LocalDateTime updatedAt;
 
+    private LocalDateTime deletedAt;
+
     private Long provideId;
 
     public static Member from(MemberCreate memberCreateDto, Provide provide) {
@@ -48,15 +47,21 @@ public class Member {
 
     public Member update(MemberUpdate memberUpdate) {
         return Member.builder()
-                .id(this.id)
+                //tobe update
                 .nickname(memberUpdate.getNickname())
-                .gender(this.gender)
-                .birth(this.birth)
                 .terms(memberUpdate.getTerms())
                 .profileImage(memberUpdate.getProfileImage())
+                //not to be update
+                .id(this.id)
+                .gender(this.gender)
+                .birth(this.birth)
                 .createdAt(this.createdAt)
                 .provideId(this.provideId)
+                .deletedAt(this.deletedAt)
                 .build();
+    }
+    public void disable() {
+        this.deletedAt = LocalDateTime.now();
     }
 
     public boolean getTerms() {

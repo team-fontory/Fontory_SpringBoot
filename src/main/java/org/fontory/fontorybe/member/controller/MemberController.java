@@ -4,10 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.fontory.fontorybe.member.controller.dto.MemberCreate;
-import org.fontory.fontorybe.member.controller.dto.MemberCreateResponse;
-import org.fontory.fontorybe.member.controller.dto.MemberUpdate;
-import org.fontory.fontorybe.member.controller.dto.MemberUpdateResponse;
+import org.fontory.fontorybe.member.controller.dto.*;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
@@ -73,5 +70,23 @@ public class MemberController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(MemberUpdateResponse.from(updatedMember));
+    }
+
+    @Operation(
+            summary = "회원탈퇴"
+    )
+    @Parameter(name = "memberId", description = "탈퇴할 회원 ID")
+    @DeleteMapping("/{memberId}")
+    public ResponseEntity<MemberDisableResponse> disableMember(
+            @PathVariable Long memberId
+    ) {
+        Long requestMemberId = memberId;
+
+//        should be tested
+//        Member updatedMember = memberService.update(requestMemberId, memberId, memberUpdate);
+        Member disabledMember = memberService.disable(requestMemberId, memberId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(MemberDisableResponse.from(disabledMember));
     }
 }

@@ -1,6 +1,8 @@
 package org.fontory.fontorybe.member.infrastructure;
 
 import java.util.Optional;
+
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.infrastructure.entity.MemberEntity;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class MemberRepositoryImpl implements MemberRepository {
     private final MemberJpaRepository memberJpaRepository;
+    private final EntityManager em;
 
     @Override
     public Optional<Member> findById(Long id) {
@@ -20,8 +23,15 @@ public class MemberRepositoryImpl implements MemberRepository {
 
     @Override
     public Member save(Member member) {
-        return memberJpaRepository.save(MemberEntity.from(member))
-                .toModel();
+        MemberEntity savedMember = memberJpaRepository.save(MemberEntity.from(member));
+
+        /**
+         * For Adapt BaseEntity
+         */
+        em.flush();
+        em.refresh(savedMember);
+
+        return savedMember.toModel();
     }
 
     @Override

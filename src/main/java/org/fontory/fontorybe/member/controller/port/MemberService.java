@@ -9,4 +9,5 @@ public interface MemberService {
     Member create(MemberCreate memberCreateDto, Long provideId);
     Member update(Long requestMemberId, Long memberId, MemberUpdate memberUpdate);
     Boolean isDuplicateNameExists(String targetName);
+    Member disable(Long requestMemberId, Long memberId);
 }
