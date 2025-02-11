@@ -5,18 +5,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 import java.time.LocalDate;
+
+import org.fontory.fontorybe.member.controller.dto.MemberCreate;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
-import org.fontory.fontorybe.member.domain.dto.MemberCreateDto;
-import org.fontory.fontorybe.member.domain.dto.MemberUpdateDto;
+import org.fontory.fontorybe.member.controller.dto.MemberUpdate;
+import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
+import org.fontory.fontorybe.provide.domain.exception.ProvideNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
-import org.springframework.test.context.jdbc.SqlGroup;
 
 @SpringBootTest
 @Sql(value = "/sql/createMemberTestData.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
@@ -60,13 +62,13 @@ class MemberServiceTest {
     void getOrThrownByIdTestX() {
         assertThatThrownBy(
                 () -> memberService.getOrThrowById(nonExistentId)
-        ).isInstanceOf(RuntimeException.class);
+        ).isExactlyInstanceOf(MemberNotFoundException.class);
     }
 
     @Test
     @DisplayName("member - create success test")
     void createTest() {
-        MemberCreateDto memberCreateDto = new MemberCreateDto(testNickName, testGender, testBirth, testTerms, testProfileImage);
+        MemberCreate memberCreateDto = new MemberCreate(testNickName, testGender, testBirth, testTerms, testProfileImage);
         Member createdMember = memberService.create(memberCreateDto, testProvideId);
 
         assertAll(
@@ -75,7 +77,7 @@ class MemberServiceTest {
                 () -> assertThat(createdMember.getNickname()).isEqualTo(testNickName),
                 () -> assertThat(createdMember.getGender()).isEqualTo(testGender),
                 () -> assertThat(createdMember.getBirth()).isEqualTo(testBirth),
-                () -> assertThat(createdMember.isTerms()).isEqualTo(testTerms),
+                () -> assertThat(createdMember.getTerms()).isEqualTo(testTerms),
                 () -> assertThat(createdMember.getProfileImage()).isEqualTo(testProfileImage),
                 () -> assertThat(createdMember.getCreatedAt()).isNotNull(),
                 () -> assertThat(createdMember.getUpdatedAt()).isNotNull()
@@ -85,26 +87,29 @@ class MemberServiceTest {
     @Test
     @DisplayName("member - create fail test caused by provide Not found")
     void createTestX() {
-        MemberCreateDto memberCreateDto = new MemberCreateDto(testNickName, testGender, testBirth, testTerms, testProfileImage);
+        MemberCreate memberCreateDto = new MemberCreate(testNickName, testGender, testBirth, testTerms, testProfileImage);
         assertThatThrownBy(
                 () -> memberService.create(memberCreateDto, nonExistentId))
-                .isInstanceOf(RuntimeException.class);
+                .isExactlyInstanceOf(ProvideNotFoundException.class);
     }
 
     @Test
     @DisplayName("member - update success")
     void updateTest() {
+        Long requestMemberId = testMemberId;
         Member member = memberService.getOrThrowById(testMemberId);
-        MemberUpdateDto memberUpdateDto = new MemberUpdateDto(updateNickName, updateGender, updateBirth, updateTerms, updateProfileImage);
-        Member updatedMember = memberService.update(testMemberId, memberUpdateDto);
+        MemberUpdate memberUpdate = new MemberUpdate(updateNickName, updateProfileImage, updateTerms);
+        Member updatedMember = memberService.update(requestMemberId, testMemberId, memberUpdate);
         assertAll(
                 () -> assertThat(updatedMember.getId()).isEqualTo(member.getId()),
-                () -> assertThat(updatedMember.getNickname()).isEqualTo(updateNickName),
-                () -> assertThat(updatedMember.getGender()).isEqualTo(updateGender),
-                () -> assertThat(updatedMember.getBirth()).isEqualTo(updateBirth),
-                () -> assertThat(updatedMember.getProfileImage()).isEqualTo(updateProfileImage),
-                () -> assertThat(updatedMember.getProvideId()).isEqualTo(member.getProvideId()),
+                () -> assertThat(updatedMember.getGender()).isEqualTo(member.getGender()),
+                () -> assertThat(updatedMember.getBirth()).isEqualTo(member.getBirth()),
                 () -> assertThat(updatedMember.getCreatedAt()).isEqualTo(member.getCreatedAt()),
+                () -> assertThat(updatedMember.getProvideId()).isEqualTo(member.getProvideId()),
+
+                () -> assertThat(updatedMember.getNickname()).isEqualTo(updateNickName),
+                () -> assertThat(updatedMember.getProfileImage()).isEqualTo(updateProfileImage),
+                () -> assertThat(updatedMember.getTerms()).isEqualTo(updateTerms),
                 () -> assertThat(updatedMember.getUpdatedAt()).isAfter(member.getUpdatedAt())
         );
     }

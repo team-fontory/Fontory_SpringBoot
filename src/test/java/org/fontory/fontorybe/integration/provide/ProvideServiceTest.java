@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.UUID;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
-import org.fontory.fontorybe.provide.domain.dto.ProvideCreateDto;
+import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
-import org.springframework.test.context.jdbc.SqlGroup;
 
 @SpringBootTest
 @Sql(value = "/sql/createProvideTestData.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)

@@ -1,18 +1,17 @@
-package org.fontory.fontorybe.member.domain.dto;
+package org.fontory.fontorybe.member.controller.dto;
 
-import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 
+import java.time.LocalDate;
+
 @Getter
 @Builder
 @AllArgsConstructor
-public class MemberCreateDto {
+public class MemberUpdate {
     private String nickname;
-    private Gender gender;
-    private LocalDate birth;
-    private Boolean terms;
     private String profileImage;
+    private Boolean terms;
 }

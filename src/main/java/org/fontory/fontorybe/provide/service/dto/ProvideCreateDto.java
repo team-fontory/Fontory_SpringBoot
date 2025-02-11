@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.provide.domain.dto;
+package org.fontory.fontorybe.provide.service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

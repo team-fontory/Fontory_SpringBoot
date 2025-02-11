@@ -7,12 +7,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.fontory.fontorybe.member.domain.dto.MemberCreateDto;
-import org.fontory.fontorybe.member.domain.dto.MemberUpdateDto;
+import org.fontory.fontorybe.member.controller.dto.MemberCreate;
+import org.fontory.fontorybe.member.controller.dto.MemberUpdate;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 import org.fontory.fontorybe.provide.domain.Provide;
-import org.fontory.fontorybe.provide.infrastructure.entity.ProvideEntity;
-import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 
 @Getter
 @Builder
@@ -37,7 +35,7 @@ public class Member {
 
     private Long provideId;
 
-    public static Member from(MemberCreateDto memberCreateDto, Provide provide) {
+    public static Member from(MemberCreate memberCreateDto, Provide provide) {
         return Member.builder()
                 .nickname(memberCreateDto.getNickname())
                 .gender(memberCreateDto.getGender())
@@ -48,16 +46,20 @@ public class Member {
                 .build();
     }
 
-    public Member update(MemberUpdateDto memberUpdateDto) {
+    public Member update(MemberUpdate memberUpdate) {
         return Member.builder()
                 .id(this.id)
-                .nickname(memberUpdateDto.getNickname())
-                .gender(memberUpdateDto.getGender())
-                .birth(memberUpdateDto.getBirth())
-                .terms(memberUpdateDto.getTerms())
-                .profileImage(memberUpdateDto.getProfileImage())
+                .nickname(memberUpdate.getNickname())
+                .gender(this.gender)
+                .birth(this.birth)
+                .terms(memberUpdate.getTerms())
+                .profileImage(memberUpdate.getProfileImage())
                 .createdAt(this.createdAt)
                 .provideId(this.provideId)
                 .build();
+    }
+
+    public boolean getTerms() {
+        return this.terms;
     }
 }

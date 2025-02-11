@@ -66,7 +66,7 @@ public class MemberEntity extends BaseEntity {
                 .nickname(member.getNickname())
                 .gender(member.getGender())
                 .birth(member.getBirth())
-                .terms(member.isTerms())
+                .terms(member.getTerms())
                 .profileImage(member.getProfileImage())
                 .provideId(member.getProvideId())
                 .createdAt(member.getCreatedAt())

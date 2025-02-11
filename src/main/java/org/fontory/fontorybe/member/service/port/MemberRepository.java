@@ -6,4 +6,5 @@ import org.fontory.fontorybe.member.domain.Member;
 public interface MemberRepository {
     Optional<Member> findById(Long id);
     Member save(Member member);
+    boolean existsByNickname(String nickname);
 }
