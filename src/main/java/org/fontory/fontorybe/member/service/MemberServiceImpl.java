@@ -1,5 +1,6 @@
 package org.fontory.fontorybe.member.service;
 
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.member.controller.dto.MemberCreate;
 import org.fontory.fontorybe.member.controller.port.MemberService;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Builder
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService {
     private final MemberRepository memberRepository;
@@ -43,6 +45,7 @@ public class MemberServiceImpl implements MemberService {
         }
 
         Provide provide = provideService.getOrThrownById(provideId);
+
         return memberRepository.save(Member.from(memberCreate, provide));
     }
 

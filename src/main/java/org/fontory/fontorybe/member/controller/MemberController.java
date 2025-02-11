@@ -3,6 +3,7 @@ package org.fontory.fontorybe.member.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.member.controller.dto.*;
 import org.fontory.fontorybe.member.controller.port.MemberService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @Tag(name = "회원관리", description = "사용자 API")
+@Builder
 @RestController
 @RequestMapping("/member")
 @RequiredArgsConstructor

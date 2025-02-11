@@ -1,5 +1,6 @@
 package org.fontory.fontorybe.provide.service;
 
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 @Service
+@Builder
 @RequiredArgsConstructor
 public class ProvideServiceImpl implements ProvideService {
     private final ProvideRepository provideRepository;
@@ -40,7 +42,6 @@ public class ProvideServiceImpl implements ProvideService {
                                 .provider(Provider.GOOGLE)
                                 .providedId(UUID.randomUUID().toString())
                                 .email("tempEmail")
-                                .build()
-        ).getId();
+                                .build()).getId();
     }
 }
