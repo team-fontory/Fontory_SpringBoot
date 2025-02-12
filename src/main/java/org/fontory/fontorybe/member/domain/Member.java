@@ -2,16 +2,12 @@ package org.fontory.fontorybe.member.domain;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import org.fontory.fontorybe.member.domain.dto.MemberCreateDto;
+
+import lombok.*;
+import org.fontory.fontorybe.member.controller.dto.MemberCreate;
+import org.fontory.fontorybe.member.controller.dto.MemberUpdate;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 import org.fontory.fontorybe.provide.domain.Provide;
-import org.fontory.fontorybe.provide.infrastructure.entity.ProvideEntity;
-import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 
 @Getter
 @Builder
@@ -34,9 +30,11 @@ public class Member {
 
     private LocalDateTime updatedAt;
 
+    private LocalDateTime deletedAt;
+
     private Long provideId;
 
-    public static Member from(MemberCreateDto memberCreateDto, Provide provide) {
+    public static Member from(MemberCreate memberCreateDto, Provide provide) {
         return Member.builder()
                 .nickname(memberCreateDto.getNickname())
                 .gender(memberCreateDto.getGender())
@@ -45,5 +43,28 @@ public class Member {
                 .profileImage(memberCreateDto.getProfileImage())
                 .provideId(provide.getId())
                 .build();
+    }
+
+    public Member update(MemberUpdate memberUpdate) {
+        return Member.builder()
+                //tobe update
+                .nickname(memberUpdate.getNickname())
+                .terms(memberUpdate.getTerms())
+                .profileImage(memberUpdate.getProfileImage())
+                //not to be update
+                .id(this.id)
+                .gender(this.gender)
+                .birth(this.birth)
+                .createdAt(this.createdAt)
+                .provideId(this.provideId)
+                .deletedAt(this.deletedAt)
+                .build();
+    }
+    public void disable() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
+    public boolean getTerms() {
+        return this.terms;
     }
 }

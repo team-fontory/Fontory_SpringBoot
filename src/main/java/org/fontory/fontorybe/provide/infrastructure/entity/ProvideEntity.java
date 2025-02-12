@@ -13,6 +13,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 import org.fontory.fontorybe.common.domain.BaseEntity;
 import org.fontory.fontorybe.provide.domain.Provide;
 
@@ -21,7 +22,7 @@ import org.fontory.fontorybe.provide.domain.Provide;
 @Table(name = "provide")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder
+@SuperBuilder
 public class ProvideEntity extends BaseEntity {
 
     @Id
@@ -45,6 +46,8 @@ public class ProvideEntity extends BaseEntity {
                 .providedId(providedId)
                 .email(email)
                 .memberId(memberId)
+                .createdAt(getCreatedAt())
+                .updatedAt(getUpdatedAt())
                 .build();
     }
 
@@ -55,6 +58,7 @@ public class ProvideEntity extends BaseEntity {
                 .providedId(provide.getProvidedId())
                 .email(provide.getEmail())
                 .memberId(provide.getMemberId())
+                .createdAt(provide.getCreatedAt())
                 .build();
     }
 }

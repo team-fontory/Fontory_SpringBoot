@@ -1,36 +1,37 @@
-package org.fontory.fontorybe.integration.provide;
+package org.fontory.fontorybe.unit.provide;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.assertj.core.api.Assertions.*;
-
-import java.util.UUID;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
-import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
+import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
+import org.fontory.fontorybe.unit.mock.TestContainer;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 
-@SpringBootTest
-@Sql(value = "/sql/createProvideTestData.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(value = "/sql/deleteProvideTestData.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
-class ProvideServiceTest {
+import java.util.UUID;
 
-    @Autowired
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
+
+public class ProvideServiceTest {
     private ProvideService provideService;
 
     /**
-     * testValues
+     * TestValues
      */
     Long nonExistentId = -1L;
     String testProvidedId = UUID.randomUUID().toString();
     String testEmail = "testEmail";
     Provider testProvider = Provider.GOOGLE;
     ProvideCreateDto provideCreateDto = new ProvideCreateDto(testProvider, testProvidedId, testEmail);
+
+    @BeforeEach
+    void init() {
+        TestContainer testContainer = new TestContainer();
+        provideService = testContainer.provideService;
+    }
 
     @Test
     @DisplayName("provide - create success test")
@@ -52,7 +53,7 @@ class ProvideServiceTest {
     @DisplayName("provide - getOrThrownById fail test caused by not found")
     void provideGetOrThrownByIdTestX() {
         assertThatThrownBy(
-            () -> provideService.getOrThrownById(nonExistentId))
+                () -> provideService.getOrThrownById(nonExistentId))
                 .isInstanceOf(RuntimeException.class);
     }
 

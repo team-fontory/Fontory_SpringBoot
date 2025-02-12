@@ -1,35 +1,32 @@
-package org.fontory.fontorybe.integration.member;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assertions.assertAll;
-
-import java.time.LocalDate;
-import java.util.UUID;
+package org.fontory.fontorybe.unit.member;
 
 import org.fontory.fontorybe.member.controller.dto.MemberCreate;
+import org.fontory.fontorybe.member.controller.dto.MemberUpdate;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
-import org.fontory.fontorybe.member.controller.dto.MemberUpdate;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
 import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.domain.exception.MemberOwnerMismatchException;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
+import org.fontory.fontorybe.provide.domain.Provide;
 import org.fontory.fontorybe.provide.domain.exception.ProvideNotFoundException;
+import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
+import org.fontory.fontorybe.unit.mock.TestContainer;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.jdbc.Sql;
-import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 
-@SpringBootTest
-@Sql(value = "/sql/createMemberTestData.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
-@Sql(value = "/sql/deleteMemberTestData.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
-class MemberServiceTest {
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
-    @Autowired MemberService memberService;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
+
+public class MemberServiceTest {
+    MemberService memberService;
 
     /**
      * testValues
@@ -40,16 +37,40 @@ class MemberServiceTest {
     Gender testGender = Gender.MALE;
     LocalDate testBirth = LocalDate.of(2025, 1, 26);
     Boolean testTerms = Boolean.TRUE;
-    String testNickName = "testNickName";
+    String testNickName = "testNickname";
     String testProfileImage = "testProfileImage";
 
-    Gender updateGender = Gender.FEMALE;
-    LocalDate updateBirth = LocalDate.of(2025, 1, 27);
     Boolean updateTerms = Boolean.FALSE;
     String updateNickName = "updateNickName";
     String updateProfileImage = "updateProfileImage";
 
+    @BeforeEach
+    void init() {
+        TestContainer testContainer = new TestContainer();
+        memberService = testContainer.memberService;
 
+        LocalDateTime now = LocalDateTime.now();
+        testContainer.memberRepository.save(
+                Member.builder()
+                        .id(testMemberId)
+                        .nickname("nickname")
+                        .gender(testGender)
+                        .birth(testBirth)
+                        .terms(testTerms)
+                        .profileImage(testProfileImage)
+                        .provideId(testProvideId)
+                        .createdAt(now)
+                        .updatedAt(now)
+                        .build());
+
+        testContainer.provideRepository.save(
+                Provide.builder()
+                        .id(testProvideId)
+                        .provider(Provider.GOOGLE)
+                        .providedId("test_provided_id")
+                        .email("test_email")
+                        .build());
+    }
 
     @Test
     @DisplayName("member - getOrThrownById success test")

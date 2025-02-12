@@ -6,9 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.fontory.fontorybe.common.domain.BaseEntity;
-import org.fontory.fontorybe.member.domain.Member;
-import org.fontory.fontorybe.provide.domain.dto.ProvideCreateDto;
+import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 
 @Getter

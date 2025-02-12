@@ -7,24 +7,21 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
+
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.fontory.fontorybe.common.domain.BaseEntity;
 import org.fontory.fontorybe.member.domain.Member;
 
 @Entity
 @Getter
-@Builder
 @Table(name = "member")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@SuperBuilder
 public class MemberEntity extends BaseEntity {
 
     @Id
@@ -45,6 +42,8 @@ public class MemberEntity extends BaseEntity {
 
     private Long provideId;
 
+    private LocalDateTime deletedAt;
+
     public Member toModel() {
         return Member.builder()
                 .id(id)
@@ -56,6 +55,7 @@ public class MemberEntity extends BaseEntity {
                 .provideId(provideId)
                 .createdAt(getCreatedAt())
                 .updatedAt(getUpdatedAt())
+                .deletedAt(getDeletedAt())
                 .build();
     }
 
@@ -65,9 +65,12 @@ public class MemberEntity extends BaseEntity {
                 .nickname(member.getNickname())
                 .gender(member.getGender())
                 .birth(member.getBirth())
-                .terms(member.isTerms())
+                .terms(member.getTerms())
                 .profileImage(member.getProfileImage())
                 .provideId(member.getProvideId())
+                .createdAt(member.getCreatedAt())
+                .updatedAt(member.getUpdatedAt())
+                .deletedAt(member.getDeletedAt())
                 .build();
     }
 }

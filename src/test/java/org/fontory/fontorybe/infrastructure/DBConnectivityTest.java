@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
 @SpringBootTest
-public class DBConnectivityTest {
+class DBConnectivityTest {
 
     @Autowired
     private DataSource dataSource;
