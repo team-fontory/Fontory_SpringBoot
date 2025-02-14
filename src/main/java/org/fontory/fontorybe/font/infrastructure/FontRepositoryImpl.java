@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.font.domain.Font;
 import org.fontory.fontorybe.font.infrastructure.entity.FontEntity;
 import org.fontory.fontorybe.font.service.port.FontRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -27,7 +29,7 @@ public class FontRepositoryImpl implements FontRepository {
     }
 
     @Override
-    public List<Font> findAllByMemberId(Long memberId) {
+    public List<Font> findTop5ByMemberIdOrderByCreatedAtDesc(Long memberId) {
         List<FontEntity> fontEntities = fontJpaRepository.findTop5ByMemberIdOrderByCreatedAtDesc(memberId);
 
         return fontEntities.stream()
@@ -38,5 +40,12 @@ public class FontRepositoryImpl implements FontRepository {
     @Override
     public Optional<Font> findById(Long id) {
         return fontJpaRepository.findById(id).map(FontEntity::toModel);
+    }
+
+    @Override
+    public Page<Font> findAllByMemberId(Long memberId, PageRequest pageRequest) {
+        Page<FontEntity> fontEntityPage = fontJpaRepository.findAllByMemberId(memberId, pageRequest);
+
+        return fontEntityPage.map(FontEntity::toModel);
     }
 }

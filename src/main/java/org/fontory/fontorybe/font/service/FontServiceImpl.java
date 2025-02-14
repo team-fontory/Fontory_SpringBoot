@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
+import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
@@ -12,6 +13,9 @@ import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.service.port.FontRepository;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +35,7 @@ public class FontServiceImpl implements FontService {
 
     @Override
     public List<FontProgressResponse> getFontProgress(Long memberId) {
-        List<Font> fonts = fontRepository.findAllByMemberId(memberId);
+        List<Font> fonts = fontRepository.findTop5ByMemberIdOrderByCreatedAtDesc(memberId);
 
         return fonts.stream()
                 .map(FontProgressResponse::from)
@@ -51,5 +55,19 @@ public class FontServiceImpl implements FontService {
     @Transactional(readOnly = true)
     public Font getOrThrowById(Long id) {
         return fontRepository.findById(id).orElseThrow(FontNotFoundException::new);
+    }
+
+    @Override
+    public Page<FontResponse> getFonts(Long memberId, int page, int size) {
+        Sort sort = Sort.by(Sort.Order.desc("createdAt"));
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
+
+        Page<Font> fontPage = fontRepository.findAllByMemberId(memberId, pageRequest);
+
+        return fontPage.map(font -> FontResponse.builder()
+                .id(font.getId())
+                .name(font.getName())
+                .example(font.getExample())
+                .build());
     }
 }
