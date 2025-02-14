@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.infrastructure.entity.FontStatus;
 
 @Getter
@@ -34,4 +35,13 @@ public class Font {
 
     private LocalDateTime updatedAt;
 
+    public static Font from(FontCreateDTO fontCreateDTO, Long memberId) {
+        return Font.builder()
+                .name(fontCreateDTO.getName())
+                .status(FontStatus.PROGRESS)
+                .downloadCount(0L)
+                .bookmarkCount(0L)
+                .memberId(memberId)
+                .build();
+    }
 }
