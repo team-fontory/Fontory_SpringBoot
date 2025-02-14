@@ -48,4 +48,9 @@ public class FontRepositoryImpl implements FontRepository {
 
         return fontEntityPage.map(FontEntity::toModel);
     }
+
+    @Override
+    public void deleteById(Long id) {
+        fontJpaRepository.deleteById(id);
+    }
 }

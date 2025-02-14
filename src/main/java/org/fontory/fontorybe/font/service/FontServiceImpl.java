@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
+import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
@@ -84,6 +85,19 @@ public class FontServiceImpl implements FontService {
         checkFontOwnership(member.getId(), targetFont.getMemberId());
 
         return FontDetailResponse.from(targetFont);
+    }
+
+    @Override
+    @Transactional
+    public FontDeleteResponse delete(Long memberId, Long fontId) {
+        Member member = memberService.getOrThrowById(memberId);
+        Font targetFont = getOrThrowById(fontId);
+
+        checkFontOwnership(member.getId(), targetFont.getMemberId());
+
+        fontRepository.deleteById(targetFont.getId());
+
+        return FontDeleteResponse.from(fontId);
     }
 
     private void checkFontOwnership(Long requestMemberId, Long targetMemberId) {

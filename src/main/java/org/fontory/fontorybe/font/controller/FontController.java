@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontCreateResponse;
+import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -100,5 +102,18 @@ public class FontController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(font);
+    }
+
+    @Operation(summary = "내가 제작한 폰트 삭제")
+    @Parameter(name = "fontId", description = "삭제 할 폰트 ID")
+    @DeleteMapping("/members/{fontId}")
+    public ResponseEntity<?> deleteFont(@PathVariable Long fontId) {
+        Long memberId = 1L;
+
+        FontDeleteResponse deletedFont = fontService.delete(memberId, fontId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(deletedFont);
     }
 }

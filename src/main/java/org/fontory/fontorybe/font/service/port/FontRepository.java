@@ -12,4 +12,5 @@ public interface FontRepository {
     List<Font> findTop5ByMemberIdOrderByCreatedAtDesc(Long memberId);
     Optional<Font> findById(Long id);
     Page<Font> findAllByMemberId(Long memberId, PageRequest pageRequest);
+    void deleteById(Long id);
 }
