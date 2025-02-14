@@ -34,6 +34,8 @@ public class FontEntity extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private FontStatus status;
 
+    private String example;
+
     private Long downloadCount;
 
     private Long bookmarkCount;
@@ -49,6 +51,7 @@ public class FontEntity extends BaseEntity {
                 .id(id)
                 .name(name)
                 .status(status)
+                .example(example)
                 .downloadCount(downloadCount)
                 .bookmarkCount(bookmarkCount)
                 .ttf(ttf)
@@ -64,6 +67,7 @@ public class FontEntity extends BaseEntity {
                 .id(font.getId())
                 .name(font.getName())
                 .status(font.getStatus())
+                .example(font.getExample())
                 .downloadCount(font.getDownloadCount())
                 .bookmarkCount(font.getBookmarkCount())
                 .ttf(font.getTtf())

@@ -21,6 +21,8 @@ public class Font {
 
     private FontStatus status;
 
+    private String example;
+
     private Long downloadCount;
 
     private Long bookmarkCount;
@@ -39,6 +41,7 @@ public class Font {
         return Font.builder()
                 .name(fontCreateDTO.getName())
                 .status(FontStatus.PROGRESS)
+                .example(fontCreateDTO.getExample())
                 .downloadCount(0L)
                 .bookmarkCount(0L)
                 .memberId(memberId)

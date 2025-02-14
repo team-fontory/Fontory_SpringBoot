@@ -9,4 +9,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class FontCreateDTO {
     private String name;
+    private String example;
 }
