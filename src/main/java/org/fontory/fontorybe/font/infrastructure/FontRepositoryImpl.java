@@ -2,6 +2,7 @@ package org.fontory.fontorybe.font.infrastructure;
 
 import jakarta.persistence.EntityManager;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.font.domain.Font;
@@ -32,5 +33,10 @@ public class FontRepositoryImpl implements FontRepository {
         return fontEntities.stream()
                 .map(FontEntity::toModel)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Font> findById(Long id) {
+        return fontJpaRepository.findById(id).map(FontEntity::toModel);
     }
 }
