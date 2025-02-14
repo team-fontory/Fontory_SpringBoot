@@ -3,6 +3,7 @@ package org.fontory.fontorybe.common.controller;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.common.domain.BaseErrorResponse;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
+import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
 import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
@@ -29,8 +30,8 @@ public class GlobalExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    @ExceptionHandler(MemberOwnerMismatchException.class)
-    public BaseErrorResponse memberOwnerMismatch(MemberOwnerMismatchException e) {
+    @ExceptionHandler({MemberOwnerMismatchException.class, FontOwnerMismatchException.class})
+    public BaseErrorResponse ownerMismatch(Exception e) {
         return new BaseErrorResponse(e.getMessage());
     }
 

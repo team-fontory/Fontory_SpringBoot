@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontCreateResponse;
+import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
@@ -86,5 +87,18 @@ public class FontController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(fonts);
+    }
+
+    @Operation(summary = "내가 제작한 폰트 상세보기")
+    @Parameter(name = "fontId", description = "상세 조회 할 폰트 ID")
+    @GetMapping("/members/{fontId}")
+    public ResponseEntity<?> getFont(@PathVariable Long fontId) {
+        Long memberId = 1L;
+
+        FontDetailResponse font = fontService.getFont(memberId, fontId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(font);
     }
 }

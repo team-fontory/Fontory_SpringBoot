@@ -2,6 +2,7 @@ package org.fontory.fontorybe.font.controller.port;
 
 import java.util.List;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
+import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
@@ -14,4 +15,5 @@ public interface FontService {
     Font update(Long memberId, Long fontId, FontUpdateDTO fontUpdateDTO);
     Font getOrThrowById(Long id);
     Page<FontResponse> getFonts(Long memberId, int page, int size);
+    FontDetailResponse getFont(Long memberId, Long fondId);
 }

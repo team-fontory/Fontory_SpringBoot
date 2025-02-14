@@ -4,12 +4,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
+import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
+import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
 import org.fontory.fontorybe.font.service.port.FontRepository;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
@@ -34,6 +36,7 @@ public class FontServiceImpl implements FontService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FontProgressResponse> getFontProgress(Long memberId) {
         List<Font> fonts = fontRepository.findTop5ByMemberIdOrderByCreatedAtDesc(memberId);
 
@@ -58,6 +61,7 @@ public class FontServiceImpl implements FontService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<FontResponse> getFonts(Long memberId, int page, int size) {
         Sort sort = Sort.by(Sort.Order.desc("createdAt"));
         PageRequest pageRequest = PageRequest.of(page, size, sort);
@@ -69,5 +73,22 @@ public class FontServiceImpl implements FontService {
                 .name(font.getName())
                 .example(font.getExample())
                 .build());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public FontDetailResponse getFont(Long memberId, Long fontId) {
+        Member member = memberService.getOrThrowById(memberId);
+        Font targetFont = getOrThrowById(fontId);
+
+        checkFontOwnership(member.getId(), targetFont.getMemberId());
+
+        return FontDetailResponse.from(targetFont);
+    }
+
+    private void checkFontOwnership(Long requestMemberId, Long targetMemberId) {
+        if (!requestMemberId.equals(targetMemberId)) {
+            throw new FontOwnerMismatchException();
+        }
     }
 }
