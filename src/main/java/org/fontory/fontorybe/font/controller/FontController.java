@@ -130,4 +130,15 @@ public class FontController {
                 .status(HttpStatus.OK)
                 .body(fontPage);
     }
+
+    @Operation(summary = "제작자의 다른 폰트 3개 조회")
+    @Parameter(name = "fontId", description = "현재 상세보기 한 폰트 ID")
+    @GetMapping("/{fontId}/others")
+    public ResponseEntity<?> getOtherFontsByWriter(@PathVariable Long fontId) {
+        List<FontResponse> font = fontService.getOtherFonts(fontId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(font);
+    }
 }

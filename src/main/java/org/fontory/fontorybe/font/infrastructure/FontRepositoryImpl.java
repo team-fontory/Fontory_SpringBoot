@@ -67,4 +67,13 @@ public class FontRepositoryImpl implements FontRepository {
 
         return fontEntityPage.map(FontEntity::toModel);
     }
+
+    @Override
+    public List<Font> findTop3ByMemberIdAndIdNotOrderByCreatedAtDesc(Long memberId, Long fontId) {
+        List<FontEntity> fontEntities = fontJpaRepository.findTop3ByMemberIdAndIdNotOrderByCreatedAtDesc(memberId, fontId);
+
+        return fontEntities.stream()
+                .map(FontEntity::toModel)
+                .collect(Collectors.toList());
+    }
 }

@@ -15,4 +15,5 @@ public interface FontRepository {
     void deleteById(Long id);
     Page<Font> findAll(PageRequest pageRequest);
     Page<Font> findByNameContaining(String keyword, PageRequest pageRequest);
+    List<Font> findTop3ByMemberIdAndIdNotOrderByCreatedAtDesc(Long memberId, Long fontId);
 }

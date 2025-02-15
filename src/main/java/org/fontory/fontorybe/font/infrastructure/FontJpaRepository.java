@@ -10,4 +10,5 @@ public interface FontJpaRepository extends JpaRepository<FontEntity, Long> {
     List<FontEntity> findTop5ByMemberIdOrderByCreatedAtDesc(Long memberId);
     Page<FontEntity> findAllByMemberId(Long memberId, PageRequest pageRequest);
     Page<FontEntity> findByNameContaining(String name, PageRequest pageRequest);
+    List<FontEntity> findTop3ByMemberIdAndIdNotOrderByCreatedAtDesc(Long memberId, Long fontId);
 }

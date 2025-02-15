@@ -131,6 +131,19 @@ public class FontServiceImpl implements FontService {
         });
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<FontResponse> getOtherFonts(Long fontId) {
+        Font font = getOrThrowById(fontId);
+        Member member = memberService.getOrThrowById(font.getMemberId());
+
+        List<Font> fonts = fontRepository.findTop3ByMemberIdAndIdNotOrderByCreatedAtDesc(member.getId(), fontId);
+
+        return fonts.stream()
+                .map(FontResponse::from)
+                .collect(Collectors.toList());
+    }
+
     private void checkFontOwnership(Long requestMemberId, Long targetMemberId) {
         if (!requestMemberId.equals(targetMemberId)) {
             throw new FontOwnerMismatchException();
