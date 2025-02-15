@@ -92,13 +92,11 @@ public class FontController {
                 .body(fonts);
     }
 
-    @Operation(summary = "내가 제작한 폰트 상세보기")
+    @Operation(summary = "폰트 상세보기")
     @Parameter(name = "fontId", description = "상세 조회 할 폰트 ID")
-    @GetMapping("/members/{fontId}")
+    @GetMapping("/{fontId}")
     public ResponseEntity<?> getFont(@PathVariable Long fontId) {
-        Long memberId = 1L;
-
-        FontDetailResponse font = fontService.getFont(memberId, fontId);
+        FontDetailResponse font = fontService.getFont(fontId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

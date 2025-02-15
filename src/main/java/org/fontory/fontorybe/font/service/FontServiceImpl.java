@@ -54,6 +54,8 @@ public class FontServiceImpl implements FontService {
         Member member = memberService.getOrThrowById(memberId);
         Font targetFont = getOrThrowById(fontId);
 
+        checkFontOwnership(member.getId(), targetFont.getMemberId());
+
         return fontRepository.save(targetFont.update(fontUpdateDTO));
     }
 
@@ -80,13 +82,11 @@ public class FontServiceImpl implements FontService {
 
     @Override
     @Transactional(readOnly = true)
-    public FontDetailResponse getFont(Long memberId, Long fontId) {
-        Member member = memberService.getOrThrowById(memberId);
+    public FontDetailResponse getFont(Long fontId) {
         Font targetFont = getOrThrowById(fontId);
+        Member member = memberService.getOrThrowById(targetFont.getMemberId());
 
-        checkFontOwnership(member.getId(), targetFont.getMemberId());
-
-        return FontDetailResponse.from(targetFont);
+        return FontDetailResponse.from(targetFont, member.getNickname());
     }
 
     @Override

@@ -10,18 +10,18 @@ public class FontDetailResponse {
     private Long id;
     private String name;
     private String example;
+    private String writerName;
     private Long downloadCount;
     private Long bookmarkCount;
-    private Long memberId;
 
-    public static FontDetailResponse from(Font font) {
+    public static FontDetailResponse from(Font font, String writerName) {
         return FontDetailResponse.builder()
                 .id(font.getId())
                 .name(font.getName())
                 .example(font.getExample())
+                .writerName(writerName)
                 .downloadCount(font.getDownloadCount())
                 .bookmarkCount(font.getBookmarkCount())
-                .memberId(font.getMemberId())
                 .build();
     }
 }

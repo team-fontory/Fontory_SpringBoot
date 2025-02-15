@@ -17,7 +17,7 @@ public interface FontService {
     Font update(Long memberId, Long fontId, FontUpdateDTO fontUpdateDTO);
     Font getOrThrowById(Long id);
     Page<FontResponse> getFonts(Long memberId, int page, int size);
-    FontDetailResponse getFont(Long memberId, Long fondId);
+    FontDetailResponse getFont(Long fondId);
     FontDeleteResponse delete(Long memberId, Long fontId);
     Page<FontPageResponse> getFontPage(int page, int size, String sortBy, String keyword);
 }
