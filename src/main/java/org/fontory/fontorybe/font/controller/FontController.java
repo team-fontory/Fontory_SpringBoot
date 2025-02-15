@@ -9,6 +9,7 @@ import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontCreateResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
+import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
@@ -115,5 +116,20 @@ public class FontController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(deletedFont);
+    }
+
+    @Operation(summary = "폰트 둘러보기")
+    @GetMapping
+    public ResponseEntity<?> getFontPage(
+            @Parameter(description = "페이지 시작 오프셋 (기본값: 0)", example = "0") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 당 엘리먼트 개수 (기본값: 10)", example = "10") @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "정렬 기준 (예: createdAt, downloadCount, bookmarkCount)", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
+            @Parameter(description = "검색 키워드", example = "") @RequestParam(required = false) String keyword
+    ) {
+        Page<FontPageResponse> fontPage = fontService.getFontPage(page, size, sortBy, keyword);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(fontPage);
     }
 }

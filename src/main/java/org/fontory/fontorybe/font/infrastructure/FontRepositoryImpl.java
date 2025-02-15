@@ -53,4 +53,18 @@ public class FontRepositoryImpl implements FontRepository {
     public void deleteById(Long id) {
         fontJpaRepository.deleteById(id);
     }
+
+    @Override
+    public Page<Font> findAll(PageRequest pageRequest) {
+        Page<FontEntity> fontEntityPage = fontJpaRepository.findAll(pageRequest);
+
+        return fontEntityPage.map(FontEntity::toModel);
+    }
+
+    @Override
+    public Page<Font> findByNameContaining(String keyword, PageRequest pageRequest) {
+        Page<FontEntity> fontEntityPage = fontJpaRepository.findByNameContaining(keyword, pageRequest);
+
+        return fontEntityPage.map(FontEntity::toModel);
+    }
 }

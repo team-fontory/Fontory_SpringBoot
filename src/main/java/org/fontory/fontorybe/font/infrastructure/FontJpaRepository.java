@@ -9,4 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface FontJpaRepository extends JpaRepository<FontEntity, Long> {
     List<FontEntity> findTop5ByMemberIdOrderByCreatedAtDesc(Long memberId);
     Page<FontEntity> findAllByMemberId(Long memberId, PageRequest pageRequest);
+    Page<FontEntity> findByNameContaining(String name, PageRequest pageRequest);
 }

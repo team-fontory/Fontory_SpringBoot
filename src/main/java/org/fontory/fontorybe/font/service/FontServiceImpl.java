@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
+import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -98,6 +100,35 @@ public class FontServiceImpl implements FontService {
         fontRepository.deleteById(targetFont.getId());
 
         return FontDeleteResponse.from(fontId);
+    }
+
+    @Override
+    public Page<FontPageResponse> getFontPage(int page, int size, String sortBy, String keyword) {
+        Sort sort = Sort.by(Sort.Order.desc("createdAt"));
+        if ("downloadCount".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(Sort.Order.desc("downloadCount"));
+        } else if ("bookmarkCount".equalsIgnoreCase(sortBy)) {
+            sort = Sort.by(Sort.Order.desc("bookmarkCount"));
+        }
+
+        PageRequest pageRequest = PageRequest.of(page, size, sort);
+
+        Page<Font> fontPage;
+        if (!StringUtils.hasText(keyword)) {
+            fontPage = fontRepository.findAll(pageRequest);
+        } else {
+            fontPage = fontRepository.findByNameContaining(keyword, pageRequest);
+        }
+
+        return fontPage.map(font -> {
+            Member member = memberService.getOrThrowById(font.getMemberId());
+            return FontPageResponse.builder()
+                    .id(font.getId())
+                    .name(font.getName())
+                    .example(font.getExample())
+                    .writerName(member.getNickname())
+                    .build();
+        });
     }
 
     private void checkFontOwnership(Long requestMemberId, Long targetMemberId) {

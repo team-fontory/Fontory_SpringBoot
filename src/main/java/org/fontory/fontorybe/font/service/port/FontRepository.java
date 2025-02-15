@@ -13,4 +13,6 @@ public interface FontRepository {
     Optional<Font> findById(Long id);
     Page<Font> findAllByMemberId(Long memberId, PageRequest pageRequest);
     void deleteById(Long id);
+    Page<Font> findAll(PageRequest pageRequest);
+    Page<Font> findByNameContaining(String keyword, PageRequest pageRequest);
 }
