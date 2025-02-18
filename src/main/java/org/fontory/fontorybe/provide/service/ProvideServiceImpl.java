@@ -2,6 +2,7 @@ package org.fontory.fontorybe.provide.service;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.fontory.fontorybe.provide.domain.exception.ProvideNotFoundException;
@@ -10,8 +11,6 @@ import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Service
 @Builder
@@ -32,16 +31,17 @@ public class ProvideServiceImpl implements ProvideService {
         return provideRepository.save(provide);
     }
 
-    // Not for Service
-    // Should be deleted
     @Override
     @Transactional
-    public Long getTempProvideId() {
-        return create(
-                ProvideCreateDto.builder()
-                                .provider(Provider.GOOGLE)
-                                .providedId(UUID.randomUUID().toString())
-                                .email("tempEmail")
-                                .build()).getId();
+    public Provide create(Provider provider, String email, String providedId) {
+        Provide provide = Provide.from(provider, email, providedId);
+        return provideRepository.save(provide);
+    }
+
+    @Override
+    @Transactional
+    public Provide setMember(Provide provide, Member member) {
+        provide.setMember(member.getId());
+        return provideRepository.save(provide);
     }
 }

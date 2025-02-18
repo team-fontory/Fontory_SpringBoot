@@ -2,6 +2,7 @@ package org.fontory.fontorybe.unit.mock;
 
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.provide.domain.Provide;
+import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
 
 import java.time.LocalDateTime;
@@ -50,6 +51,13 @@ public class FakeProvideRepository implements ProvideRepository {
     public Optional<Provide> findById(Long id) {
         return data.stream()
                 .filter(item -> item.getId().equals(id))
+                .findAny();
+    }
+
+    @Override
+    public Optional<Provide> findByOAuthInfo(String userIdentifier, Provider provider) {
+        return data.stream()
+                .filter(item -> item.getProvider().equals(provider) && item.getProvidedId().equals(userIdentifier))
                 .findAny();
     }
 }

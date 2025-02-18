@@ -1,9 +1,15 @@
 package org.fontory.fontorybe.unit.member;
 
+import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.member.controller.MemberController;
 import org.fontory.fontorybe.member.controller.dto.*;
 import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
+import org.fontory.fontorybe.provide.domain.Provide;
+import org.fontory.fontorybe.provide.domain.exception.ProvideNotFoundException;
+import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
+import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
 import org.fontory.fontorybe.unit.mock.TestContainer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,10 +18,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class MemberControllerTest {
@@ -25,46 +31,61 @@ public class MemberControllerTest {
      * testValues
      */
     Long nonExistentId = -1L;
-    Long testMemberId = 999L;
-    Long testProvideId = 1L;
-    Gender testGender = Gender.MALE;
-    LocalDate testBirth = LocalDate.of(2025, 1, 26);
-    Boolean testTerms = Boolean.TRUE;
-    String testNickName = "testNickname";
-    String testProfileImage = "testProfileImage";
+
+    Long existMemberId = null;
+    Gender existMemberGender = Gender.MALE;
+    LocalDate existMemberBirth = LocalDate.of(2025, 1, 26);
+    Boolean existMemberTerms = Boolean.TRUE;
+    String existMemberNickName = "existMemberNickName";
+    String existMemberProfileImage = "existMemberProfileImage";
+
+    Gender newMemberGender = Gender.FEMALE;
+    LocalDate newMemberBirth = LocalDate.of(2025, 1, 22);
+    Boolean newMemberTerms = Boolean.FALSE;
+    String newMemberNickName = "newMemberNickName";
+    String newMemberProfileImage = "newMemberProfileImage";
 
     Boolean updateTerms = Boolean.FALSE;
     String updateNickName = "updateNickName";
     String updateProfileImage = "updateProfileImage";
 
+    Long existMemberProvideId = null;
+    String existMemberProvidedId = UUID.randomUUID().toString();
+    String existMemberEmail = "existMemberEmail";
+    Provider existMemberProvider = Provider.GOOGLE;
+
+    String newMemberProvidedId = UUID.randomUUID().toString();
+    String newMemberEmail = "newMemberEmail";
+    Provider newMemberProvider = Provider.NAVER;
+
+    UserPrincipal userPrincipal = null;
+    TestContainer testContainer = null;
+
     @BeforeEach
     void init() {
-        TestContainer testContainer = new TestContainer();
+        testContainer = new TestContainer();
         memberController = MemberController.builder()
                 .memberService(testContainer.memberService)
                 .provideService(testContainer.provideService)
+                .jwtTokenProvider(testContainer.jwtTokenProvider)
+                .authService(testContainer.authService)
                 .build();
 
-        LocalDateTime now = LocalDateTime.now();
-        testContainer.memberRepository.save(
-                Member.builder()
-                        .id(testMemberId)
-                        .nickname(testNickName)
-                        .gender(testGender)
-                        .birth(testBirth)
-                        .terms(testTerms)
-                        .profileImage(testProfileImage)
-                        .provideId(testProvideId)
-                        .createdAt(now)
-                        .updatedAt(now)
-                        .build());
+        ProvideCreateDto provideCreateDto = new ProvideCreateDto(existMemberProvider, existMemberProvidedId, existMemberEmail);
+        Provide createdProvide = testContainer.provideService.create(provideCreateDto);
+        String provideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide.getId()));
+        MemberCreateRequest memberCreateRequest = new MemberCreateRequest(provideToken,existMemberNickName, existMemberGender, existMemberBirth, existMemberTerms, existMemberProfileImage);
+        Member createdMember = testContainer.memberService.create(memberCreateRequest, createdProvide.getId());
+        existMemberId = createdMember.getId();
+        existMemberProvideId = createdProvide.getId();
+        userPrincipal = UserPrincipal.from(createdMember);
     }
 
     @Test
     @DisplayName("checkDuplicate returns true when duplicate exists")
     void testCheckDuplicateTrue() {
         //given
-        String nickname = testNickName;
+        String nickname = existMemberNickName;
 
         //when
         ResponseEntity<Boolean> response = memberController.checkDuplicate(nickname);
@@ -96,22 +117,19 @@ public class MemberControllerTest {
     @DisplayName("addMember returns created member response")
     void testAddMember() {
         //given
-        MemberCreate memberCreate = new MemberCreate(
-                "newMember",
-                Gender.MALE,
-                LocalDate.parse("2025-01-26"),
-                true,
-                "newProfileImage"
-        );
+        ProvideCreateDto provideCreateDto = new ProvideCreateDto(newMemberProvider, newMemberProvidedId, newMemberEmail);
+        Provide createdProvide = testContainer.provideService.create(provideCreateDto);
+        String provideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide.getId()));
+        MemberCreateRequest memberCreateRequest = new MemberCreateRequest(provideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
         //when
-        ResponseEntity<MemberCreateResponse> response = memberController.addMember(memberCreate);
+        ResponseEntity<MemberCreateResponse> response = memberController.addMember(memberCreateRequest);
         MemberCreateResponse body = response.getBody();
         //then
         assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED),
                 () -> assertThat(body).isNotNull(),
-                () -> assertThat(body.getId()).isNotNull(),
-                () -> assertThat(body.getNickname()).isEqualTo("newMember")
+                () -> assertThat(body.getAccessToken()).isNotNull(),
+                () -> assertThat(body.getRefreshToken()).isNotNull()
         );
     }
 
@@ -120,20 +138,21 @@ public class MemberControllerTest {
     @DisplayName("updateMember returns updated member response")
     void testUpdateMember() {
         //given
-        MemberUpdate memberUpdate = new MemberUpdate(
-                "updatedNick",
-                "updatedProfileImage",
-                false
+        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(
+                updateNickName,
+                updateProfileImage,
+                updateTerms
         );
         //when
-        ResponseEntity<MemberUpdateResponse> response = memberController.updateMember(memberUpdate, testMemberId);
+        ResponseEntity<MemberUpdateResponse> response = memberController.updateMember(memberUpdateRequest, userPrincipal);
         MemberUpdateResponse body = response.getBody();
         //then
         assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
                 () -> assertThat(body).isNotNull(),
-                () -> assertThat(body.getId()).isEqualTo(testMemberId),
-                () -> assertThat(body.getNickname()).isEqualTo("updatedNick")
+                () -> assertThat(body.getNickname()).isEqualTo(updateNickName),
+                () -> assertThat(body.getTerms()).isEqualTo(updateTerms),
+                () -> assertThat(body.getProfileImage()).isEqualTo(updateProfileImage)
         );
     }
 
@@ -142,7 +161,7 @@ public class MemberControllerTest {
     void testDisableMember() {
         //given
         //when
-        ResponseEntity<MemberDisableResponse> response = memberController.disableMember(testMemberId);
+        ResponseEntity<MemberDisableResponse> response = memberController.disableMember(userPrincipal);
         MemberDisableResponse body = response.getBody();
         //then
         assertAll(
@@ -150,5 +169,37 @@ public class MemberControllerTest {
                 () -> assertThat(body).isNotNull(),
                 () -> assertThat(body.getDeletedAt()).isNotNull()
         );
+    }
+
+    @Test
+    @DisplayName("addMember fails when provided token is invalid")
+    void addMemberInvalidProvideTokenTest() {
+        // given: 잘못된 토큰으로 회원 가입 요청
+        String invalidProvideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(nonExistentId));
+        MemberCreateRequest memberCreateRequest = new MemberCreateRequest(invalidProvideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        // when & then: ProvideNotFoundException이 발생해야 함
+        assertThatThrownBy(() -> memberController.addMember(memberCreateRequest))
+                .isInstanceOf(ProvideNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("updateMember fails when member not found")
+    void updateMemberNonExistentTest() {
+        // given: UserPrincipal의 id를 조작해 존재하지 않는 회원 id로 만듦
+        UserPrincipal nonExistentUser = new UserPrincipal(nonExistentId);
+        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(updateNickName, updateProfileImage, updateTerms);
+        // when & then: MemberNotFoundException 발생 예상 (글로벌 예외 핸들러가 있다면 그에 맞는 응답이 내려갈 것)
+        assertThatThrownBy(() -> memberController.updateMember(memberUpdateRequest, nonExistentUser))
+                .isInstanceOf(MemberNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("disableMember fails when member is already disabled")
+    void disableAlreadyDisabledMemberTest() {
+        // given: 먼저 정상적으로 회원 비활성화 처리
+        memberController.disableMember(userPrincipal);
+        // when & then: 이미 비활성화된 회원을 다시 비활성화 요청 시 예외 발생
+        assertThatThrownBy(() -> memberController.disableMember(userPrincipal))
+                .isInstanceOf(RuntimeException.class);  // 실제 예외 타입(MemberAlreadyDisabledException 등)을 지정
     }
 }

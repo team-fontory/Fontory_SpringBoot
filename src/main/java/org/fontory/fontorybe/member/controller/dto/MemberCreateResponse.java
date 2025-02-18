@@ -3,24 +3,21 @@ package org.fontory.fontorybe.member.controller.dto;
 import lombok.Builder;
 import lombok.Getter;
 import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Builder
 public class MemberCreateResponse {
-    private Long id;
-    private String nickname;
-    private String profileImage;
-    private Boolean terms;
+    private String accessToken;
+    private String refreshToken;
     private LocalDateTime createdAt;
 
-    public static MemberCreateResponse from(Member member) {
+    public static MemberCreateResponse from(Member member, TokenResponse tokenResponse) {
         return MemberCreateResponse.builder()
-                .id(member.getId())
-                .nickname(member.getNickname())
-                .profileImage(member.getProfileImage())
-                .terms(member.getTerms())
+                .accessToken(tokenResponse.getAccessToken())
+                .refreshToken(tokenResponse.getRefreshToken())
                 .createdAt(member.getCreatedAt())
                 .build();
     }

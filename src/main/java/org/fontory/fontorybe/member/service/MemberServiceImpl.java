@@ -2,14 +2,13 @@ package org.fontory.fontorybe.member.service;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
-import org.fontory.fontorybe.member.controller.dto.MemberCreate;
+import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
-import org.fontory.fontorybe.member.controller.dto.MemberUpdate;
+import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
 import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
-import org.fontory.fontorybe.member.domain.exception.MemberOwnerMismatchException;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
@@ -38,36 +37,36 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public Member create(MemberCreate memberCreate, Long provideId) {
+    public Member create(MemberCreateRequest memberCreateRequest, Long provideId) {
         // 닉네임 중복확인
-        if (isDuplicateNameExists(memberCreate.getNickname())) {
+        if (isDuplicateNameExists(memberCreateRequest.getNickname())) {
              throw new MemberDuplicateNameExistsException();
         }
 
         Provide provide = provideService.getOrThrownById(provideId);
+        Member createdMember = memberRepository.save(Member.from(memberCreateRequest, provide));
+        provideService.setMember(provide, createdMember);
 
-        return memberRepository.save(Member.from(memberCreate, provide));
+        return createdMember;
     }
 
     @Override
     @Transactional
-    public Member update(Long requestMemberId, Long memberId, MemberUpdate memberUpdate) {
-        Member targetMember = getOrThrowById(memberId);
-        checkMemberOwnership(requestMemberId, memberId);
+    public Member update(Long requestMemberId, MemberUpdateRequest memberUpdateRequest) {
+        Member targetMember = getOrThrowById(requestMemberId);
 
-        if (!targetMember.getNickname().equals(memberUpdate.getNickname()) &&
-                isDuplicateNameExists(memberUpdate.getNickname())) {
+        if (!targetMember.getNickname().equals(memberUpdateRequest.getNickname()) &&
+                isDuplicateNameExists(memberUpdateRequest.getNickname())) {
             throw new MemberDuplicateNameExistsException();
         }
 
-        return memberRepository.save(targetMember.update(memberUpdate));
+        return memberRepository.save(targetMember.update(memberUpdateRequest));
     }
 
     @Override
     @Transactional
-    public Member disable(Long requestMemberId, Long memberId) {
-        Member targetMember = getOrThrowById(memberId);
-        checkMemberOwnership(requestMemberId, memberId);
+    public Member disable(Long requestMemberId) {
+        Member targetMember = getOrThrowById(requestMemberId);
 
         if (targetMember.getDeletedAt() != null) {
             throw new MemberAlreadyDisabledException();
@@ -75,11 +74,5 @@ public class MemberServiceImpl implements MemberService {
 
         targetMember.disable();
         return memberRepository.save(targetMember);
-    }
-
-    private void checkMemberOwnership(Long requestMemberId, Long targetMemberId) {
-        if (!requestMemberId.equals(targetMemberId)) {
-            throw new MemberOwnerMismatchException();
-        }
     }
 }

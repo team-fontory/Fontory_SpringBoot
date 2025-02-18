@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class MemberUpdateResponse {
-    private Long id;
     private String nickname;
     private String profileImage;
     private Boolean terms;
@@ -17,7 +16,6 @@ public class MemberUpdateResponse {
 
     public static MemberUpdateResponse from(Member member) {
         return MemberUpdateResponse.builder()
-                .id(member.getId())
                 .nickname(member.getNickname())
                 .profileImage(member.getProfileImage())
                 .terms(member.getTerms())

@@ -1,13 +1,17 @@
 package org.fontory.fontorybe.member.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import org.fontory.fontorybe.authentication.adapter.inbound.Login;
+import org.fontory.fontorybe.authentication.application.AuthService;
 import org.fontory.fontorybe.member.controller.dto.*;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +26,8 @@ import org.springframework.web.bind.annotation.*;
 public class MemberController {
     private final MemberService memberService;
     private final ProvideService provideService;
+    private final AuthService authService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Operation(
             summary = "닉네임 중복 확인",
@@ -42,33 +48,29 @@ public class MemberController {
     )
     @PostMapping
     public ResponseEntity<MemberCreateResponse> addMember(
-            @RequestBody MemberCreate memberCreate
+            @RequestBody MemberCreateRequest memberCreateRequest
     ) {
-        // not implements yet
-        Long tempProvideId = provideService.getTempProvideId();
+        Long provideId = jwtTokenProvider.getProvideId(memberCreateRequest.getProvideToken());
 
-        Member createdMember = memberService.create(memberCreate, tempProvideId);
+        Member createdMember = memberService.create(memberCreateRequest, provideId);
+        TokenResponse tokens = authService.login(UserPrincipal.from(createdMember));
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(MemberCreateResponse.from(createdMember));
+                .body(MemberCreateResponse.from(createdMember, tokens));
     }
 
     @Operation(
             summary = "회원정보 수정"
     )
-    @Parameter(name = "memberId", description = "수정할 회원 ID")
-    @PutMapping("/{memberId}")
+    @PutMapping
     public ResponseEntity<MemberUpdateResponse> updateMember(
-        @RequestBody MemberUpdate memberUpdate,
-        @PathVariable Long memberId
+        @RequestBody MemberUpdateRequest memberUpdateRequest,
+        @Login UserPrincipal userPrincipal
     ) {
-        Long requestMemberId = memberId;
+        Long requestMemberId = userPrincipal.getId();
 
-//        should be tested
-//        Member updatedMember = memberService.update(requestMemberId, memberId, memberUpdate);
-
-        Member updatedMember = memberService.update(requestMemberId, memberId, memberUpdate);
+        Member updatedMember = memberService.update(requestMemberId, memberUpdateRequest);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(MemberUpdateResponse.from(updatedMember));
@@ -77,16 +79,13 @@ public class MemberController {
     @Operation(
             summary = "회원탈퇴"
     )
-    @Parameter(name = "memberId", description = "탈퇴할 회원 ID")
-    @DeleteMapping("/{memberId}")
+    @DeleteMapping
     public ResponseEntity<MemberDisableResponse> disableMember(
-            @PathVariable Long memberId
+            @Login UserPrincipal userPrincipal
     ) {
-        Long requestMemberId = memberId;
+        Long requestMemberId = userPrincipal.getId();
 
-//        should be tested
-//        Member updatedMember = memberService.update(requestMemberId, memberId, memberUpdate);
-        Member disabledMember = memberService.disable(requestMemberId, memberId);
+        Member disabledMember = memberService.disable(requestMemberId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(MemberDisableResponse.from(disabledMember));
