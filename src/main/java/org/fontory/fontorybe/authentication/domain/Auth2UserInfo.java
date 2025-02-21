@@ -20,6 +20,10 @@ public class Auth2UserInfo {
             case GOOGLE -> {
                 return new Auth2UserInfo((String) attributes.get(pk), Provider.GOOGLE, (String) attributes.get("email"));
             }
+            case NAVER -> {
+                Map<String, Object> naverAttributes = (Map<String, Object>) attributes.get(pk);
+                return new Auth2UserInfo((String) naverAttributes.get("id"), Provider.NAVER, (String) naverAttributes.get("email"));
+            }
         }
         throw new ProviderNotFoundException(String.valueOf(provider));
     }

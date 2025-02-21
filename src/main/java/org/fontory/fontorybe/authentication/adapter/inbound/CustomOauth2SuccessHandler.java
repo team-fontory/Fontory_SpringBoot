@@ -12,6 +12,8 @@ import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.DefaultRedirectStrategy;
+import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +27,7 @@ public class CustomOauth2SuccessHandler implements AuthenticationSuccessHandler 
     private final ObjectMapper objectMapper;
     private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
+//    private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -43,6 +46,7 @@ public class CustomOauth2SuccessHandler implements AuthenticationSuccessHandler 
             attributes.put("refreshToken", tokens.getRefreshToken());
         }
 
+//        redirectStrategy.sendRedirect(request, response, "");
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_OK);
         response.getWriter().write(objectMapper.writeValueAsString(attributes));

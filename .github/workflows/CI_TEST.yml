@@ -49,6 +49,7 @@ jobs:
           echo "spring.security.oauth2.client.registration.google.client-id=${{ secrets.OAUTH2_GOOGLE_CLIENT_ID }}" >> ./src/main/resources/application-oauth2.properties
           echo "spring.security.oauth2.client.registration.google.client-secret=${{ secrets.OAUTH2_GOOGLE_CLIENT_SECRET }}" >> ./src/main/resources/application-oauth2.properties
           echo "spring.security.oauth2.client.registration.google.scope=${{ secrets.OAUTH2_GOOGLE_SCOPE }}" >> ./src/main/resources/application-oauth2.properties
+          printf "%s\n" "${{ secrets.OAUTH2_NAVER_PROPERTIES }}" >> ./src/main/resources/application-oauth2.properties
 
       - name: Build with Gradle Wrapper
         run: ./gradlew build
