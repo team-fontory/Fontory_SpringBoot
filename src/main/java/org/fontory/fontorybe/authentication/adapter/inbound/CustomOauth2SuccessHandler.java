@@ -12,8 +12,6 @@ import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.web.DefaultRedirectStrategy;
-import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -37,14 +35,14 @@ public class CustomOauth2SuccessHandler implements AuthenticationSuccessHandler 
         Map<String, Object> attributes = new HashMap<>();
         Provide provide = customUser.getAttribute("provide");
 
-        if (provide.getMemberId() == null) {
-            String token = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(provide.getId()));
-            attributes.put("provideId", token);
-        } else {
-            TokenResponse tokens = authService.login(new UserPrincipal(provide.getMemberId()));
-            attributes.put("accessToken", tokens.getAccessToken());
-            attributes.put("refreshToken", tokens.getRefreshToken());
-        }
+//        if (provide.getMemberId() == null) {
+        String token = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(provide.getId()));
+        attributes.put("provideId", token);
+//        } else {
+//            TokenResponse tokens = authService.generateTokens(new UserPrincipal(provide.getMemberId()));
+//            attributes.put("accessToken", tokens.getAccessToken());
+//            attributes.put("refreshToken", tokens.getRefreshToken());
+//        }
 
 //        redirectStrategy.sendRedirect(request, response, "");
         response.setContentType("application/json");

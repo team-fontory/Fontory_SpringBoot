@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
+import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,7 +14,11 @@ public class AuthService {
     private final TokenService tokenService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public TokenResponse login(UserPrincipal user) {
+    public TokenResponse generateTokens(UserPrincipal user) {
+        if (user.getId() == null || user.getId() == 0) {
+            throw new MemberNotFoundException();
+        }
+
         String existingToken = tokenService.getRefreshToken(user.getId());
         if (existingToken != null) {
             tokenService.removeRefreshToken(user.getId());
