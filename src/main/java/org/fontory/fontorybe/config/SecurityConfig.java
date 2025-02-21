@@ -35,19 +35,21 @@ public class SecurityConfig {
                 .httpBasic(HttpBasicConfigurer::disable)
                 .formLogin(FormLoginConfigurer::disable)
                 .authorizeHttpRequests((authorizeRequests) -> authorizeRequests
-//                        .requestMatchers("/health-check").permitAll()
-//                        .requestMatchers("/swagger-ui.html").permitAll()
-//                        .requestMatchers("/swagger-ui/**").permitAll()
-//                        .requestMatchers("/v3/api-docs/**").permitAll()
-//                        .requestMatchers("/swagger-resources/**").permitAll()
-//                        .requestMatchers("/webjars/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                .oauth2Login(customConfigure ->
-                        customConfigure.successHandler(oauth2SuccessHandler)
+//                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+                .oauth2Login(customConfigure -> customConfigure
+//                                .authorizationEndpoint(endpoint -> endpoint
+//                                        .authorizationRequestRepository(cookieOAuth2AuthorizationRequestRepository))
+
+                                .successHandler(oauth2SuccessHandler)
                                 .failureHandler(oauth2FailureHandler)
 //                        .failureUrl("/login?error=true")
-                        .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig.userService(oauth2UserService))
+                                .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
+                                        .userService(oauth2UserService)
+                                )
+
+
                 )
                         .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
 

@@ -118,13 +118,18 @@ class MemberServiceIntegrationTest {
     @Test
     @DisplayName("member - create fail test caused by duplicate nickname")
     void createDuplicateNicknameTest() {
+        ProvideCreateDto provideCreateDto1 = new ProvideCreateDto(Provider.GOOGLE, UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        ProvideCreateDto provideCreateDto2 = new ProvideCreateDto(Provider.NAVER, UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        Provide createdProvide1 = provideService.create(provideCreateDto1);
+        Provide createdProvide2 = provideService.create(provideCreateDto2);
+        String provideToken1 = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide1.getId()));
+        String provideToken2 = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide2.getId()));
         // 첫 번째 회원 생성
-        String temporalProvideToken = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(existMemberProvideId));
-        MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(temporalProvideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(provideToken1, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
         memberService.create(memberCreateRequestDto);
 
         // 동일 닉네임으로 또 회원 생성 시 예외 발생
-        MemberCreateRequest duplicateMemberCreateRequestDto = new MemberCreateRequest(temporalProvideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        MemberCreateRequest duplicateMemberCreateRequestDto = new MemberCreateRequest(provideToken2, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
         assertThatThrownBy(
                 () -> memberService.create(duplicateMemberCreateRequestDto))
                 .isExactlyInstanceOf(MemberDuplicateNameExistsException.class);

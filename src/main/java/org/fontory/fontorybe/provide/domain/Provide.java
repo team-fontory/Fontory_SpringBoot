@@ -1,5 +1,6 @@
 package org.fontory.fontorybe.provide.domain;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import lombok.*;
@@ -11,7 +12,7 @@ import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class Provide {
+public class Provide implements Serializable {
     private Long id;
 
     private Provider provider;

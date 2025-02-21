@@ -47,11 +47,11 @@ public class MemberServiceImpl implements MemberService {
         Long provideId = jwtTokenProvider.getProvideId(memberCreateRequest.getProvideToken());
         Provide provide = provideService.getOrThrownById(provideId);
 
-        // 닉네임 중복확인
-        if (isDuplicateNameExists(memberCreateRequest.getNickname())) {
-             throw new MemberDuplicateNameExistsException();
-        } else if (provide.getMemberId() != null) {
+        // 존재하는지 가입했는지, 닉네임 중복확인
+        if (provide.getMemberId() != null) {
             throw new MemberAlreadyExistException();
+        } else if (isDuplicateNameExists(memberCreateRequest.getNickname())) {
+             throw new MemberDuplicateNameExistsException();
         }
 
         Member createdMember = memberRepository.save(Member.from(memberCreateRequest, provide));
