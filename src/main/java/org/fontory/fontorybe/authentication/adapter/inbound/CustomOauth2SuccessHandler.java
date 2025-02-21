@@ -31,14 +31,13 @@ public class CustomOauth2SuccessHandler implements AuthenticationSuccessHandler 
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
         String SIGNUP_URL = BaseURL + SignUpPath;
-        String AUTH_URL = AuthPath + AuthPath;
+        String AUTH_URL = BaseURL + AuthPath;
 
         OAuth2User authUser = (OAuth2User) authentication.getPrincipal();
         Provide provide = authUser.getAttribute("provide");
 
         String token = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(provide.getId()));
 
-        System.out.println("SIGNUP_URL = " + SIGNUP_URL);
         if (provide.getMemberId() == null) {
             redirectStrategy.sendRedirect(request, response, SIGNUP_URL + "?token=" + token);
         } else {
