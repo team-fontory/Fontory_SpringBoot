@@ -6,6 +6,7 @@ import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
+import org.fontory.fontorybe.member.domain.exception.MemberAlreadyExistException;
 import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
@@ -71,7 +72,7 @@ public class MemberServiceTest {
         String provideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide.getId()));
 
         MemberCreateRequest memberCreateRequest = new MemberCreateRequest(provideToken, existMemberNickName, existMemberGender, existMemberBirth, existMemberTerms, existMemberProfileImage);
-        Member createdMember = testContainer.memberService.create(memberCreateRequest, testContainer.jwtTokenProvider.getProvideId(provideToken));
+        Member createdMember = testContainer.memberService.create(memberCreateRequest);
         existMemberId = createdMember.getId();
         existMemberProvideId = createdProvide.getId();
         userPrincipal = UserPrincipal.from(createdMember);
@@ -111,7 +112,7 @@ public class MemberServiceTest {
         String provideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide.getId()));
 
         MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(provideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        Member createdMember = memberService.create(memberCreateRequestDto, testContainer.jwtTokenProvider.getProvideId(provideToken));
+        Member createdMember = memberService.create(memberCreateRequestDto);
 
         assertAll(
                 () -> assertThat(createdMember.getId()).isNotNull(),
@@ -132,7 +133,7 @@ public class MemberServiceTest {
         String nonExistProvideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(nonExistentId));
         MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(nonExistProvideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
         assertThatThrownBy(
-                () -> memberService.create(memberCreateRequestDto, nonExistentId))
+                () -> memberService.create(memberCreateRequestDto))
                 .isExactlyInstanceOf(ProvideNotFoundException.class);
     }
 
@@ -148,12 +149,12 @@ public class MemberServiceTest {
         String provideToken2 = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide2.getId()));
 
         MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(provideToken1, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        memberService.create(memberCreateRequestDto, testContainer.jwtTokenProvider.getProvideId(provideToken1));
+        memberService.create(memberCreateRequestDto);
 
         // 동일 닉네임으로 또 회원 생성 시 예외 발생
         MemberCreateRequest duplicateMemberCreateRequestDto = new MemberCreateRequest(provideToken2, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
         assertThatThrownBy(
-                () -> memberService.create(duplicateMemberCreateRequestDto, testContainer.jwtTokenProvider.getProvideId(provideToken2)))
+                () -> memberService.create(duplicateMemberCreateRequestDto))
                 .isExactlyInstanceOf(MemberDuplicateNameExistsException.class);
     }
 
@@ -193,14 +194,32 @@ public class MemberServiceTest {
         String uniqueNickname2 = UUID.randomUUID().toString();
         MemberCreateRequest memberCreateRequestDto1 = new MemberCreateRequest(provideToken1, uniqueNickname1, Gender.MALE, newMemberBirth, existMemberTerms, existMemberProfileImage);
         MemberCreateRequest memberCreateRequestDto2 = new MemberCreateRequest(provideToken2, uniqueNickname2, Gender.FEMALE, newMemberBirth, existMemberTerms, existMemberProfileImage);
-        Member member1 = memberService.create(memberCreateRequestDto1, testContainer.jwtTokenProvider.getProvideId(provideToken1));
-        memberService.create(memberCreateRequestDto2, testContainer.jwtTokenProvider.getProvideId(provideToken2));
+        Member member1 = memberService.create(memberCreateRequestDto1);
+        memberService.create(memberCreateRequestDto2);
 
         // member1의 닉네임을 이미 존재하는 이름으로 업데이트 시도하면 예외 발생
         MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(uniqueNickname2, updateProfileImage, updateTerms);
         assertThatThrownBy(
                 () -> memberService.update(member1.getId(), memberUpdateRequest))
                 .isExactlyInstanceOf(MemberDuplicateNameExistsException.class);
+    }
+
+    @Test
+    @DisplayName("member - create fail when provide create member more than one")
+    void createProvideMemberMoreThanOneTest() {
+        ProvideCreateDto provideCreateDto = new ProvideCreateDto(newMemberProvider, newMemberProvidedId, newMemberEmail);
+        Provide createdProvide = testContainer.provideService.create(provideCreateDto);
+        String provideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide.getId()));
+
+        String uniqueNickname1 = UUID.randomUUID().toString();
+        String uniqueNickname2 = UUID.randomUUID().toString();
+        MemberCreateRequest memberCreateRequestDto1 = new MemberCreateRequest(provideToken, uniqueNickname1, Gender.MALE, newMemberBirth, existMemberTerms, existMemberProfileImage);
+        MemberCreateRequest memberCreateRequestDto2 = new MemberCreateRequest(provideToken, uniqueNickname2, Gender.MALE, newMemberBirth, existMemberTerms, existMemberProfileImage);
+
+        Member member1 = memberService.create(memberCreateRequestDto1);
+        assertThatThrownBy(
+                () -> memberService.create(memberCreateRequestDto2))
+                .isInstanceOf(MemberAlreadyExistException.class);
     }
 
     @Test
@@ -248,7 +267,7 @@ public class MemberServiceTest {
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
         String provideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide.getId()));
         MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(provideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        Member member = memberService.create(memberCreateRequestDto, testContainer.jwtTokenProvider.getProvideId(provideToken));
+        Member member = memberService.create(memberCreateRequestDto);
 
         // 회원 비활성화
         Member disabledMember = memberService.disable(member.getId());
@@ -263,7 +282,7 @@ public class MemberServiceTest {
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
         String provideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide.getId()));
         MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(provideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        Member member = memberService.create(memberCreateRequestDto, testContainer.jwtTokenProvider.getProvideId(provideToken));
+        Member member = memberService.create(memberCreateRequestDto);
 
         // 회원 비활성화
         memberService.disable(member.getId());

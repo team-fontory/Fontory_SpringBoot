@@ -5,6 +5,7 @@ import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.authentication.domain.exception.InvalidRefreshTokenException;
+import org.fontory.fontorybe.member.domain.Member;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -18,32 +19,36 @@ public class TokenService {
     private static final String KEY_PREFIX = "refresh_token:";
     private static final long REFRESH_TOKEN_VALIDITY = 7 * 24 * 60 * 60 * 1000; // 7 days
 
-    public void saveRefreshToken(Long id, String refreshToken) {
-        redisTemplate.opsForValue().set(KEY_PREFIX + id, refreshToken, Duration.ofMillis(REFRESH_TOKEN_VALIDITY));
+    public void saveRefreshToken(Member member, String refreshToken) {
+        redisTemplate.opsForValue().set(KEY_PREFIX + member.getId(), refreshToken, Duration.ofMillis(REFRESH_TOKEN_VALIDITY));
     }
 
-    public String getRefreshToken(Long id) {
-        return redisTemplate.opsForValue().get(KEY_PREFIX + id);
+    public String getRefreshToken(Member member) {
+        return redisTemplate.opsForValue().get(KEY_PREFIX + member.getId());
     }
 
-    public void removeRefreshToken(Long id) {
-        redisTemplate.delete(KEY_PREFIX + id);
+    public void removeRefreshToken(Member member) {
+        redisTemplate.delete(KEY_PREFIX + member.getId());
     }
 
-    public TokenResponse refreshToken(String refreshToken) {
-        Long memberId = jwtTokenProvider.getMemberId(refreshToken);
-
-        String storedRefreshToken = getRefreshToken(memberId);
+    /**
+     * 토큰 재발급
+     * 기존 RefreshToken 존재 여부 확인 -> 없을 시 Exception
+     */
+    public TokenResponse refreshToken(Member member, String refreshToken) {
+        String storedRefreshToken = getRefreshToken(member);
 
         if (storedRefreshToken == null || !storedRefreshToken.equals(refreshToken)) {
             throw new InvalidRefreshTokenException();
         }
 
-        UserPrincipal userPrincipal = new UserPrincipal(memberId);
+        removeRefreshToken(member);
+
+        UserPrincipal userPrincipal = UserPrincipal.from(member);
         String newAccessToken = jwtTokenProvider.generateAccessToken(userPrincipal);
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(userPrincipal);
 
-        saveRefreshToken(memberId, newRefreshToken);
+        saveRefreshToken(member, newRefreshToken);
 
         return TokenResponse.from(newAccessToken, newRefreshToken);
     }

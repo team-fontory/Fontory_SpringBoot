@@ -63,7 +63,8 @@ public class SecurityConfig {
                         "/v3/api-docs/**",
                         "/swagger-resources/**",
                         "/webjars/**",
-                        "/health-check")
+                        "/health-check",
+                        "/auth/token/**")
                 .requestMatchers(HttpMethod.POST,"/member");
     }
 }
