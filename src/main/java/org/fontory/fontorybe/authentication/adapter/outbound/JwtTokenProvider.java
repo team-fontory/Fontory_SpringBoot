@@ -17,14 +17,18 @@ import java.util.Date;
 public class JwtTokenProvider {
 
     @Value("${jwt.secretKey}")
-    private String SECRET_KEY;
+    private String SECRET_KEY_FOR_AUTHENTICATION;
+
+    @Value("${jwt.provide.secretKey}")
+    private String SECRET_KEY_FOR_PROVIDE;
 
     private static final long ACCESS_TOKEN_VALIDITY = 15 * 60 * 1000; // 15 minutes
     private static final long REFRESH_TOKEN_VALIDITY = 7 * 24 * 60 * 60 * 1000; // 7 days
     private static final long TEMP_TOKEN_VALIDITY = 15 * 60 * 1000; // 10 minutes
 
-    public JwtTokenProvider(String SECRET_KEY) {
-        this.SECRET_KEY = SECRET_KEY;
+    public JwtTokenProvider(String SECRET_KEY_FOR_AUTHENTICATION, String SECRET_KEY_FOR_PROVIDE) {
+        this.SECRET_KEY_FOR_AUTHENTICATION = SECRET_KEY_FOR_AUTHENTICATION;
+        this.SECRET_KEY_FOR_PROVIDE = SECRET_KEY_FOR_PROVIDE;
     }
 
     public String generateTemporalProvideToken(String id) {
@@ -34,13 +38,13 @@ public class JwtTokenProvider {
                 .setSubject(String.valueOf(id))
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
+                .signWith(SignatureAlgorithm.HS512, SECRET_KEY_FOR_PROVIDE)
                 .compact();
     }
 
     public Long getProvideId(String token) {
         Claims claims = Jwts.parser()
-                .setSigningKey(SECRET_KEY)
+                .setSigningKey(SECRET_KEY_FOR_PROVIDE)
                 .parseClaimsJws(token)
                 .getBody();
         return Long.valueOf(claims.getSubject());
@@ -53,7 +57,7 @@ public class JwtTokenProvider {
                 .setSubject(String.valueOf(user.getId()))
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
+                .signWith(SignatureAlgorithm.HS512, SECRET_KEY_FOR_AUTHENTICATION)
                 .compact();
     }
 
@@ -64,13 +68,13 @@ public class JwtTokenProvider {
                 .setSubject(String.valueOf(user.getId()))
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
-                .signWith(SignatureAlgorithm.HS512, SECRET_KEY)
+                .signWith(SignatureAlgorithm.HS512, SECRET_KEY_FOR_AUTHENTICATION)
                 .compact();
     }
 
     public Long getMemberId(String token) {
         Claims claims = Jwts.parser()
-                .setSigningKey(SECRET_KEY)
+                .setSigningKey(SECRET_KEY_FOR_AUTHENTICATION)
                 .parseClaimsJws(token)
                 .getBody();
         return Long.valueOf(claims.getSubject());
@@ -78,7 +82,7 @@ public class JwtTokenProvider {
 
     public Authentication getAuthentication(String token) {
         Claims claims = Jwts.parser()
-                .setSigningKey(SECRET_KEY)
+                .setSigningKey(SECRET_KEY_FOR_AUTHENTICATION)
                 .parseClaimsJws(token)
                 .getBody();
         Long id = Long.valueOf(claims.getSubject());

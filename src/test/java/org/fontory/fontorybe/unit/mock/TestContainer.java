@@ -11,10 +11,15 @@ import org.fontory.fontorybe.provide.service.ProvideServiceImpl;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import java.security.NoSuchAlgorithmException;
+
 import static org.mockito.Mockito.mock;
 
 public class TestContainer {
-    public final String secretKeyFroTest = "d7582740ab56d2347710acc2fa15324012f7d24db45b86255b2f2f942a455ce880b5d370a85c49b84fac901e72fce1193986e9569e780128aa411b9c4cd3aec1";
+    public final String secretKeyForTest = generateSecretKey();
+    public final String secretKeyForTest2 = generateSecretKey();
     public final MemberRepository memberRepository;
     public final ProvideRepository provideRepository;
 
@@ -30,7 +35,7 @@ public class TestContainer {
 
     public TestContainer() {
         fakeRedisTemplate = new FakeRedisTemplate();
-        jwtTokenProvider = new JwtTokenProvider(secretKeyFroTest);
+        jwtTokenProvider = new JwtTokenProvider(secretKeyForTest, secretKeyForTest2);
 
         memberRepository = new FakeMemberRepository();
         provideRepository = new FakeProvideRepository();
@@ -45,10 +50,26 @@ public class TestContainer {
         memberService = MemberServiceImpl.builder()
                 .memberRepository(memberRepository)
                 .provideService(provideService)
+                .jwtTokenProvider(jwtTokenProvider)
                 .build();
+    }
 
-//        jwtTokenProvider = JwtTokenProvider.builder()
-//                .secretKey("d7582740ab56d2347710acc2fa15324012f7d24db45b86255b2f2f942a455ce880b5d370a85c49b84fac901e72fce1193986e9569e780128aa411b9c4cd3aec1")
-//                .build();
+    private static String generateSecretKey() {
+        try {
+            KeyGenerator keyGenerator = KeyGenerator.getInstance("HmacSHA512");
+            keyGenerator.init(512);
+            SecretKey secretKey = keyGenerator.generateKey();
+            return bytesToHex(secretKey.getEncoded());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Failed to generate secret key", e);
+        }
+    }
+
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 }

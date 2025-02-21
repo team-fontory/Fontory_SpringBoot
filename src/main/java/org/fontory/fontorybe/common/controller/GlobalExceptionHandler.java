@@ -7,10 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.common.domain.BaseErrorResponse;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
-import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
-import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
-import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
-import org.fontory.fontorybe.member.domain.exception.MemberOwnerMismatchException;
+import org.fontory.fontorybe.member.domain.exception.*;
 import org.fontory.fontorybe.authentication.domain.exception.InvalidRefreshTokenException;
 import org.fontory.fontorybe.authentication.domain.exception.TokenNotFoundException;
 import org.fontory.fontorybe.provide.domain.exception.ProvideNotFoundException;
@@ -80,6 +77,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     @ExceptionHandler(TokenNotFoundException.class)
     public BaseErrorResponse tokenNotFound(TokenNotFoundException e) {
+        return new BaseErrorResponse(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(MemberAlreadyExistException.class)
+    public BaseErrorResponse memberAlreadyExist(MemberAlreadyExistException e) {
         return new BaseErrorResponse(e.getMessage());
     }
 }

@@ -1,52 +1,48 @@
 package org.fontory.fontorybe.authentication.adapter.inbound;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.fontory.fontorybe.authentication.application.AuthService;
-import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
-import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
 import org.fontory.fontorybe.provide.domain.Provide;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.web.DefaultRedirectStrategy;
+import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
 public class CustomOauth2SuccessHandler implements AuthenticationSuccessHandler {
-    private final ObjectMapper objectMapper;
-    private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
-//    private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
+    private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
+
+    @Value("${url.base}") private String BaseURL;
+    @Value("${url.path.signup}") private String SignUpPath;
+    @Value("${url.path.auth}") private String AuthPath;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        OAuth2User customUser = (OAuth2User) authentication.getPrincipal();
-        Map<String, Object> attributes = new HashMap<>();
-        Provide provide = customUser.getAttribute("provide");
+        String SIGNUP_URL = BaseURL + SignUpPath;
+        String AUTH_URL = AuthPath + AuthPath;
 
-//        if (provide.getMemberId() == null) {
+        OAuth2User authUser = (OAuth2User) authentication.getPrincipal();
+        Provide provide = authUser.getAttribute("provide");
+
         String token = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(provide.getId()));
-        attributes.put("provideId", token);
-//        } else {
-//            TokenResponse tokens = authService.generateTokens(new UserPrincipal(provide.getMemberId()));
-//            attributes.put("accessToken", tokens.getAccessToken());
-//            attributes.put("refreshToken", tokens.getRefreshToken());
-//        }
 
-//        redirectStrategy.sendRedirect(request, response, "");
-        response.setContentType("application/json");
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().write(objectMapper.writeValueAsString(attributes));
+        System.out.println("SIGNUP_URL = " + SIGNUP_URL);
+        if (provide.getMemberId() == null) {
+            redirectStrategy.sendRedirect(request, response, SIGNUP_URL + "?token=" + token);
+        } else {
+            redirectStrategy.sendRedirect(request, response, AUTH_URL + "?token=" + token);
+        }
     }
 }

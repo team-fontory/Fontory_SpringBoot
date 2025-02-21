@@ -1,13 +1,13 @@
 package org.fontory.fontorybe.authentication.adapter.inbound;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenRefreshRequest;
 import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.application.AuthService;
 import org.fontory.fontorybe.authentication.application.TokenService;
-import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.member.controller.port.MemberService;
+import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +20,7 @@ public class TokenController {
 
     private final TokenService tokenService;
     private final ProvideService provideService;
+    private final MemberService memberService;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthService authService;
 
@@ -27,7 +28,11 @@ public class TokenController {
     public ResponseEntity<TokenResponse> refreshToken(
             @RequestBody TokenRefreshRequest tokenRefreshRequest
     ) {
-        TokenResponse refreshedTokens = tokenService.refreshToken(tokenRefreshRequest.getRefreshToken());
+        String refreshToken = tokenRefreshRequest.getRefreshToken();
+        Long memberId = jwtTokenProvider.getMemberId(tokenRefreshRequest.getRefreshToken());
+        Member requestMember = memberService.getOrThrowById(memberId);
+        TokenResponse refreshedTokens = tokenService.refreshToken(requestMember, refreshToken);
+
         return ResponseEntity
                 .ok()
                 .body(refreshedTokens);
@@ -35,11 +40,13 @@ public class TokenController {
 
     @PostMapping
     public ResponseEntity<TokenResponse> newToken(
-            @RequestParam(required = true) String token
+            @RequestParam(required = true) String provideToken
     ) {
-        Long provideId = jwtTokenProvider.getProvideId(token);
+        Long provideId = jwtTokenProvider.getProvideId(provideToken);
         Provide provide = provideService.getOrThrownById(provideId);
-        TokenResponse newTokens = authService.generateTokens(new UserPrincipal(provide.getMemberId()));
+        Member requestMember = memberService.getOrThrowById(provide.getMemberId());
+        TokenResponse newTokens = authService.generateTokens(requestMember);
+
         return ResponseEntity
                 .ok()
                 .body(newTokens);

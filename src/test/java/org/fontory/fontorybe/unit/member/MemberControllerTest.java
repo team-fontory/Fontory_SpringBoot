@@ -75,7 +75,7 @@ public class MemberControllerTest {
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
         String provideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide.getId()));
         MemberCreateRequest memberCreateRequest = new MemberCreateRequest(provideToken,existMemberNickName, existMemberGender, existMemberBirth, existMemberTerms, existMemberProfileImage);
-        Member createdMember = testContainer.memberService.create(memberCreateRequest, createdProvide.getId());
+        Member createdMember = testContainer.memberService.create(memberCreateRequest);
         existMemberId = createdMember.getId();
         existMemberProvideId = createdProvide.getId();
         userPrincipal = UserPrincipal.from(createdMember);

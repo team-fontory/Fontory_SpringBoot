@@ -6,7 +6,7 @@ import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 
 public interface MemberService {
     Member getOrThrowById(Long id);
-    Member create(MemberCreateRequest memberCreateRequest, Long provideId);
+    Member create(MemberCreateRequest memberCreateRequest);
     Member update(Long requestMemberId, MemberUpdateRequest memberUpdateRequest);
     Boolean isDuplicateNameExists(String targetName);
     Member disable(Long requestMemberId);

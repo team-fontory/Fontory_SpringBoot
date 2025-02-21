@@ -50,10 +50,8 @@ public class MemberController {
     public ResponseEntity<MemberCreateResponse> addMember(
             @RequestBody MemberCreateRequest memberCreateRequest
     ) {
-        Long provideId = jwtTokenProvider.getProvideId(memberCreateRequest.getProvideToken());
-
-        Member createdMember = memberService.create(memberCreateRequest, provideId);
-        TokenResponse tokens = authService.generateTokens(UserPrincipal.from(createdMember));
+        Member createdMember = memberService.create(memberCreateRequest);
+        TokenResponse tokens = authService.generateTokens(createdMember);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

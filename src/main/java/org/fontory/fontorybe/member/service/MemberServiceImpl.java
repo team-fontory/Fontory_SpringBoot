@@ -2,6 +2,7 @@ package org.fontory.fontorybe.member.service;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
@@ -16,17 +17,21 @@ import org.fontory.fontorybe.provide.domain.Provide;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @Builder
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService {
     private final MemberRepository memberRepository;
     private final ProvideService provideService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     @Transactional(readOnly = true)
     public Member getOrThrowById(Long id) {
-        return memberRepository.findById(id)
+        return Optional.ofNullable(id)
+                .flatMap(memberRepository::findById)
                 .orElseThrow(MemberNotFoundException::new);
     }
 
@@ -38,7 +43,8 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public Member create(MemberCreateRequest memberCreateRequest, Long provideId) {
+    public Member create(MemberCreateRequest memberCreateRequest) {
+        Long provideId = jwtTokenProvider.getProvideId(memberCreateRequest.getProvideToken());
         Provide provide = provideService.getOrThrownById(provideId);
 
         // 닉네임 중복확인
