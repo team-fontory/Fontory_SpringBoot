@@ -4,8 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import lombok.*;
-import org.fontory.fontorybe.member.controller.dto.MemberCreate;
-import org.fontory.fontorybe.member.controller.dto.MemberUpdate;
+import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
+import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 import org.fontory.fontorybe.provide.domain.Provide;
 
@@ -34,23 +34,23 @@ public class Member {
 
     private Long provideId;
 
-    public static Member from(MemberCreate memberCreateDto, Provide provide) {
+    public static Member from(MemberCreateRequest memberCreateRequestDto, Provide provide) {
         return Member.builder()
-                .nickname(memberCreateDto.getNickname())
-                .gender(memberCreateDto.getGender())
-                .birth(memberCreateDto.getBirth())
-                .terms(memberCreateDto.getTerms())
-                .profileImage(memberCreateDto.getProfileImage())
+                .nickname(memberCreateRequestDto.getNickname())
+                .gender(memberCreateRequestDto.getGender())
+                .birth(memberCreateRequestDto.getBirth())
+                .terms(memberCreateRequestDto.getTerms())
+                .profileImage(memberCreateRequestDto.getProfileImage())
                 .provideId(provide.getId())
                 .build();
     }
 
-    public Member update(MemberUpdate memberUpdate) {
+    public Member update(MemberUpdateRequest memberUpdateRequest) {
         return Member.builder()
                 //tobe update
-                .nickname(memberUpdate.getNickname())
-                .terms(memberUpdate.getTerms())
-                .profileImage(memberUpdate.getProfileImage())
+                .nickname(memberUpdateRequest.getNickname())
+                .terms(memberUpdateRequest.getTerms())
+                .profileImage(memberUpdateRequest.getProfileImage())
                 //not to be update
                 .id(this.id)
                 .gender(this.gender)
