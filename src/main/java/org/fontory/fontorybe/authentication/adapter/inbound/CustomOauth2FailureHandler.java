@@ -24,6 +24,7 @@ public class CustomOauth2FailureHandler implements AuthenticationFailureHandler 
                                         AuthenticationException exception) throws IOException, ServletException {
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("message", "error occurred during authentication");
+        System.out.println("exception = " + exception);
 
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
