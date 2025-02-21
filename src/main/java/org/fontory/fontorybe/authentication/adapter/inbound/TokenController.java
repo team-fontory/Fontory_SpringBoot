@@ -1,5 +1,6 @@
 package org.fontory.fontorybe.authentication.adapter.inbound;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenRefreshRequest;
 import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
@@ -24,6 +25,9 @@ public class TokenController {
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthService authService;
 
+    @Operation(
+            summary = "토큰 재발급"
+    )
     @PostMapping("/refresh")
     public ResponseEntity<TokenResponse> refreshToken(
             @RequestBody TokenRefreshRequest tokenRefreshRequest
@@ -38,6 +42,9 @@ public class TokenController {
                 .body(refreshedTokens);
     }
 
+    @Operation(
+            summary = "토큰 발급"
+    )
     @PostMapping
     public ResponseEntity<TokenResponse> newToken(
             @RequestParam(required = true) String provideToken
