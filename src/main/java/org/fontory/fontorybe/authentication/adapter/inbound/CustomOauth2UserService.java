@@ -54,7 +54,7 @@ public class CustomOauth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         Optional<Provide> oAuthInfo = provideRepository.findByOAuthInfo(userIdentifier, provider);
 
-        if (oAuthInfo.isEmpty() || oAuthInfo.get().getMemberId() == null) {
+        if (oAuthInfo.isEmpty() || oAuthInfo.get().getId() == null) {
             Provide provide = Provide.builder()
                     .providedId(userIdentifier)
                     .email(oAuth2UserInfo.getEmail())
