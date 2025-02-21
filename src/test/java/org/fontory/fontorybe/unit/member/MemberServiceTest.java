@@ -6,6 +6,7 @@ import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
+import org.fontory.fontorybe.member.domain.exception.MemberAlreadyExistException;
 import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
@@ -201,6 +202,24 @@ public class MemberServiceTest {
         assertThatThrownBy(
                 () -> memberService.update(member1.getId(), memberUpdateRequest))
                 .isExactlyInstanceOf(MemberDuplicateNameExistsException.class);
+    }
+
+    @Test
+    @DisplayName("member - create fail when provide create member more than one")
+    void createProvideMemberMoreThanOneTest() {
+        ProvideCreateDto provideCreateDto = new ProvideCreateDto(newMemberProvider, newMemberProvidedId, newMemberEmail);
+        Provide createdProvide = testContainer.provideService.create(provideCreateDto);
+        String provideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide.getId()));
+
+        String uniqueNickname1 = UUID.randomUUID().toString();
+        String uniqueNickname2 = UUID.randomUUID().toString();
+        MemberCreateRequest memberCreateRequestDto1 = new MemberCreateRequest(provideToken, uniqueNickname1, Gender.MALE, newMemberBirth, existMemberTerms, existMemberProfileImage);
+        MemberCreateRequest memberCreateRequestDto2 = new MemberCreateRequest(provideToken, uniqueNickname2, Gender.MALE, newMemberBirth, existMemberTerms, existMemberProfileImage);
+
+        Member member1 = memberService.create(memberCreateRequestDto1, testContainer.jwtTokenProvider.getProvideId(provideToken));
+        assertThatThrownBy(
+                () -> memberService.create(memberCreateRequestDto2, testContainer.jwtTokenProvider.getProvideId(provideToken)))
+                .isInstanceOf(MemberAlreadyExistException.class);
     }
 
     @Test

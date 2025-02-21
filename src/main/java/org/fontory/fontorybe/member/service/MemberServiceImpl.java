@@ -7,6 +7,7 @@ import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
+import org.fontory.fontorybe.member.domain.exception.MemberAlreadyExistException;
 import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
@@ -38,12 +39,15 @@ public class MemberServiceImpl implements MemberService {
     @Override
     @Transactional
     public Member create(MemberCreateRequest memberCreateRequest, Long provideId) {
+        Provide provide = provideService.getOrThrownById(provideId);
+
         // 닉네임 중복확인
         if (isDuplicateNameExists(memberCreateRequest.getNickname())) {
              throw new MemberDuplicateNameExistsException();
+        } else if (provide.getMemberId() != null) {
+            throw new MemberAlreadyExistException();
         }
 
-        Provide provide = provideService.getOrThrownById(provideId);
         Member createdMember = memberRepository.save(Member.from(memberCreateRequest, provide));
         provideService.setMember(provide, createdMember);
 
