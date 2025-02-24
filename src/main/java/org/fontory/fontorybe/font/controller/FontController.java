@@ -5,6 +5,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.fontory.fontorybe.authentication.adapter.inbound.Login;
+import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontCreateResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
@@ -39,8 +41,8 @@ public class FontController {
 
     @Operation(summary = "폰트 생성")
     @PostMapping
-    public ResponseEntity<?> addFont(@RequestBody FontCreateDTO fontCreateDTO) {
-        Long memberId = 1L;
+    public ResponseEntity<?> addFont(@RequestBody FontCreateDTO fontCreateDTO, @Login UserPrincipal userPrincipal) {
+        Long memberId = userPrincipal.getId();
 
         Font createdFont = fontService.create(memberId, fontCreateDTO);
 
@@ -51,8 +53,8 @@ public class FontController {
 
     @Operation(summary = "폰트 제작 상황")
     @GetMapping("/progress")
-    public ResponseEntity<?> getFontProgress() {
-        Long memberId = 1L;
+    public ResponseEntity<?> getFontProgress(@Login UserPrincipal userPrincipal) {
+        Long memberId = userPrincipal.getId();
 
         List<FontProgressResponse> fontsProgress = fontService.getFontProgress(memberId);
 
@@ -66,9 +68,10 @@ public class FontController {
     @PutMapping("/{fontId}")
     public ResponseEntity<?> updateFont(
             @RequestBody FontUpdateDTO fontUpdateDTO,
-            @PathVariable Long fontId
+            @PathVariable Long fontId,
+            @Login UserPrincipal userPrincipal
     ) {
-        Long memberId = 1L;
+        Long memberId = userPrincipal.getId();
 
         Font updatedFont = fontService.update(memberId, fontId, fontUpdateDTO);
 
@@ -81,9 +84,10 @@ public class FontController {
     @GetMapping("/members")
     public ResponseEntity<?> getFonts(
             @Parameter(description = "페이지 시작 오프셋 (기본값: 0)", example = "0") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 당 엘리먼트 개수 (기본값: 10)", example = "10") @RequestParam(defaultValue = "10") int size
+            @Parameter(description = "페이지 당 엘리먼트 개수 (기본값: 10)", example = "10") @RequestParam(defaultValue = "10") int size,
+            @Login UserPrincipal userPrincipal
     ) {
-        Long memberId = 1L;
+        Long memberId = userPrincipal.getId();
 
         Page<FontResponse> fonts = fontService.getFonts(memberId, page, size);
 
@@ -106,8 +110,8 @@ public class FontController {
     @Operation(summary = "내가 제작한 폰트 삭제")
     @Parameter(name = "fontId", description = "삭제 할 폰트 ID")
     @DeleteMapping("/members/{fontId}")
-    public ResponseEntity<?> deleteFont(@PathVariable Long fontId) {
-        Long memberId = 1L;
+    public ResponseEntity<?> deleteFont(@PathVariable Long fontId, @Login UserPrincipal userPrincipal) {
+        Long memberId = userPrincipal.getId();
 
         FontDeleteResponse deletedFont = fontService.delete(memberId, fontId);
 
