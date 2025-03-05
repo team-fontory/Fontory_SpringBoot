@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.common.domain.BaseErrorResponse;
+import org.fontory.fontorybe.file.adapter.inbound.exception.FileUploadException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
 import org.fontory.fontorybe.member.domain.exception.*;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 @RequiredArgsConstructor
@@ -84,5 +86,17 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MemberAlreadyExistException.class)
     public BaseErrorResponse memberAlreadyExist(MemberAlreadyExistException e) {
         return new BaseErrorResponse(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(FileUploadException.class)
+    public BaseErrorResponse fileUploadException(FileUploadException e) {
+        return new BaseErrorResponse(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public BaseErrorResponse maxUploadSizeExceeded(MaxUploadSizeExceededException e) {
+        return new BaseErrorResponse("Maximum upload size exceeded :" + e.getMaxUploadSize());
     }
 }

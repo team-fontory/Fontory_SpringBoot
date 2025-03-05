@@ -59,6 +59,10 @@ class MemberServiceIntegrationTest {
     private final String updateNickName = "updateNickName";
     private final String updateProfileImage = "updateProfileImage";
 
+    private final String newMemberProvidedId = UUID.randomUUID().toString();
+    private final String newMemberEmail = "newMemberEmail";
+    private final Provider newMemberProvider = Provider.NAVER;
+
     @Test
     @DisplayName("member - getOrThrowById success test")
     void getOrThrowByIdTest() {
@@ -88,9 +92,9 @@ class MemberServiceIntegrationTest {
     @Test
     @DisplayName("member - create success test")
     void createTest() {
-        String temporalProvideToken = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(existMemberProvideId));
-        MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(temporalProvideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        Member createdMember = memberService.create(memberCreateRequestDto);
+        Provide createdProvide = provideService.getOrThrownById(existMemberProvideId);
+        MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        Member createdMember = memberService.create(memberCreateRequestDto, createdProvide);
 
         assertAll(
                 () -> assertThat(createdMember.getId()).isNotNull(),
@@ -106,32 +110,20 @@ class MemberServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("member - create fail test caused by provide Not found")
-    void createTestX() {
-        String temporalProvideToken = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(nonExistentId));
-        MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(temporalProvideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        assertThatThrownBy(
-                () -> memberService.create(memberCreateRequestDto))
-                .isExactlyInstanceOf(ProvideNotFoundException.class);
-    }
-
-    @Test
     @DisplayName("member - create fail test caused by duplicate nickname")
     void createDuplicateNicknameTest() {
         ProvideCreateDto provideCreateDto1 = new ProvideCreateDto(Provider.GOOGLE, UUID.randomUUID().toString(), UUID.randomUUID().toString());
         ProvideCreateDto provideCreateDto2 = new ProvideCreateDto(Provider.NAVER, UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Provide createdProvide1 = provideService.create(provideCreateDto1);
         Provide createdProvide2 = provideService.create(provideCreateDto2);
-        String provideToken1 = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide1.getId()));
-        String provideToken2 = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide2.getId()));
         // 첫 번째 회원 생성
-        MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(provideToken1, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        memberService.create(memberCreateRequestDto);
+        MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        memberService.create(memberCreateRequestDto, createdProvide1);
 
         // 동일 닉네임으로 또 회원 생성 시 예외 발생
-        MemberCreateRequest duplicateMemberCreateRequestDto = new MemberCreateRequest(provideToken2, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        MemberCreateRequest duplicateMemberCreateRequestDto = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
         assertThatThrownBy(
-                () -> memberService.create(duplicateMemberCreateRequestDto))
+                () -> memberService.create(duplicateMemberCreateRequestDto, createdProvide2))
                 .isExactlyInstanceOf(MemberDuplicateNameExistsException.class);
     }
 
@@ -164,15 +156,14 @@ class MemberServiceIntegrationTest {
         ProvideCreateDto provideCreateDto2 = new ProvideCreateDto(Provider.NAVER, UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Provide createdProvide1 = provideService.create(provideCreateDto1);
         Provide createdProvide2 = provideService.create(provideCreateDto2);
-        String provideToken1 = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide1.getId()));
-        String provideToken2 = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide2.getId()));
+
         // 두 회원을 각각 생성
         String uniqueNickname1 = UUID.randomUUID().toString();
         String uniqueNickname2 = UUID.randomUUID().toString();
-        MemberCreateRequest memberCreateRequestDto1 = new MemberCreateRequest(provideToken1, uniqueNickname1, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        MemberCreateRequest memberCreateRequestDto2 = new MemberCreateRequest(provideToken2, uniqueNickname2, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        Member member1 = memberService.create(memberCreateRequestDto1);
-        memberService.create(memberCreateRequestDto2);
+        MemberCreateRequest memberCreateRequestDto1 = new MemberCreateRequest(uniqueNickname1, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        MemberCreateRequest memberCreateRequestDto2 = new MemberCreateRequest(uniqueNickname2, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        Member member1 = memberService.create(memberCreateRequestDto1, createdProvide1);
+        memberService.create(memberCreateRequestDto2, createdProvide2);
 
         // member1의 닉네임을 이미 존재하는 이름(uniqueNickname2)으로 업데이트 시도하면 예외 발생
         MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(uniqueNickname2, updateProfileImage, updateTerms);
@@ -194,9 +185,11 @@ class MemberServiceIntegrationTest {
     @DisplayName("member - disable success test")
     void disableTest() {
         // 회원 생성
-        String temporalProvideToken = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(existMemberProvideId));
-        MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(temporalProvideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        Member member = memberService.create(memberCreateRequestDto);
+        ProvideCreateDto provideCreateDto = new ProvideCreateDto(Provider.GOOGLE, UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        Provide createdProvide = provideService.create(provideCreateDto);
+
+        MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        Member member = memberService.create(memberCreateRequestDto, createdProvide);
 
         // 회원 비활성화 요청 (단일 ID)
         Member disabledMember = memberService.disable(member.getId());
@@ -207,9 +200,11 @@ class MemberServiceIntegrationTest {
     @DisplayName("member - disable fail test caused by already disabled member")
     void disableAlreadyDisabledTest() {
         // 회원 생성
-        String temporalProvideToken = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(existMemberProvideId));
-        MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(temporalProvideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        Member member = memberService.create(memberCreateRequestDto);
+        ProvideCreateDto provideCreateDto = new ProvideCreateDto(Provider.GOOGLE, UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        Provide createdProvide = provideService.create(provideCreateDto);
+
+        MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        Member member = memberService.create(memberCreateRequestDto, createdProvide);
 
         // 최초 비활성화 처리
         memberService.disable(member.getId());

@@ -43,10 +43,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public Member create(MemberCreateRequest memberCreateRequest) {
-        Long provideId = jwtTokenProvider.getProvideId(memberCreateRequest.getProvideToken());
-        Provide provide = provideService.getOrThrownById(provideId);
-
+    public Member create(MemberCreateRequest memberCreateRequest, Provide provide) {
         // 존재하는지 가입했는지, 닉네임 중복확인
         if (provide.getMemberId() != null) {
             throw new MemberAlreadyExistException();

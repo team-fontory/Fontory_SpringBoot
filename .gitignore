@@ -41,4 +41,4 @@ out/
 
 ### yml ###
 application-dev.properties
-application-oauth2.properties
+application-infrastructure.properties

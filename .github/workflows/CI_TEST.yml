@@ -45,15 +45,21 @@ jobs:
 
       - name: Generate application.properties
         run: |
-          echo "jwt.secretKey=${{ secrets.JWT_SECRETKEY }}" >> ./src/main/resources/application-oauth2.properties
-          echo "jwt.provide.secretKey=${{ secrets.JWT_PROVIDE_SECRETKEY }}" >> ./src/main/resources/application-oauth2.properties
+          echo "jwt.secretKey=${{ secrets.JWT_SECRETKEY }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "jwt.provide.secretKey=${{ secrets.JWT_PROVIDE_SECRETKEY }}" >> ./src/main/resources/application-infrastructure.properties
 
-          echo "spring.security.oauth2.client.registration.google.client-id=${{ secrets.OAUTH2_GOOGLE_CLIENT_ID }}" >> ./src/main/resources/application-oauth2.properties
-          echo "spring.security.oauth2.client.registration.google.client-secret=${{ secrets.OAUTH2_GOOGLE_CLIENT_SECRET }}" >> ./src/main/resources/application-oauth2.properties
-          echo "spring.security.oauth2.client.registration.google.scope=${{ secrets.OAUTH2_GOOGLE_SCOPE }}" >> ./src/main/resources/application-oauth2.properties
-          echo "spring.security.oauth2.client.registration.google.redirect-uri=${{ secrets.OAUTH2_GOOGLE_REDIRECT_URI }}" >> ./src/main/resources/application-oauth2.properties
+          echo "spring.security.oauth2.client.registration.google.client-id=${{ secrets.OAUTH2_GOOGLE_CLIENT_ID }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.security.oauth2.client.registration.google.client-secret=${{ secrets.OAUTH2_GOOGLE_CLIENT_SECRET }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.security.oauth2.client.registration.google.scope=${{ secrets.OAUTH2_GOOGLE_SCOPE }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.security.oauth2.client.registration.google.redirect-uri=${{ secrets.OAUTH2_GOOGLE_REDIRECT_URI }}" >> ./src/main/resources/application-infrastructure.properties
           
-          printf "%s\n" "${{ secrets.OAUTH2_NAVER_PROPERTIES }}" >> ./src/main/resources/application-oauth2.properties
+          printf "%s\n" "${{ secrets.OAUTH2_NAVER_PROPERTIES }}" >> ./src/main/resources/application-infrastructure.properties
+          
+          echo "spring.cloud.aws.region.static=${{ secrets.AWS_REGION }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.credentials.access-key=${{ secrets.AWS_ACCESS_KEY }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.credentials.SECRET-key=${{ secrets.AWS_SECRET_KEY }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.s3.bucket.profile-image=${{ secrets.AWS_BUCKET_NAME_PROFILE_IMAGE }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.s3.bucket.font-paper=${{ secrets.AWS_BUCKET_NAME_FONT_PAPER }}" >> ./src/main/resources/application-infrastructure.properties
 
       - name: Build with Gradle Wrapper
         run: ./gradlew build
