@@ -1,7 +1,9 @@
 package org.fontory.fontorybe.file.adapter.inbound;
 
 import lombok.RequiredArgsConstructor;
+import org.fontory.fontorybe.authentication.adapter.inbound.Login;
 import org.fontory.fontorybe.authentication.adapter.inbound.OAuth2;
+import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.file.adapter.inbound.dto.FileUploadResponse;
 import org.fontory.fontorybe.file.domain.FileCreate;
 import org.fontory.fontorybe.file.domain.FileDetails;
@@ -25,6 +27,18 @@ public class S3UploadController {
             @RequestPart MultipartFile file
     ) {
         FileCreate fileCreate = fileRequestMapper.toProfileImageFileCreate(file, provide);
+        FileDetails fileDetails = fileService.uploadProfileImage(fileCreate);
+
+        return ResponseEntity.ok()
+                .body(FileUploadResponse.from(fileDetails));
+    }
+
+    @PutMapping("/profile-image")
+    public ResponseEntity<?> uploadMemberProfileImage(
+            @Login UserPrincipal userPrincipal,
+            @RequestPart MultipartFile file
+    ) {
+        FileCreate fileCreate = fileRequestMapper.toProfileImageFileCreate(file, userPrincipal.getId());
         FileDetails fileDetails = fileService.uploadProfileImage(fileCreate);
 
         return ResponseEntity.ok()
