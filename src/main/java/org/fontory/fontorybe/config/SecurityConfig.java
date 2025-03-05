@@ -22,6 +22,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -35,14 +36,18 @@ public class SecurityConfig {
 
     /**
      * "/files/**" 엔드포인트 전용 SecurityFilterChain:
-     * - OAUTH2 토큰 검증을 위한 JwtOnlyProvideRequireFilter만 적용,
+     * - OAUTH2 토큰 검증을 위한 JwtOnlyProvideRequireFilter만 적용되는 컨트롤러
+     * 회원가입전 사진업로드(POST, "/files/profile-image"), 회원가입(POST, "/member")
      */
     @Bean
     @Order(1)
     public SecurityFilterChain filesSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 // "/files/**" 경로에만 적용되도록 지정
-                .securityMatcher("/files/**")
+                .securityMatcher(new OrRequestMatcher(
+                    new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
+                    new AntPathRequestMatcher("/member", HttpMethod.POST.name())
+                ))
                 .csrf(CsrfConfigurer::disable)
                 .httpBasic(HttpBasicConfigurer::disable)
                 .formLogin(FormLoginConfigurer::disable)
@@ -90,7 +95,6 @@ public class SecurityConfig {
                         "/webjars/**",
                         "/health-check",
                         "/auth/token/**"
-                )
-                .requestMatchers(HttpMethod.POST, "/member");
+                );
     }
 }

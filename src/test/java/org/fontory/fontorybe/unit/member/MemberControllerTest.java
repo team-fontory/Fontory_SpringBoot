@@ -73,9 +73,8 @@ public class MemberControllerTest {
 
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(existMemberProvider, existMemberProvidedId, existMemberEmail);
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
-        String provideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide.getId()));
-        MemberCreateRequest memberCreateRequest = new MemberCreateRequest(provideToken,existMemberNickName, existMemberGender, existMemberBirth, existMemberTerms, existMemberProfileImage);
-        Member createdMember = testContainer.memberService.create(memberCreateRequest);
+        MemberCreateRequest memberCreateRequest = new MemberCreateRequest(existMemberNickName, existMemberGender, existMemberBirth, existMemberTerms, existMemberProfileImage);
+        Member createdMember = testContainer.memberService.create(memberCreateRequest, createdProvide);
         existMemberId = createdMember.getId();
         existMemberProvideId = createdProvide.getId();
         userPrincipal = UserPrincipal.from(createdMember);
@@ -119,10 +118,9 @@ public class MemberControllerTest {
         //given
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(newMemberProvider, newMemberProvidedId, newMemberEmail);
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
-        String provideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(createdProvide.getId()));
-        MemberCreateRequest memberCreateRequest = new MemberCreateRequest(provideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        MemberCreateRequest memberCreateRequest = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
         //when
-        ResponseEntity<MemberCreateResponse> response = memberController.addMember(memberCreateRequest);
+        ResponseEntity<MemberCreateResponse> response = memberController.addMember(createdProvide, memberCreateRequest);
         MemberCreateResponse body = response.getBody();
         //then
         assertAll(
@@ -169,17 +167,6 @@ public class MemberControllerTest {
                 () -> assertThat(body).isNotNull(),
                 () -> assertThat(body.getDeletedAt()).isNotNull()
         );
-    }
-
-    @Test
-    @DisplayName("addMember fails when provided token is invalid")
-    void addMemberInvalidProvideTokenTest() {
-        // given: 잘못된 토큰으로 회원 가입 요청
-        String invalidProvideToken = testContainer.jwtTokenProvider.generateTemporalProvideToken(String.valueOf(nonExistentId));
-        MemberCreateRequest memberCreateRequest = new MemberCreateRequest(invalidProvideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        // when & then: ProvideNotFoundException이 발생해야 함
-        assertThatThrownBy(() -> memberController.addMember(memberCreateRequest))
-                .isInstanceOf(ProvideNotFoundException.class);
     }
 
     @Test

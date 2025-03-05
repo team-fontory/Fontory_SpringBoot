@@ -20,8 +20,10 @@ public class JwtOnlyOAuth2RequireFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        // "/files"로 시작하는 요청에만 필터를 적용
-        return !request.getRequestURI().startsWith("/files");
+        String uri = request.getRequestURI();
+        boolean isFiles = "POST".equalsIgnoreCase(request.getMethod()) && uri.equals("/files/profile-image");
+        boolean isPostMember = "POST".equalsIgnoreCase(request.getMethod()) && uri.equals("/member");
+        return !(isFiles || isPostMember);
     }
 
     @Override

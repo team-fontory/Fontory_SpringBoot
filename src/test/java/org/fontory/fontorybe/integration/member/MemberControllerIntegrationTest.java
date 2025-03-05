@@ -61,12 +61,15 @@ public class MemberControllerIntegrationTest {
 
     // 유효한 access token (기존 회원 기준)
     private String validAccessToken;
+    private String validProvideToken;
 
     @BeforeEach
     void setUp() {
         // 이미 존재하는 회원(testMemberId)의 UserPrincipal를 만들어 accessToken을 발급
         UserPrincipal userPrincipal = new UserPrincipal(existMemberId);
         validAccessToken = "Bearer " + jwtTokenProvider.generateAccessToken(userPrincipal);
+
+        validProvideToken = "Bearer " + jwtTokenProvider.generateTemporalProvideToken(String.valueOf(existProvideId));
     }
 
     @Test
@@ -102,13 +105,11 @@ public class MemberControllerIntegrationTest {
     @Test
     @DisplayName("POST /member - add member success with valid Authorization header")
     void addMemberSuccessTest() throws Exception {
-        String provideToken = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(existProvideId));
-
-        MemberCreateRequest memberCreateRequest = new MemberCreateRequest(provideToken, newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        MemberCreateRequest memberCreateRequest = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
         String jsonRequest = objectMapper.writeValueAsString(memberCreateRequest);
 
         mockMvc.perform(post("/member")
-                        .header("Authorization", validAccessToken)
+                        .header("Authorization", validProvideToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
                 .andExpect(status().isCreated())

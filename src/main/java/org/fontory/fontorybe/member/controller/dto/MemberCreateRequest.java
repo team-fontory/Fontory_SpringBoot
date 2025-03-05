@@ -10,7 +10,6 @@ import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 @Builder
 @AllArgsConstructor
 public class MemberCreateRequest {
-    private String provideToken;
     private String nickname;
     private Gender gender;
     private LocalDate birth;

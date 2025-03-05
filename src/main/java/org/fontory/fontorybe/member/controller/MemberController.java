@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.adapter.inbound.Login;
+import org.fontory.fontorybe.authentication.adapter.inbound.OAuth2;
 import org.fontory.fontorybe.authentication.application.AuthService;
 import org.fontory.fontorybe.member.controller.dto.*;
 import org.fontory.fontorybe.member.controller.port.MemberService;
@@ -13,6 +14,7 @@ import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
+import org.fontory.fontorybe.provide.domain.Provide;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,9 +50,10 @@ public class MemberController {
     )
     @PostMapping
     public ResponseEntity<MemberCreateResponse> addMember(
+            @OAuth2 Provide provide,
             @RequestBody MemberCreateRequest memberCreateRequest
     ) {
-        Member createdMember = memberService.create(memberCreateRequest);
+        Member createdMember = memberService.create(memberCreateRequest, provide);
         TokenResponse tokens = authService.generateTokens(createdMember);
 
         return ResponseEntity
