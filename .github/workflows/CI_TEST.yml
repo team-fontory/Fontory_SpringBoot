@@ -60,6 +60,8 @@ jobs:
           echo "spring.cloud.aws.credentials.SECRET-key=${{ secrets.AWS_SECRET_KEY }}" >> ./src/main/resources/application-infrastructure.properties
           echo "spring.cloud.aws.s3.bucket.profile-image=${{ secrets.AWS_BUCKET_NAME_PROFILE_IMAGE }}" >> ./src/main/resources/application-infrastructure.properties
           echo "spring.cloud.aws.s3.bucket.font-paper=${{ secrets.AWS_BUCKET_NAME_FONT_PAPER }}" >> ./src/main/resources/application-infrastructure.properties
+          
+          echo "discord.webhook.error-url=${{ secrets.DISCORD_WEBHOOK_ERROR_URL }}" >> ./src/main/resources/application-infrastructure.properties
 
       - name: Build with Gradle Wrapper
         run: ./gradlew build
