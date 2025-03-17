@@ -12,7 +12,7 @@ public class FontoryConfiguration implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowedOrigins("http://localhost:5173", "https://www.fontory.co.kr", "https://fontory.co.kr", "https://fontory.vercel.app")
                 .allowCredentials(true)
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*");
     }
 }
