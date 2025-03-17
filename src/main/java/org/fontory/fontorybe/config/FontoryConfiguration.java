@@ -10,7 +10,7 @@ public class FontoryConfiguration implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173", "https://www.fontory.co.kr", "https://fontory.co.kr")
+                .allowedOrigins("http://localhost:5173", "https://www.fontory.co.kr", "https://fontory.co.kr", "https://fontory.vercel.app")
                 .allowCredentials(true)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH")
                 .allowedHeaders("*");
