@@ -78,6 +78,7 @@ jobs:
           echo "spring.cloud.aws.s3.bucket.font-paper=${{ secrets.AWS_BUCKET_NAME_FONT_PAPER }}" >> ./src/main/resources/application-infrastructure.properties
 
           echo "discord.webhook.error-url=${{ secrets.DISCORD_WEBHOOK_ERROR_URL }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "url.base=https://fontory.co.kr" >> ./src/main/resources/application-infrastructure.properties
 
       - name: Build with Gradle Wrapper
 #        run: ./gradlew test -i
