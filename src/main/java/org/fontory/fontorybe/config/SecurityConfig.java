@@ -23,6 +23,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -33,6 +34,7 @@ public class SecurityConfig {
     private final CustomOauth2SuccessHandler oauth2SuccessHandler;
     private final CustomOauth2FailureHandler oauth2FailureHandler;
     private final JwtTokenProvider jwtTokenProvider;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     /**
      * "/files/**" 엔드포인트 전용 SecurityFilterChain:
@@ -48,6 +50,7 @@ public class SecurityConfig {
                     new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
                     new AntPathRequestMatcher("/member", HttpMethod.POST.name())
                 ))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(CsrfConfigurer::disable)
                 .httpBasic(HttpBasicConfigurer::disable)
                 .formLogin(FormLoginConfigurer::disable)
@@ -67,6 +70,7 @@ public class SecurityConfig {
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher(new NegatedRequestMatcher(new AntPathRequestMatcher("/files/**")))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(CsrfConfigurer::disable)
                 .httpBasic(HttpBasicConfigurer::disable)
                 .formLogin(FormLoginConfigurer::disable)
