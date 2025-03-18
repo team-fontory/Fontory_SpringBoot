@@ -37,7 +37,8 @@ public class WebConfig implements WebMvcConfigurer {
                 "http://localhost:5173",
                 "https://www.fontory.co.kr",
                 "https://fontory.co.kr",
-                "https://fontory.vercel.app"
+                "https://fontory.vercel.app",
+                "https://api.fontory.co.kr"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
