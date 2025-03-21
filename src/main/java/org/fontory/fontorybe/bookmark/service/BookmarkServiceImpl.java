@@ -1,5 +1,7 @@
 package org.fontory.fontorybe.bookmark.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.bookmark.controller.dto.BookmarkDeleteResponse;
 import org.fontory.fontorybe.bookmark.controller.port.BookmarkService;
@@ -7,13 +9,20 @@ import org.fontory.fontorybe.bookmark.domain.Bookmark;
 import org.fontory.fontorybe.bookmark.domain.exception.BookmarkAlreadyException;
 import org.fontory.fontorybe.bookmark.domain.exception.BookmarkNotFoundException;
 import org.fontory.fontorybe.bookmark.service.port.BookmarkRepository;
+import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
+import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
 import org.fontory.fontorybe.font.service.port.FontRepository;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -55,5 +64,27 @@ public class BookmarkServiceImpl implements BookmarkService {
         fontRepository.save(font);
 
         return BookmarkDeleteResponse.from(bookmark.getId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<FontResponse> getBookmarkedFonts(Long memberId, int page, int size, String keyword) {
+        Member member = memberService.getOrThrowById(memberId);
+
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+        Page<Bookmark> bookmarks = bookmarkRepository.findAllByMemberId(memberId, pageRequest);
+
+        List<Long> fontIds = bookmarks.stream()
+                .map(Bookmark::getFontId)
+                .toList();
+
+        List<Font> fonts = fontRepository.findAllByIdIn(fontIds);
+
+        List<FontResponse> filtered = fonts.stream()
+                .filter(font -> !StringUtils.hasText(keyword) || font.getName().contains(keyword))
+                .map(FontResponse::from)
+                .toList();
+
+        return new PageImpl<>(filtered, pageRequest, bookmarks.getTotalElements());
     }
 }

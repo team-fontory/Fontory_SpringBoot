@@ -76,4 +76,13 @@ public class FontRepositoryImpl implements FontRepository {
                 .map(FontEntity::toModel)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Font> findAllByIdIn(List<Long> ids) {
+        List<FontEntity> fontEntities = fontJpaRepository.findAllByIdIn(ids);
+
+        return fontEntities.stream()
+                .map(FontEntity::toModel)
+                .collect(Collectors.toList());
+    }
 }
