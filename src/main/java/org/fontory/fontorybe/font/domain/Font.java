@@ -42,6 +42,10 @@ public class Font {
         this.bookmarkCount++;
     }
 
+    public void decreaseBookmarkCount() {
+        this.bookmarkCount--;
+    }
+
     public static Font from(FontCreateDTO fontCreateDTO, Long memberId) {
         return Font.builder()
                 .name(fontCreateDTO.getName())

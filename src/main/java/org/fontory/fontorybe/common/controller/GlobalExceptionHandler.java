@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.bookmark.domain.exception.BookmarkAlreadyException;
+import org.fontory.fontorybe.bookmark.domain.exception.BookmarkNotFoundException;
 import org.fontory.fontorybe.common.domain.BaseErrorResponse;
 import org.fontory.fontorybe.file.adapter.inbound.exception.FileUploadException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
@@ -24,7 +25,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 public class GlobalExceptionHandler {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler({MemberNotFoundException.class, FontNotFoundException.class})
+    @ExceptionHandler({MemberNotFoundException.class, FontNotFoundException.class, BookmarkNotFoundException.class})
     public BaseErrorResponse notFoundException(Exception e) {
         return new BaseErrorResponse(e.getMessage());
     }
