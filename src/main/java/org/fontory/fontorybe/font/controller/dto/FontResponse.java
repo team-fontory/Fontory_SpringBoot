@@ -10,12 +10,16 @@ public class FontResponse {
     private Long id;
     private String name;
     private String example;
+    private Long downloadCount;
+    private Long bookmarkCount;
 
     public static FontResponse from(Font font) {
         return FontResponse.builder()
                 .id(font.getId())
                 .name(font.getName())
                 .example(font.getExample())
+                .downloadCount(font.getDownloadCount())
+                .bookmarkCount(font.getBookmarkCount())
                 .build();
     }
 }

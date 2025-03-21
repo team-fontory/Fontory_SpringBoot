@@ -73,11 +73,7 @@ public class FontServiceImpl implements FontService {
 
         Page<Font> fontPage = fontRepository.findAllByMemberId(memberId, pageRequest);
 
-        return fontPage.map(font -> FontResponse.builder()
-                .id(font.getId())
-                .name(font.getName())
-                .example(font.getExample())
-                .build());
+        return fontPage.map(FontResponse::from);
     }
 
     @Override
