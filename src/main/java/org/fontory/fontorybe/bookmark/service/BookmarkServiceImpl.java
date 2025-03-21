@@ -3,6 +3,7 @@ package org.fontory.fontorybe.bookmark.service;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.bookmark.controller.port.BookmarkService;
 import org.fontory.fontorybe.bookmark.domain.Bookmark;
+import org.fontory.fontorybe.bookmark.domain.exception.BookmarkAlreadyException;
 import org.fontory.fontorybe.bookmark.service.port.BookmarkRepository;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
@@ -24,6 +25,10 @@ public class BookmarkServiceImpl implements BookmarkService {
     @Override
     @Transactional
     public Bookmark create(Long memberId, Long fontId) {
+        if (bookmarkRepository.existsByMemberIdAndFontId(memberId, fontId)) {
+            throw new BookmarkAlreadyException();
+        }
+
         Member member = memberService.getOrThrowById(memberId);
         Font font = fontService.getOrThrowById(fontId);
 

@@ -4,6 +4,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
+import org.fontory.fontorybe.bookmark.domain.exception.BookmarkAlreadyException;
 import org.fontory.fontorybe.common.domain.BaseErrorResponse;
 import org.fontory.fontorybe.file.adapter.inbound.exception.FileUploadException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
@@ -98,5 +99,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public BaseErrorResponse maxUploadSizeExceeded(MaxUploadSizeExceededException e) {
         return new BaseErrorResponse("Maximum upload size exceeded :" + e.getMaxUploadSize());
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(BookmarkAlreadyException.class)
+    public BaseErrorResponse bookmarkAlready(BookmarkAlreadyException e) {
+        return new BaseErrorResponse(e.getMessage());
     }
 }

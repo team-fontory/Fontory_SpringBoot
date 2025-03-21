@@ -22,4 +22,9 @@ public class BookmarkRepositoryImpl implements BookmarkRepository {
 
         return savedBookmark.toModel();
     }
+
+    @Override
+    public boolean existsByMemberIdAndFontId(Long memberId, Long fontId) {
+        return bookmarkJpaRepository.existsByMemberIdAndFontId(memberId, fontId);
+    }
 }
