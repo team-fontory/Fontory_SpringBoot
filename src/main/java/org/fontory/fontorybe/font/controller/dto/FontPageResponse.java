@@ -11,6 +11,8 @@ public class FontPageResponse {
     private String name;
     private String example;
     private String writerName;
+    private Long downloadCount;
+    private Long bookmarkCount;
 
     public static FontPageResponse from(Font font, String writerName) {
         return FontPageResponse.builder()
@@ -18,6 +20,8 @@ public class FontPageResponse {
                 .name(font.getName())
                 .example(font.getExample())
                 .writerName(writerName)
+                .downloadCount(font.getDownloadCount())
+                .bookmarkCount(font.getBookmarkCount())
                 .build();
     }
 }

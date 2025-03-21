@@ -38,6 +38,10 @@ public class Font {
 
     private LocalDateTime updatedAt;
 
+    public void increaseBookmarkCount() {
+        this.bookmarkCount++;
+    }
+
     public static Font from(FontCreateDTO fontCreateDTO, Long memberId) {
         return Font.builder()
                 .name(fontCreateDTO.getName())
