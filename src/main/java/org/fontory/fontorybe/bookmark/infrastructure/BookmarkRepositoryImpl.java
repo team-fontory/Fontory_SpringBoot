@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.bookmark.domain.Bookmark;
 import org.fontory.fontorybe.bookmark.infrastructure.entity.BookmarkEntity;
 import org.fontory.fontorybe.bookmark.service.port.BookmarkRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -38,5 +40,12 @@ public class BookmarkRepositoryImpl implements BookmarkRepository {
     @Override
     public void deleteById(Long id) {
         bookmarkJpaRepository.deleteById(id);
+    }
+
+    @Override
+    public Page<Bookmark> findAllByMemberId(Long memberId, PageRequest pageRequest) {
+        Page<BookmarkEntity> bookmarkEntities = bookmarkJpaRepository.findAllByMemberId(memberId, pageRequest);
+
+        return bookmarkEntities.map(BookmarkEntity::toModel);
     }
 }
