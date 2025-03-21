@@ -122,12 +122,7 @@ public class FontServiceImpl implements FontService {
 
         return fontPage.map(font -> {
             Member member = memberService.getOrThrowById(font.getMemberId());
-            return FontPageResponse.builder()
-                    .id(font.getId())
-                    .name(font.getName())
-                    .example(font.getExample())
-                    .writerName(member.getNickname())
-                    .build();
+            return FontPageResponse.from(font, member.getNickname());
         });
     }
 

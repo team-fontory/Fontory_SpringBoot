@@ -4,6 +4,8 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
+import org.fontory.fontorybe.bookmark.domain.exception.BookmarkAlreadyException;
+import org.fontory.fontorybe.bookmark.domain.exception.BookmarkNotFoundException;
 import org.fontory.fontorybe.common.domain.BaseErrorResponse;
 import org.fontory.fontorybe.file.adapter.inbound.exception.FileUploadException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
@@ -23,7 +25,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 public class GlobalExceptionHandler {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ExceptionHandler({MemberNotFoundException.class, FontNotFoundException.class})
+    @ExceptionHandler({MemberNotFoundException.class, FontNotFoundException.class, BookmarkNotFoundException.class})
     public BaseErrorResponse notFoundException(Exception e) {
         return new BaseErrorResponse(e.getMessage());
     }
@@ -98,5 +100,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public BaseErrorResponse maxUploadSizeExceeded(MaxUploadSizeExceededException e) {
         return new BaseErrorResponse("Maximum upload size exceeded :" + e.getMaxUploadSize());
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(BookmarkAlreadyException.class)
+    public BaseErrorResponse bookmarkAlready(BookmarkAlreadyException e) {
+        return new BaseErrorResponse(e.getMessage());
     }
 }
