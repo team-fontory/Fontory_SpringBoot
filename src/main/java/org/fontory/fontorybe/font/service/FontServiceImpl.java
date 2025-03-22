@@ -135,6 +135,28 @@ public class FontServiceImpl implements FontService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<FontResponse> getMyPopularFonts(Long memberId) {
+        Member member = memberService.getOrThrowById(memberId);
+
+        List<Font> fonts = fontRepository.findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(memberId);
+
+        return fonts.stream()
+                .map(FontResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FontResponse> getPopularFonts() {
+        List<Font> fonts = fontRepository.findTop3OrderByDownloadAndBookmarkCountDesc();
+
+        return fonts.stream()
+                .map(FontResponse::from)
+                .collect(Collectors.toList());
+    }
+
     private void checkFontOwnership(Long requestMemberId, Long targetMemberId) {
         if (!requestMemberId.equals(targetMemberId)) {
             throw new FontOwnerMismatchException();

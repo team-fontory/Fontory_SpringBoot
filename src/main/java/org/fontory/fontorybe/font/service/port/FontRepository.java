@@ -17,4 +17,6 @@ public interface FontRepository {
     Page<Font> findByNameContaining(String keyword, PageRequest pageRequest);
     List<Font> findTop3ByMemberIdAndIdNotOrderByCreatedAtDesc(Long memberId, Long fontId);
     List<Font> findAllByIdIn(List<Long> ids);
+    List<Font> findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(Long memberId);
+    List<Font> findTop3OrderByDownloadAndBookmarkCountDesc();
 }
