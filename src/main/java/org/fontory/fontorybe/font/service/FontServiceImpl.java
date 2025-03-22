@@ -137,10 +137,20 @@ public class FontServiceImpl implements FontService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FontResponse> getPopularFonts(Long memberId) {
+    public List<FontResponse> getMyPopularFonts(Long memberId) {
         Member member = memberService.getOrThrowById(memberId);
 
         List<Font> fonts = fontRepository.findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(memberId);
+
+        return fonts.stream()
+                .map(FontResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<FontResponse> getPopularFonts() {
+        List<Font> fonts = fontRepository.findTop3OrderByDownloadAndBookmarkCountDesc();
 
         return fonts.stream()
                 .map(FontResponse::from)

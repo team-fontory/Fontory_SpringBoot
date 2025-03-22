@@ -148,10 +148,21 @@ public class FontController {
 
     @Operation(summary = "나만의 폰트 랭킹 조회")
     @GetMapping("/members/popular")
-    public ResponseEntity<?> getPopularFonts(@Login UserPrincipal userPrincipal) {
+    public ResponseEntity<?> getMyPopularFonts(@Login UserPrincipal userPrincipal) {
         Long memberId = userPrincipal.getId();
 
-        List<FontResponse> fonts = fontService.getPopularFonts(memberId);
+        List<FontResponse> fonts = fontService.getMyPopularFonts(memberId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(fonts);
+    }
+
+    @Operation(summary = "인기 폰트 조회")
+    @GetMapping("/popular")
+    public ResponseEntity<?> getPopularFonts() {
+
+        List<FontResponse> fonts = fontService.getPopularFonts();
 
         return ResponseEntity
                 .status(HttpStatus.OK)

@@ -96,4 +96,14 @@ public class FontRepositoryImpl implements FontRepository {
                 .map(FontEntity::toModel)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Font> findTop3OrderByDownloadAndBookmarkCountDesc() {
+        Pageable topThree = PageRequest.of(0, 3);
+        List<FontEntity> entities = fontJpaRepository.findTop3OrderByDownloadAndBookmarkCountDesc(topThree);
+
+        return entities.stream()
+                .map(FontEntity::toModel)
+                .collect(Collectors.toList());
+    }
 }
