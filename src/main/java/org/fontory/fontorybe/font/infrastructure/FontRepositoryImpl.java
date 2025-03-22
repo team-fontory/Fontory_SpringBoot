@@ -10,6 +10,7 @@ import org.fontory.fontorybe.font.infrastructure.entity.FontEntity;
 import org.fontory.fontorybe.font.service.port.FontRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -82,6 +83,16 @@ public class FontRepositoryImpl implements FontRepository {
         List<FontEntity> fontEntities = fontJpaRepository.findAllByIdIn(ids);
 
         return fontEntities.stream()
+                .map(FontEntity::toModel)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Font> findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(Long memberId) {
+        Pageable topFour = PageRequest.of(0, 4);
+        List<FontEntity> entities = fontJpaRepository.findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(memberId, topFour);
+
+        return entities.stream()
                 .map(FontEntity::toModel)
                 .collect(Collectors.toList());
     }

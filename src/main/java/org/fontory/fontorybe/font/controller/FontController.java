@@ -145,4 +145,16 @@ public class FontController {
                 .status(HttpStatus.OK)
                 .body(font);
     }
+
+    @Operation(summary = "나만의 폰트 랭킹 조회")
+    @GetMapping("/members/popular")
+    public ResponseEntity<?> getPopularFonts(@Login UserPrincipal userPrincipal) {
+        Long memberId = userPrincipal.getId();
+
+        List<FontResponse> fonts = fontService.getPopularFonts(memberId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(fonts);
+    }
 }
