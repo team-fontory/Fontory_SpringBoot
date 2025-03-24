@@ -12,14 +12,16 @@ public class FontResponse {
     private String example;
     private Long downloadCount;
     private Long bookmarkCount;
+    private boolean isBookmarked;
 
-    public static FontResponse from(Font font) {
+    public static FontResponse from(Font font, boolean isBookmarked) {
         return FontResponse.builder()
                 .id(font.getId())
                 .name(font.getName())
                 .example(font.getExample())
                 .downloadCount(font.getDownloadCount())
                 .bookmarkCount(font.getBookmarkCount())
+                .isBookmarked(isBookmarked)
                 .build();
     }
 }
