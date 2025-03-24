@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
+import org.fontory.fontorybe.authentication.domain.exception.TokenNotFoundException;
 import org.fontory.fontorybe.common.domain.SkipDiscordNotification;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -49,7 +50,8 @@ public class ExceptionLoggingAspect {
     private boolean shouldSkipNotification(Throwable ex) {
         if (ex instanceof io.jsonwebtoken.MalformedJwtException ||
         ex instanceof io.jsonwebtoken.JwtException ||
-        ex instanceof io.jsonwebtoken.ExpiredJwtException) {
+        ex instanceof io.jsonwebtoken.ExpiredJwtException ||
+        ex instanceof TokenNotFoundException) {
             return true;
         }
 

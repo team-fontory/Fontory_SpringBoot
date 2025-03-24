@@ -35,65 +35,85 @@ public class SecurityConfig {
     private final CustomOauth2FailureHandler oauth2FailureHandler;
     private final JwtTokenProvider jwtTokenProvider;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
-    /**
-     * "/files/**" 엔드포인트 전용 SecurityFilterChain:
-     * - OAUTH2 토큰 검증을 위한 JwtOnlyProvideRequireFilter만 적용되는 컨트롤러
-     * 회원가입전 사진업로드(POST, "/files/profile-image"), 회원가입(POST, "/member")
-     */
+    // 1. Chain for OAUTH2
     @Bean
     @Order(1)
-    public SecurityFilterChain filesSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // "/files/**" 경로에만 적용되도록 지정
-                .securityMatcher(new OrRequestMatcher(
-                    new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
-                    new AntPathRequestMatcher("/member", HttpMethod.POST.name()),
-                    new AntPathRequestMatcher("/fonts/{fontId}", HttpMethod.GET.name()),
-                    new AntPathRequestMatcher("/fonts", HttpMethod.GET.name()),
-                    new AntPathRequestMatcher("/fonts/{fontId}/others", HttpMethod.GET.name()),
-                    new AntPathRequestMatcher("/fonts/popular", HttpMethod.GET.name())
+    public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher( new OrRequestMatcher(
+                                new AntPathRequestMatcher("/oauth2/**"),
+                                new AntPathRequestMatcher("/login/oauth2/**")
                 ))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(CsrfConfigurer::disable)
                 .httpBasic(HttpBasicConfigurer::disable)
                 .formLogin(FormLoginConfigurer::disable)
-                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .anyRequest().permitAll()
-                )
-                .addFilterBefore(new JwtOnlyOAuth2RequireFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
-        return http.build();
-    }
-
-    /**
-     * 기본 SecurityFilterChain:
-     * - "/files/**" 이외의 모든 요청에 대해 JwtAuthenticationFilter와 OAuth2 관련 설정 적용
-     */
-    @Bean
-    @Order(2)
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher(new NegatedRequestMatcher(new AntPathRequestMatcher("/files/**")))
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                .csrf(CsrfConfigurer::disable)
-                .httpBasic(HttpBasicConfigurer::disable)
-                .formLogin(FormLoginConfigurer::disable)
-                .authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                        .requestMatchers(HttpMethod.GET, "/fonts/{fontId}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/fonts").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/fonts/{fontId}/others").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/fonts/popular").permitAll()
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler(oauth2SuccessHandler)
                         .failureHandler(oauth2FailureHandler)
                         .userInfoEndpoint(userInfoEndpoint -> userInfoEndpoint
-                                .userService(oauth2UserService)
-                        )
+                                .userService(oauth2UserService))
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
-        return http.build();
+                .build();
+    }
+
+    /**
+     * 2. jwtOnlySecurityFilterChain
+     * 회원가입전 OAUTH2를 발급한 임시 토큰을 검증하기 위한 JwtOnlyProvideRequireFilter만 적용되는 컨트롤러
+     * 회원가입전 사진업로드(POST, "/files/profile-image"), 회원가입(POST, "/member")
+     */
+    @Bean
+    @Order(2)
+    public SecurityFilterChain jwtOnlySecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher(new OrRequestMatcher(
+                        new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
+                        new AntPathRequestMatcher("/member", HttpMethod.POST.name())
+                ))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .csrf(CsrfConfigurer::disable)
+                .httpBasic(HttpBasicConfigurer::disable)
+                .formLogin(FormLoginConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .addFilterBefore(new JwtOnlyOAuth2RequireFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
+
+    // 3. 기본 체인: 그 외의 모든 요청에 대해 JWT 인증 필터 적용
+
+    /**
+     * 3. defaultSecurityFilterChain
+     * 그 외의 모든 요청에 대해 JWT 인증 필터 적용
+     */
+    @Bean
+    @Order(3)
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher(new NegatedRequestMatcher(
+                        new OrRequestMatcher(
+                                new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
+                                new AntPathRequestMatcher("/member", HttpMethod.POST.name())
+                        )
+                ))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .csrf(CsrfConfigurer::disable)
+                .httpBasic(HttpBasicConfigurer::disable)
+                .formLogin(FormLoginConfigurer::disable)
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
+                .authorizeHttpRequests(auth -> auth
+                        // 인증이 없어도 되는 (@Login(required= false) 가능) 요청 엔드포인트
+                        .requestMatchers(HttpMethod.GET, "/fonts/{fontId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/fonts").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/fonts/{fontId}/others").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/fonts/popular").permitAll()
+                        // 그 외엔 인증 필요
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
 
     @Bean

@@ -38,7 +38,6 @@ public class CustomOauth2SuccessHandler implements AuthenticationSuccessHandler 
         Provide provide = authUser.getAttribute("provide");
 
         String token = jwtTokenProvider.generateTemporalProvideToken(String.valueOf(provide.getId()));
-
         if (provide.getMemberId() == null) {
             redirectStrategy.sendRedirect(request, response, SIGNUP_URL + "?token=" + token);
         } else {

@@ -35,7 +35,6 @@ public class OAuth2InfoArgumentResolver implements HandlerMethodArgumentResolver
         String token = request.getHeader("Authorization");
 
         token = token.substring(7);
-        System.out.println("token = " + token);
         return provideService.getOrThrownById(jwtTokenProvider.getProvideId(token));
     }
 }
