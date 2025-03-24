@@ -32,7 +32,13 @@ public class LoginMemberArgumentResolver implements HandlerMethodArgumentResolve
         HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
         String token = request.getHeader("Authorization");
 
+        Login loginAnnotation = parameter.getParameterAnnotation(Login.class);
+        boolean isRequired = loginAnnotation.required();
+
         if (token == null || token.isEmpty()) {
+            if (!isRequired) {
+                return null;
+            }
             throw new TokenNotFoundException();
         }
 

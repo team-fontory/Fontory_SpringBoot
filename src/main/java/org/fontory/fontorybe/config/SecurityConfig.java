@@ -48,7 +48,11 @@ public class SecurityConfig {
                 // "/files/**" 경로에만 적용되도록 지정
                 .securityMatcher(new OrRequestMatcher(
                     new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
-                    new AntPathRequestMatcher("/member", HttpMethod.POST.name())
+                    new AntPathRequestMatcher("/member", HttpMethod.POST.name()),
+                    new AntPathRequestMatcher("/fonts/{fontId}", HttpMethod.GET.name()),
+                    new AntPathRequestMatcher("/fonts", HttpMethod.GET.name()),
+                    new AntPathRequestMatcher("/fonts/{fontId}/others", HttpMethod.GET.name()),
+                    new AntPathRequestMatcher("/fonts/popular", HttpMethod.GET.name())
                 ))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(CsrfConfigurer::disable)
@@ -75,6 +79,10 @@ public class SecurityConfig {
                 .httpBasic(HttpBasicConfigurer::disable)
                 .formLogin(FormLoginConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                        .requestMatchers(HttpMethod.GET, "/fonts/{fontId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/fonts").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/fonts/{fontId}/others").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/fonts/popular").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2

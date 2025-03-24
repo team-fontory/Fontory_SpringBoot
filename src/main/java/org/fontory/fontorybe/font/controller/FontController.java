@@ -127,9 +127,11 @@ public class FontController {
             @Parameter(description = "페이지 당 엘리먼트 개수 (기본값: 10)", example = "10") @RequestParam(defaultValue = "10") int size,
             @Parameter(description = "정렬 기준 (예: createdAt, downloadCount, bookmarkCount)", example = "createdAt") @RequestParam(defaultValue = "createdAt") String sortBy,
             @Parameter(description = "검색 키워드", example = "") @RequestParam(required = false) String keyword,
-            @Login UserPrincipal userPrincipal
+            @Login(required = false) UserPrincipal userPrincipal
     ) {
-        Page<FontPageResponse> fontPage = fontService.getFontPage(userPrincipal.getId(), page, size, sortBy, keyword);
+        Long memberId = userPrincipal != null ? userPrincipal.getId() : null;
+
+        Page<FontPageResponse> fontPage = fontService.getFontPage(memberId, page, size, sortBy, keyword);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -161,8 +163,8 @@ public class FontController {
 
     @Operation(summary = "인기 폰트 조회")
     @GetMapping("/popular")
-    public ResponseEntity<?> getPopularFonts(@Login UserPrincipal userPrincipal) {
-        Long memberId = userPrincipal.getId();
+    public ResponseEntity<?> getPopularFonts(@Login(required = false) UserPrincipal userPrincipal) {
+        Long memberId = userPrincipal != null ? userPrincipal.getId() : null;
 
         List<FontResponse> fonts = fontService.getPopularFonts(memberId);
 
