@@ -19,8 +19,8 @@ public interface FontService {
     Page<FontResponse> getFonts(Long memberId, int page, int size);
     FontDetailResponse getFont(Long fondId);
     FontDeleteResponse delete(Long memberId, Long fontId);
-    Page<FontPageResponse> getFontPage(int page, int size, String sortBy, String keyword);
+    Page<FontPageResponse> getFontPage(Long memberId, int page, int size, String sortBy, String keyword);
     List<FontResponse> getOtherFonts(Long fontId);
     List<FontResponse> getMyPopularFonts(Long memberId);
-    List<FontResponse> getPopularFonts();
+    List<FontResponse> getPopularFonts(Long memberId);
 }

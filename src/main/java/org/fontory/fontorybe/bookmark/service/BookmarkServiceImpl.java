@@ -82,7 +82,7 @@ public class BookmarkServiceImpl implements BookmarkService {
 
         List<FontResponse> filtered = fonts.stream()
                 .filter(font -> !StringUtils.hasText(keyword) || font.getName().contains(keyword))
-                .map(FontResponse::from)
+                .map(font -> FontResponse.from(font, true))
                 .toList();
 
         return new PageImpl<>(filtered, pageRequest, bookmarks.getTotalElements());

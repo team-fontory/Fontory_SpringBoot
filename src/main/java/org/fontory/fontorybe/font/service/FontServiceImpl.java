@@ -3,6 +3,7 @@ package org.fontory.fontorybe.font.service;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.fontory.fontorybe.bookmark.service.port.BookmarkRepository;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
@@ -28,6 +29,7 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class FontServiceImpl implements FontService {
     private final FontRepository fontRepository;
+    private final BookmarkRepository bookmarkRepository;
     private final MemberService memberService;
 
     @Override
@@ -73,7 +75,10 @@ public class FontServiceImpl implements FontService {
 
         Page<Font> fontPage = fontRepository.findAllByMemberId(memberId, pageRequest);
 
-        return fontPage.map(FontResponse::from);
+        return fontPage.map(font -> {
+            boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, font.getId());
+            return FontResponse.from(font, bookmarked);
+        });
     }
 
     @Override
@@ -99,7 +104,7 @@ public class FontServiceImpl implements FontService {
     }
 
     @Override
-    public Page<FontPageResponse> getFontPage(int page, int size, String sortBy, String keyword) {
+    public Page<FontPageResponse> getFontPage(Long memberId, int page, int size, String sortBy, String keyword) {
         Sort sort = Sort.by(Sort.Order.desc("createdAt"));
         if ("downloadCount".equalsIgnoreCase(sortBy)) {
             sort = Sort.by(Sort.Order.desc("downloadCount"));
@@ -116,9 +121,17 @@ public class FontServiceImpl implements FontService {
             fontPage = fontRepository.findByNameContaining(keyword, pageRequest);
         }
 
+        if (memberId == null) {
+            return fontPage.map(font -> {
+                Member member = memberService.getOrThrowById(font.getMemberId());
+                return FontPageResponse.from(font, member.getNickname(), false);
+            });
+        }
+
         return fontPage.map(font -> {
             Member member = memberService.getOrThrowById(font.getMemberId());
-            return FontPageResponse.from(font, member.getNickname());
+            boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, font.getId());
+            return FontPageResponse.from(font, member.getNickname(), bookmarked);
         });
     }
 
@@ -131,7 +144,10 @@ public class FontServiceImpl implements FontService {
         List<Font> fonts = fontRepository.findTop3ByMemberIdAndIdNotOrderByCreatedAtDesc(member.getId(), fontId);
 
         return fonts.stream()
-                .map(FontResponse::from)
+                .map(f -> {
+                    boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), f.getId());
+                    return FontResponse.from(f, bookmarked);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -143,17 +159,31 @@ public class FontServiceImpl implements FontService {
         List<Font> fonts = fontRepository.findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(memberId);
 
         return fonts.stream()
-                .map(FontResponse::from)
+                .map(f -> {
+                    boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), f.getId());
+                    return FontResponse.from(f, bookmarked);
+                })
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<FontResponse> getPopularFonts() {
+    public List<FontResponse> getPopularFonts(Long memberId) {
         List<Font> fonts = fontRepository.findTop3OrderByDownloadAndBookmarkCountDesc();
 
+        if (memberId == null) {
+            return fonts.stream()
+                    .map(font -> FontResponse.from(font, false))
+                    .collect(Collectors.toList());
+        }
+
+        Member member = memberService.getOrThrowById(memberId);
+
         return fonts.stream()
-                .map(FontResponse::from)
+                .map(f -> {
+                    boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), f.getId());
+                    return FontResponse.from(f, bookmarked);
+                })
                 .collect(Collectors.toList());
     }
 
