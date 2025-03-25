@@ -99,7 +99,7 @@ public class MemberControllerIntegrationTest {
                         .param("nickname", "someNickname"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
-                .andExpect(jsonPath("$.errorMessage").value("Invalid JWT token"));
+                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
     }
 
     @Test
@@ -144,7 +144,7 @@ public class MemberControllerIntegrationTest {
                         .content(jsonRequest))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
-                .andExpect(jsonPath("$.errorMessage").value("Invalid JWT token"));
+                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
     }
 
     @Test
@@ -163,6 +163,6 @@ public class MemberControllerIntegrationTest {
         mockMvc.perform(delete("/member"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
-                .andExpect(jsonPath("$.errorMessage").value("Invalid JWT token"));
+                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
     }
 }

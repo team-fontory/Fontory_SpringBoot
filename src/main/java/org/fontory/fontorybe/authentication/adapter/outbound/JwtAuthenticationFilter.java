@@ -25,16 +25,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         String header = request.getHeader("Authorization");
+        // 토큰이 없으면 필터 체인을 그대로 진행.
+        if (header == null || !header.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         try {
-            if (header != null && header.startsWith("Bearer ")) {
                 String token = header.substring(7);
                 Authentication auth = jwtTokenProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(auth);
-                filterChain.doFilter(request, response);
-            } else {
-                throw new ServletException("Invalid JWT token");
-            }
         } catch (Exception e) {
+            // 토큰이 존재하지만 유효하지 않은 경우엔 에러 응답을 처리.
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
 
@@ -47,6 +48,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 writer.write(jsonError);
                 writer.flush();
             }
+            return;
         }
+        filterChain.doFilter(request, response);
     }
 }
