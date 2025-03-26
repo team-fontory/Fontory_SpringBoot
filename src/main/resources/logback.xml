@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-
     <!-- 환경변수 기본값 설정 -->
     <springProperty scope="context" name="LOKI_SERVICE" source="LOKI_SERVICE" defaultValue="fontory"/>
     <springProperty scope="context" name="LOKI_ENV" source="LOKI_ENV" defaultValue="dev"/>
@@ -8,7 +7,7 @@
 
     <!-- Spring Boot 기본 로그 설정 포함 -->
     <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
-    
+
     <!-- Console appender with request ID -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -16,24 +15,52 @@
         </encoder>
     </appender>
 
-    <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
-        <http>
-            <url>http://localhost:3100/loki/api/v1/push</url>
-        </http>
-        <format>
-            <label>
-                <pattern>app=${LOKI_SERVICE},host=${HOSTNAME},level=%level</pattern>
-            </label>
-            <message>
-                <pattern>[%X{requestId:-SYSTEM}] l=%level h=${HOSTNAME} c=%logger{20} t=%thread | %msg %ex</pattern>
-            </message>
-        </format>
-    </appender>
+    <!-- test 프로파일: Loki appender 미사용 -->
+    <springProfile name="test">
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
 
-    <!-- Root logger에 콘솔과 Loki Appender 등록 -->
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="LOKI"/>
-    </root>
+    <!-- prod 프로파일: host.docker.internal 사용 -->
+    <springProfile name="prod">
+        <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+            <http>
+                <url>http://host.docker.internal:3100/loki/api/v1/push</url>
+            </http>
+            <format>
+                <label>
+                    <pattern>app=${LOKI_SERVICE},host=${HOSTNAME},level=%level</pattern>
+                </label>
+                <message>
+                    <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{requestId:-SYSTEM}] l=%level h=${HOSTNAME} c=%logger{20} t=%thread | %msg %ex</pattern>
+                </message>
+            </format>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="LOKI"/>
+        </root>
+    </springProfile>
 
+    <!-- dev 프로파일 : localhost 사용  -->
+    <springProfile name="dev">
+        <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+            <http>
+                <url>http://localhost:3100/loki/api/v1/push</url>
+            </http>
+            <format>
+                <label>
+                    <pattern>app=${LOKI_SERVICE},host=${HOSTNAME},level=%level</pattern>
+                </label>
+                <message>
+                    <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%X{requestId:-SYSTEM}] l=%level h=${HOSTNAME} c=%logger{20} t=%thread | %msg %ex</pattern>
+                </message>
+            </format>
+        </appender>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="LOKI"/>
+        </root>
+    </springProfile>
 </configuration>

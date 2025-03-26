@@ -17,6 +17,16 @@ datasources:
     uid: loki
     type: loki
     access: proxy
-    url: http://fontory-loki:3100
+    url: http://host.docker.internal:3100
+#    url: http://fontory-loki:3100
+    isDefault: false
+    editable: true
+
+  - name: tloki
+    uid: tloki
+    type: loki
+    access: proxy
+    url: http://fotory-loki:3100
+    #    url: http://fontory-loki:3100
     isDefault: false
     editable: true
