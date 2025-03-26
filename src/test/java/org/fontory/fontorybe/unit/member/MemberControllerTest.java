@@ -1,5 +1,6 @@
 package org.fontory.fontorybe.unit.member;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.member.controller.MemberController;
 import org.fontory.fontorybe.member.controller.dto.*;
@@ -7,7 +8,6 @@ import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 import org.fontory.fontorybe.provide.domain.Provide;
-import org.fontory.fontorybe.provide.domain.exception.ProvideNotFoundException;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
 import org.fontory.fontorybe.unit.mock.TestContainer;
@@ -69,6 +69,7 @@ public class MemberControllerTest {
                 .provideService(testContainer.provideService)
                 .jwtTokenProvider(testContainer.jwtTokenProvider)
                 .authService(testContainer.authService)
+                .objectMapper(new ObjectMapper())
                 .build();
 
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(existMemberProvider, existMemberProvidedId, existMemberEmail);

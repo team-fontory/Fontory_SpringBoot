@@ -1,9 +1,5 @@
 package org.fontory.fontorybe.bookmark.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.adapter.inbound.Login;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.bookmark.controller.dto.BookmarkCreateResponse;
@@ -22,6 +18,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Tag(name = "북마크 관리", description = "북마크 API")
 @RestController
 @RequestMapping("/bookmarks")
@@ -33,8 +36,11 @@ public class BookmarkController {
     @PostMapping("/{fontId}")
     public ResponseEntity<?> addBookmark(@Login UserPrincipal userPrincipal, @PathVariable Long fontId) {
         Long memberId = userPrincipal.getId();
+        log.info("Request received: Add bookmark for font ID: {} by member ID: {}", fontId, memberId);
 
         Bookmark createdBookmark = bookmarkService.create(memberId, fontId);
+        log.info("Response sent: Bookmark created with ID: {}, for font ID: {}, member ID: {}", 
+                createdBookmark.getId(), createdBookmark.getFontId(), createdBookmark.getMemberId());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -45,8 +51,11 @@ public class BookmarkController {
     @DeleteMapping("/{fontId}")
     public ResponseEntity<?> deleteBookmark(@Login UserPrincipal userPrincipal, @PathVariable Long fontId) {
         Long memberId = userPrincipal.getId();
+        log.info("Request received: Delete bookmark for font ID: {} by member ID: {}", fontId, memberId);
 
         BookmarkDeleteResponse deletedBookmark = bookmarkService.delete(memberId, fontId);
+        log.info("Response sent: Bookmark deleted successfully for font ID: {}, member ID: {}, deleted bookmark ID: {}", 
+                fontId, memberId, deletedBookmark.getId());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -62,12 +71,15 @@ public class BookmarkController {
             @Login UserPrincipal userPrincipal
     ) {
         Long memberId = userPrincipal.getId();
+        log.info("Request received: Get bookmarked fonts for member ID: {}, page: {}, size: {}, keyword: {}", 
+                memberId, page, size, keyword);
 
         Page<FontResponse> fonts = bookmarkService.getBookmarkedFonts(memberId, page, size, keyword);
+        log.info("Response sent: Returned {} bookmarked fonts out of {} total, {} pages", 
+                fonts.getNumberOfElements(), fonts.getTotalElements(), fonts.getTotalPages());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(fonts);
     }
-
 }
