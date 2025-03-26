@@ -66,6 +66,11 @@ dependencies {
     // Aws
     implementation platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.1.1")
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3'
+
+    // Monitoring
+    implementation 'com.github.loki4j:loki-logback-appender:1.4.1'
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    runtimeOnly "io.micrometer:micrometer-registry-prometheus"
 }
 
 tasks.named('test') {

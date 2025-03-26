@@ -1,10 +1,7 @@
 package org.fontory.fontorybe.font.controller;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
+
 import org.fontory.fontorybe.authentication.adapter.inbound.Login;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
@@ -19,7 +16,6 @@ import org.fontory.fontorybe.font.controller.dto.FontUpdateResponse;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,19 +28,47 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Tag(name = "폰트 관리", description = "폰트 API")
 @RestController
 @RequestMapping("/fonts")
 @RequiredArgsConstructor
 public class FontController {
     private final FontService fontService;
+    private final ObjectMapper objectMapper;
+    
+    /**
+     * Convert an object to JSON string for logging
+     * If conversion fails, falls back to toString()
+     */
+    private String toJson(Object obj) {
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to convert object to JSON for logging: {}", e.getMessage());
+            return obj.toString();
+        }
+    }
 
     @Operation(summary = "폰트 생성")
     @PostMapping
     public ResponseEntity<?> addFont(@RequestBody FontCreateDTO fontCreateDTO, @Login UserPrincipal userPrincipal) {
         Long memberId = userPrincipal.getId();
+        log.info("Request received: Create font for member ID: {}, request: {}", 
+                memberId, toJson(fontCreateDTO));
 
         Font createdFont = fontService.create(memberId, fontCreateDTO);
+        log.info("Response sent: Font created with ID: {}, name: {}", 
+                createdFont.getId(), createdFont.getName());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
@@ -55,8 +79,10 @@ public class FontController {
     @GetMapping("/progress")
     public ResponseEntity<?> getFontProgress(@Login UserPrincipal userPrincipal) {
         Long memberId = userPrincipal.getId();
+        log.info("Request received: Get font progress for member ID: {}", memberId);
 
         List<FontProgressResponse> fontsProgress = fontService.getFontProgress(memberId);
+        log.info("Response sent: Returned {} fonts for progress display", fontsProgress.size());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -72,8 +98,12 @@ public class FontController {
             @Login UserPrincipal userPrincipal
     ) {
         Long memberId = userPrincipal.getId();
+        log.info("Request received: Update font ID: {} by member ID: {}, request: {}", 
+                fontId, memberId, toJson(fontUpdateDTO));
 
         Font updatedFont = fontService.update(memberId, fontId, fontUpdateDTO);
+        log.info("Response sent: Font ID: {} updated successfully, name: {}", 
+                updatedFont.getId(), updatedFont.getName());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -88,8 +118,10 @@ public class FontController {
             @Login UserPrincipal userPrincipal
     ) {
         Long memberId = userPrincipal.getId();
+        log.info("Request received: Get fonts for member ID: {}, page: {}, size: {}", memberId, page, size);
 
         Page<FontResponse> fonts = fontService.getFonts(memberId, page, size);
+        log.info("Response sent: Returned {} fonts, total pages: {}", fonts.getNumberOfElements(), fonts.getTotalPages());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -100,7 +132,11 @@ public class FontController {
     @Parameter(name = "fontId", description = "상세 조회 할 폰트 ID")
     @GetMapping("/{fontId}")
     public ResponseEntity<?> getFont(@PathVariable Long fontId) {
+        log.info("Request received: Get font details for font ID: {}", fontId);
+
         FontDetailResponse font = fontService.getFont(fontId);
+        log.info("Response sent: Font details returned for font ID: {}, name: {}", 
+                fontId, font.getName());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -112,8 +148,10 @@ public class FontController {
     @DeleteMapping("/members/{fontId}")
     public ResponseEntity<?> deleteFont(@PathVariable Long fontId, @Login UserPrincipal userPrincipal) {
         Long memberId = userPrincipal.getId();
+        log.info("Request received: Delete font ID: {} by member ID: {}", fontId, memberId);
 
         FontDeleteResponse deletedFont = fontService.delete(memberId, fontId);
+        log.info("Response sent: Font ID: {} deleted successfully", fontId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -130,8 +168,11 @@ public class FontController {
             @Login(required = false) UserPrincipal userPrincipal
     ) {
         Long memberId = userPrincipal != null ? userPrincipal.getId() : null;
+        log.info("Request received: Get font page with params - page: {}, size: {}, sortBy: {}, keyword: {}, memberId: {}", 
+                page, size, sortBy, keyword, memberId);
 
         Page<FontPageResponse> fontPage = fontService.getFontPage(memberId, page, size, sortBy, keyword);
+        log.info("Response sent: Returned {} fonts, total pages: {}", fontPage.getNumberOfElements(), fontPage.getTotalPages());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -142,7 +183,10 @@ public class FontController {
     @Parameter(name = "fontId", description = "현재 상세보기 한 폰트 ID")
     @GetMapping("/{fontId}/others")
     public ResponseEntity<?> getOtherFontsByWriter(@PathVariable Long fontId) {
+        log.info("Request received: Get other fonts by the creator of font ID: {}", fontId);
+
         List<FontResponse> font = fontService.getOtherFonts(fontId);
+        log.info("Response sent: Returned {} other fonts from the same creator", font.size());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -153,8 +197,10 @@ public class FontController {
     @GetMapping("/members/popular")
     public ResponseEntity<?> getMyPopularFonts(@Login UserPrincipal userPrincipal) {
         Long memberId = userPrincipal.getId();
+        log.info("Request received: Get popular fonts for member ID: {}", memberId);
 
         List<FontResponse> fonts = fontService.getMyPopularFonts(memberId);
+        log.info("Response sent: Returned {} popular fonts for member", fonts.size());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -165,8 +211,10 @@ public class FontController {
     @GetMapping("/popular")
     public ResponseEntity<?> getPopularFonts(@Login(required = false) UserPrincipal userPrincipal) {
         Long memberId = userPrincipal != null ? userPrincipal.getId() : null;
+        log.info("Request received: Get globally popular fonts, requesting member ID: {}", memberId);
 
         List<FontResponse> fonts = fontService.getPopularFonts(memberId);
+        log.info("Response sent: Returned {} globally popular fonts", fonts.size());
 
         return ResponseEntity
                 .status(HttpStatus.OK)

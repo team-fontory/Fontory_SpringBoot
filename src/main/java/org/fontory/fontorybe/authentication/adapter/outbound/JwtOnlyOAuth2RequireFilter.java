@@ -43,7 +43,6 @@ public class JwtOnlyOAuth2RequireFilter extends OncePerRequestFilter {
                 sendUnauthorized(response, "Invalid or missing provideId in token");
                 return;
             }
-            System.out.println("provideId = " + provideId);
             filterChain.doFilter(request, response);
         } catch (Exception e) {
             sendUnauthorized(response, e.getMessage());
