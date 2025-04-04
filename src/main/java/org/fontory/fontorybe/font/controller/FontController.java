@@ -10,6 +10,7 @@ import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
 import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
+import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateResponse;
@@ -20,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -219,5 +221,24 @@ public class FontController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(fonts);
+    }
+
+    @Operation(summary = "폰트 상태 수정")
+    @Parameter(name = "fontId", description = "수정할 폰트 ID")
+    @PatchMapping("/progress/{fontId}")
+    public ResponseEntity<?> updateFontProgress(
+            @RequestBody FontProgressUpdateDTO fontProgressUpdateDTO,
+            @PathVariable Long fontId
+    ) {
+        log.info("Request received: Update font progress ID: {}, request: {}",
+                fontId, toJson(fontProgressUpdateDTO));
+
+        Font updatedFont = fontService.updateProgress(fontId, fontProgressUpdateDTO);
+        log.info("Response sent: Font ID: {} updated successfully, name: {}",
+                updatedFont.getId(), updatedFont.getName());
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(FontUpdateResponse.from(updatedFont));
     }
 }
