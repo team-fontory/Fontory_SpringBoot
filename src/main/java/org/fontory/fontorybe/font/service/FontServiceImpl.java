@@ -9,6 +9,7 @@ import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
 import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
+import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.controller.port.FontService;
@@ -243,6 +244,17 @@ public class FontServiceImpl implements FontService {
         
         log.info("Service completed: Retrieved {} globally popular fonts", result.size());
         return result;
+    }
+
+    @Override
+    @Transactional
+    public Font updateProgress(Long fontId, FontProgressUpdateDTO fontProgressUpdateDTO) {
+        log.info("Service executing: Updating font ID: {}", fontId);
+        Font targetFont = getOrThrowById(fontId);
+
+        Font updatedFont = fontRepository.save(targetFont.updateProgress(fontProgressUpdateDTO));
+        log.info("Service completed: Font ID: {} updated successfully", fontId);
+        return updatedFont;
     }
 
     private void checkFontOwnership(Long requestMemberId, Long targetMemberId) {

@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
+import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.infrastructure.entity.FontStatus;
 
@@ -63,6 +64,22 @@ public class Font {
                 .example(fontUpdateDTO.getExample())
                 .id(this.id)
                 .status(this.status)
+                .downloadCount(this.downloadCount)
+                .bookmarkCount(this.bookmarkCount)
+                .ttf(this.ttf)
+                .woff(this.woff)
+                .memberId(this.memberId)
+                .createdAt(this.createdAt)
+                .updatedAt(this.updatedAt)
+                .build();
+    }
+
+    public Font updateProgress(FontProgressUpdateDTO fontProgressUpdateDTO) {
+        return Font.builder()
+                .name(this.getName())
+                .example(this.getExample())
+                .id(this.id)
+                .status(fontProgressUpdateDTO.getStatus())
                 .downloadCount(this.downloadCount)
                 .bookmarkCount(this.bookmarkCount)
                 .ttf(this.ttf)

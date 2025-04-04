@@ -128,7 +128,8 @@ public class SecurityConfig {
                         "/webjars/**",
                         "/health-check",
                         "/auth/token/**",
-                        "/actuator/prometheus"
+                        "/actuator/prometheus",
+                        "/fonts/progress/{fontId}"
                 );
     }
 }
