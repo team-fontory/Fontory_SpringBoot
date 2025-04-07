@@ -3,7 +3,6 @@ package org.fontory.fontorybe.authentication.adapter.inbound;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
-import org.fontory.fontorybe.authentication.domain.exception.TokenNotFoundException;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.springframework.core.MethodParameter;

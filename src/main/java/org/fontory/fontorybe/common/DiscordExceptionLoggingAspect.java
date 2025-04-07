@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Aspect
 @Component
-public class ExceptionLoggingAspect {
+public class DiscordExceptionLoggingAspect {
 
     private final ObjectMapper objectMapper;
     private final RestTemplate restTemplate;
@@ -37,8 +37,8 @@ public class ExceptionLoggingAspect {
     @Value("${discord.webhook.error-url}")
     private  String discordWebhookUrl;
 
-    public ExceptionLoggingAspect(RestTemplateBuilder restTemplateBuilder,
-                                  ObjectMapper objectMapper) {
+    public DiscordExceptionLoggingAspect(RestTemplateBuilder restTemplateBuilder,
+                                         ObjectMapper objectMapper) {
         this.restTemplate = restTemplateBuilder.build();
         this.objectMapper = objectMapper;
     }
@@ -69,7 +69,7 @@ public class ExceptionLoggingAspect {
     @AfterThrowing(pointcut = "within(org.fontory..*)", throwing = "ex")
     public void handleException(JoinPoint joinPoint, Throwable ex) {
         if (shouldSkipNotification(ex)) {
-            log.warn("Skipping Discord notification for exception: {}", ex.getClass().getSimpleName());
+            log.debug("Skipping Discord notification for exception: {}", ex.getClass().getSimpleName());
             return;
         }
 
