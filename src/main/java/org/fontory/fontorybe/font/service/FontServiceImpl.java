@@ -257,6 +257,24 @@ public class FontServiceImpl implements FontService {
         return updatedFont;
     }
 
+    @Override
+    @Transactional
+    public FontResponse fontDownload(Long memberId, Long fontId) {
+        log.info("Service executing: Download font ID: {}", fontId);
+        Font targetFont = getOrThrowById(fontId);
+        targetFont.increaseDownloadCount();
+
+        // TODO : 폰트 다운로드
+
+        boolean isBookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, fontId);
+
+        fontRepository.save(targetFont);
+
+        log.info("Service completed: Font ID: {} download successfully", fontId);
+
+        return FontResponse.from(targetFont, isBookmarked);
+    }
+
     private void checkFontOwnership(Long requestMemberId, Long targetMemberId) {
         log.debug("Service detail: Checking font ownership: requestMemberId={}, targetMemberId={}", 
                 requestMemberId, targetMemberId);

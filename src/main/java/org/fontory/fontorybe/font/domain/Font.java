@@ -47,6 +47,10 @@ public class Font {
         this.bookmarkCount--;
     }
 
+    public void increaseDownloadCount() {
+        this.downloadCount++;
+    }
+
     public static Font from(FontCreateDTO fontCreateDTO, Long memberId) {
         return Font.builder()
                 .name(fontCreateDTO.getName())

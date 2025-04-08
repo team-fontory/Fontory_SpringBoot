@@ -13,6 +13,7 @@ public class FontDetailResponse {
     private String writerName;
     private Long downloadCount;
     private Long bookmarkCount;
+    private Long memberId;
 
     public static FontDetailResponse from(Font font, String writerName) {
         return FontDetailResponse.builder()
@@ -22,6 +23,7 @@ public class FontDetailResponse {
                 .writerName(writerName)
                 .downloadCount(font.getDownloadCount())
                 .bookmarkCount(font.getBookmarkCount())
+                .memberId(font.getMemberId())
                 .build();
     }
 }

@@ -241,4 +241,21 @@ public class FontController {
                 .status(HttpStatus.OK)
                 .body(FontUpdateResponse.from(updatedFont));
     }
+
+    @Operation(summary = "폰트 다운로드")
+    @GetMapping("/{fontId}/download")
+    public ResponseEntity<?> downloadFont(
+            @Login UserPrincipal userPrincipal,
+            @PathVariable Long fontId
+    ) {
+        Long memberId = userPrincipal.getId();
+        log.info("Request received: Get font download for font ID : {}, requesting memberId : {}", fontId, memberId);
+
+        FontResponse res = fontService.fontDownload(memberId, fontId);
+        log.info("Response sent: Font downloaded with ID: {}", fontId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(res);
+    }
 }
