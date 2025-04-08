@@ -25,4 +25,5 @@ public interface FontService {
     List<FontResponse> getMyPopularFonts(Long memberId);
     List<FontResponse> getPopularFonts(Long memberId);
     Font updateProgress(Long fontId, FontProgressUpdateDTO fontProgressUpdateDTO);
+    FontResponse fontDownload(Long memberId, Long fontId);
 }
