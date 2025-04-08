@@ -34,7 +34,7 @@ public class ProvideServiceImpl implements ProvideService {
     @Override
     @Transactional
     public Provide create(Provider provider, String email, String providedId) {
-        Provide provide = Provide.from(provider, email, providedId);
+        Provide provide = Provide.from(provider, providedId, email);
         return provideRepository.save(provide);
     }
 

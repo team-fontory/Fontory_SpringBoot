@@ -1,6 +1,5 @@
 package org.fontory.fontorybe.config;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2FailureHandler;
 import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2SuccessHandler;
@@ -12,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -129,7 +127,8 @@ public class SecurityConfig {
                         "/health-check",
                         "/auth/token/**",
                         "/actuator/prometheus",
-                        "/fonts/progress/{fontId}"
+                        "/fonts/progress/{fontId}",
+                        "/sqs-test"
                 );
     }
 }

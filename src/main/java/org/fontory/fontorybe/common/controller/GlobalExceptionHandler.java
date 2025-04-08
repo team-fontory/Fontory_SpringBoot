@@ -10,6 +10,7 @@ import org.fontory.fontorybe.common.domain.BaseErrorResponse;
 import org.fontory.fontorybe.file.adapter.inbound.exception.FileUploadException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
+import org.fontory.fontorybe.font.domain.exception.FontSQSProduceExcepetion;
 import org.fontory.fontorybe.member.domain.exception.*;
 import org.fontory.fontorybe.authentication.domain.exception.InvalidRefreshTokenException;
 import org.fontory.fontorybe.authentication.domain.exception.TokenNotFoundException;
@@ -105,6 +106,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(BookmarkAlreadyException.class)
     public BaseErrorResponse bookmarkAlready(BookmarkAlreadyException e) {
+        return new BaseErrorResponse(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    @ExceptionHandler(FontSQSProduceExcepetion.class)
+    public BaseErrorResponse SQSProduceException(FontSQSProduceExcepetion e) {
         return new BaseErrorResponse(e.getMessage());
     }
 }

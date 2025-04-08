@@ -42,9 +42,16 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
     private final Date issuedAt = new Date(1735689600000L);     // 2025-01-01T00:00:00Z
     private final Date expiration = new Date(1767225600000L);     // 2025-12-31T23:59:59Z
 
+
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        // 컨텍스트가 완전히 초기화된 후, 프록시된 빈을 얻어 @Transactional이 적용된 initTokens()를 호출합니다.
+        // 재시작 컨텍스트인지 확인
+        if (event.getApplicationContext().getParent() != null) {
+            log.info("Skipping token init in restarted context");
+            return;
+        }
+
+        // 프록시 빈을 통해 @Transactional이 적용된 메서드 실행
         DevTokenInitializer initializer = event.getApplicationContext().getBean(DevTokenInitializer.class);
         initializer.initTokens();
     }
@@ -58,16 +65,17 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
                 .provider(Provider.GOOGLE)
                 .build();
 
+        Provide savedProvide = provideRepository.save(provide);
+
         Member member = Member.builder()
                 .gender(Gender.MALE)
-                .provideId(provide.getId())
+                .provideId(savedProvide.getId())
                 .terms(true)
                 .birth(LocalDate.now())
                 .nickname("Tester")
                 .profileImage("ProfileImage-URL")
                 .build();
 
-        Provide savedProvide = provideRepository.save(provide);
         memberRepository.save(member);
 
         String fixedTokenForProvide = Jwts.builder()
