@@ -245,10 +245,10 @@ public class FontController {
     @Operation(summary = "폰트 다운로드")
     @GetMapping("/{fontId}/download")
     public ResponseEntity<?> downloadFont(
-            @Login(required = false) UserPrincipal userPrincipal,
+            @Login UserPrincipal userPrincipal,
             @PathVariable Long fontId
     ) {
-        Long memberId = userPrincipal != null ? userPrincipal.getId() : null;
+        Long memberId = userPrincipal.getId();
         log.info("Request received: Get font download for font ID : {}, requesting memberId : {}", fontId, memberId);
 
         FontResponse res = fontService.fontDownload(memberId, fontId);

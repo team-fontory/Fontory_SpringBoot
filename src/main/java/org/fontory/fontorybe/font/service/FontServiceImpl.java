@@ -266,10 +266,7 @@ public class FontServiceImpl implements FontService {
 
         // TODO : 폰트 다운로드
 
-        boolean isBookmarked = false;
-        if (memberId != null) {
-            isBookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, fontId);
-        }
+        boolean isBookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, fontId);
 
         fontRepository.save(targetFont);
 
