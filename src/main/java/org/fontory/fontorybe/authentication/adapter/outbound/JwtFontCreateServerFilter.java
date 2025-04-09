@@ -16,23 +16,22 @@ import java.io.PrintWriter;
 
 @Slf4j
 @RequiredArgsConstructor
-public class JwtOnlyOAuth2RequireFilter extends OncePerRequestFilter {
+public class JwtFontCreateServerFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String uri = request.getRequestURI();
-        boolean isFiles = "POST".equalsIgnoreCase(request.getMethod()) && uri.equals("/files/profile-image");
-        boolean isPostMember = "POST".equalsIgnoreCase(request.getMethod()) && uri.equals("/member");
-        return !(isFiles || isPostMember);
+        boolean isFontProgressRequest = "PATCH".equalsIgnoreCase(request.getMethod()) && uri.matches("/fonts/progress/\\d+");
+        return !isFontProgressRequest;
     }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        log.info("JwtOnlyOAuth2RequireFilter");
+        log.info("JwtFontCreateServerFilter");
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             sendUnauthorized(response, "Missing JWT token");
@@ -41,14 +40,14 @@ public class JwtOnlyOAuth2RequireFilter extends OncePerRequestFilter {
 
         String token = header.substring(7);
         try {
-            Long provideId = jwtTokenProvider.getProvideId(token);
-            if (provideId == null) {
-                sendUnauthorized(response, "Invalid or missing provideId in token");
+            String fontCreateServer = jwtTokenProvider.getFontCreateServer(token);
+            if (!fontCreateServer.equals(jwtTokenProvider.getFontCreateServerSubject())) {
+                sendUnauthorized(response, "Invalid or missing token for this request");
                 return;
             }
             filterChain.doFilter(request, response);
         } catch (Exception e) {
-            sendUnauthorized(response, e.getMessage());
+            sendUnauthorized(response, "Invalid or missing token for this request");
         }
     }
 

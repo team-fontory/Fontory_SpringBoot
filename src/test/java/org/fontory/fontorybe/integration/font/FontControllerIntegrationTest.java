@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.common.DevTokenInitializer;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
@@ -42,7 +43,8 @@ class FontControllerIntegrationTest {
     private ObjectMapper objectMapper;
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-
+    @Autowired
+    private DevTokenInitializer devTokenInitializer;
 
     private final Long existMemberId = 999L;
     private final String existMemberName = "existMemberNickName";
@@ -63,11 +65,13 @@ class FontControllerIntegrationTest {
     private final String updateFontExample = "updateFontExample";
 
     private String validAccessToken;
+    private String validFontCreateServerToken;
 
     @BeforeEach
     void setUp() {
         UserPrincipal userPrincipal = new UserPrincipal(existMemberId);
         validAccessToken = "Bearer " + jwtTokenProvider.generateAccessToken(userPrincipal);
+        validFontCreateServerToken = "Bearer " + devTokenInitializer.getFixedTokenForFontCreateServer();
     }
 
     @Test
@@ -328,6 +332,7 @@ class FontControllerIntegrationTest {
         String content = objectMapper.writeValueAsString(updateDTO);
 
         mockMvc.perform(patch("/fonts/progress/{fontId}", 999L)
+                        .header("Authorization", validFontCreateServerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(content))
                 .andExpect(status().isOk())

@@ -9,6 +9,9 @@ import lombok.Getter;
 @AllArgsConstructor
 public class FontRequestProduceDto {
     private Long memberId;
+    private Long fontId;
     private String fontName;
-    private String templateUrl;
+    private String templateURL;
+    private String author;
+    private String requestUUID;
 }

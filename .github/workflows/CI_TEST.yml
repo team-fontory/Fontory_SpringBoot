@@ -47,6 +47,7 @@ jobs:
         run: |
           echo "jwt.secretKey=${{ secrets.JWT_SECRETKEY }}" >> ./src/main/resources/application-infrastructure.properties
           echo "jwt.provide.secretKey=${{ secrets.JWT_PROVIDE_SECRETKEY }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "jwt.fontCreateServer.secretKey=${{ secrets.JWT_FONT_CREATE_SERVER_SECRETKEY }}" >> ./src/main/resources/application-infrastructure.properties
 
           echo "spring.security.oauth2.client.registration.google.client-id=${{ secrets.OAUTH2_GOOGLE_CLIENT_ID }}" >> ./src/main/resources/application-infrastructure.properties
           echo "spring.security.oauth2.client.registration.google.client-secret=${{ secrets.OAUTH2_GOOGLE_CLIENT_SECRET }}" >> ./src/main/resources/application-infrastructure.properties

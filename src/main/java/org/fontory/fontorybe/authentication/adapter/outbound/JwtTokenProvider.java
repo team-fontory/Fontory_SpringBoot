@@ -22,9 +22,15 @@ public class JwtTokenProvider {
     @Value("${jwt.provide.secretKey}")
     private String SECRET_KEY_FOR_PROVIDE;
 
+    @Value("${jwt.fontCreateServer.secretKey}")
+    private String SECRET_KEY_FOR_FONT_CREATE_SERVER;
+
     private static final long ACCESS_TOKEN_VALIDITY = 15 * 60 * 1000; // 15 minutes
     private static final long REFRESH_TOKEN_VALIDITY = 7 * 24 * 60 * 60 * 1000; // 7 days
     private static final long TEMP_TOKEN_VALIDITY = 15 * 60 * 1000; // 10 minutes
+
+    @Getter
+    private final String fontCreateServerSubject = "FontCreateServer";
 
     public JwtTokenProvider(String SECRET_KEY_FOR_AUTHENTICATION, String SECRET_KEY_FOR_PROVIDE) {
         this.SECRET_KEY_FOR_AUTHENTICATION = SECRET_KEY_FOR_AUTHENTICATION;
@@ -88,5 +94,13 @@ public class JwtTokenProvider {
         Long id = Long.valueOf(claims.getSubject());
         UserPrincipal principal = new UserPrincipal(id);
         return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
+    }
+
+    public String getFontCreateServer(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(SECRET_KEY_FOR_FONT_CREATE_SERVER)
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getSubject();
     }
 }

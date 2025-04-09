@@ -5,6 +5,7 @@ import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2FailureH
 import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2SuccessHandler;
 import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2UserService;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtAuthenticationFilter;
+import org.fontory.fontorybe.authentication.adapter.outbound.JwtFontCreateServerFilter;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtOnlyOAuth2RequireFilter;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
@@ -60,12 +61,31 @@ public class SecurityConfig {
     }
 
     /**
-     * 2. jwtOnlySecurityFilterChain
+     * 2. FontCreateServer(FastAPI)에서 폰트제작상태 update 요청을 검증
+     */
+    @Bean
+    @Order(2)
+    public SecurityFilterChain FontCreateServerSecurityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .securityMatcher(new OrRequestMatcher(
+                        new AntPathRequestMatcher("/fonts/progress/{fontId:[\\d]+}", HttpMethod.PATCH.name())
+                ))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .csrf(CsrfConfigurer::disable)
+                .httpBasic(HttpBasicConfigurer::disable)
+                .formLogin(FormLoginConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .addFilterBefore(new JwtFontCreateServerFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
+
+    /**
+     * 3. jwtOnlySecurityFilterChain
      * 회원가입전 OAUTH2를 발급한 임시 토큰을 검증하기 위한 JwtOnlyProvideRequireFilter만 적용되는 컨트롤러
      * 회원가입전 사진업로드(POST, "/files/profile-image"), 회원가입(POST, "/member")
      */
     @Bean
-    @Order(2)
+    @Order(3)
     public SecurityFilterChain jwtOnlySecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher(new OrRequestMatcher(
@@ -84,11 +104,11 @@ public class SecurityConfig {
     // 3. 기본 체인: 그 외의 모든 요청에 대해 JWT 인증 필터 적용
 
     /**
-     * 3. defaultSecurityFilterChain
+     * 4. defaultSecurityFilterChain
      * 그 외의 모든 요청에 대해 JWT 인증 필터 적용
      */
     @Bean
-    @Order(3)
+    @Order(4)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher(new NegatedRequestMatcher(
@@ -127,7 +147,6 @@ public class SecurityConfig {
                         "/health-check",
                         "/auth/token/**",
                         "/actuator/prometheus",
-                        "/fonts/progress/{fontId}",
                         "/sqs-test"
                 );
     }

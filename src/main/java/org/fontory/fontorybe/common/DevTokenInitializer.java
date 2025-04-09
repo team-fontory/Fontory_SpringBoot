@@ -3,8 +3,10 @@ package org.fontory.fontorybe.common;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.transaction.Transactional;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.application.TokenService;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
 import org.fontory.fontorybe.member.controller.port.MemberService;
@@ -28,7 +30,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DevTokenInitializer implements ApplicationListener<ContextRefreshedEvent> {
 
-    private final TokenService tokenService;
+    private final JwtTokenProvider jwtTokenProvider;
     private final ProvideRepository provideRepository;
     private final MemberRepository memberRepository;
 
@@ -38,10 +40,15 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
     @Value("${jwt.provide.secretKey}")
     private String secretKeyForProvide;
 
+    @Value("${jwt.fontCreateServer.secretKey}")
+    private String secretKeyForFontCreateServer;
+
     // 고정된 발행 및 만료 시간
     private final Date issuedAt = new Date(1735689600000L);     // 2025-01-01T00:00:00Z
     private final Date expiration = new Date(1767225600000L);     // 2025-12-31T23:59:59Z
 
+    @Getter
+    private String fixedTokenForFontCreateServer;
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -76,7 +83,7 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
                 .profileImage("ProfileImage-URL")
                 .build();
 
-        memberRepository.save(member);
+        Member savedMember = memberRepository.save(member);
 
         String fixedTokenForProvide = Jwts.builder()
                 .setSubject(String.valueOf(savedProvide.getId()))
@@ -86,13 +93,21 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
                 .compact();
 
         String fixedTokenForAuthentication = Jwts.builder()
-                .setSubject(String.valueOf(member.getId()))
+                .setSubject(String.valueOf(savedMember.getId()))
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
                 .signWith(SignatureAlgorithm.HS512, secretKeyForAuthentication)
                 .compact();
 
+        fixedTokenForFontCreateServer = Jwts.builder()
+                .setSubject(jwtTokenProvider.getFontCreateServerSubject())
+                .setIssuedAt(issuedAt)
+                .setExpiration(expiration)
+                .signWith(SignatureAlgorithm.HS512, secretKeyForFontCreateServer)
+                .compact();
+
         log.info("Provide JWT for development: {}", fixedTokenForProvide);
         log.info("Authentication JWT for development: {}", fixedTokenForAuthentication);
+        log.info("FontCreateServer JWT: {}", fixedTokenForFontCreateServer);
     }
 }
