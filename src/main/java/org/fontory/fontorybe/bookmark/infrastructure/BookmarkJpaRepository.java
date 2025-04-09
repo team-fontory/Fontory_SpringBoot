@@ -1,7 +1,6 @@
 package org.fontory.fontorybe.bookmark.infrastructure;
 
 import java.util.Optional;
-import org.fontory.fontorybe.bookmark.domain.Bookmark;
 import org.fontory.fontorybe.bookmark.infrastructure.entity.BookmarkEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -9,8 +9,25 @@ env:
   DOCKERHUB_REPOSITORY: fontory-server
 
 jobs:
+  skip_check:
+    name: checking skip ci
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - name: Check for [skip ci] in commit message
+        id: check
+        run: |
+          if echo "${{ github.event.head_commit.message }}" | grep -iq "\[skip ci\]"; then
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          fi 
+
   CI:
     name: Continuous Integration
+    needs: skip_check
+    if: needs.skip_check.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -76,6 +93,7 @@ jobs:
           echo "spring.cloud.aws.credentials.SECRET-key=${{ secrets.AWS_SECRET_KEY }}" >> ./src/main/resources/application-infrastructure.properties
           echo "spring.cloud.aws.s3.bucket.profile-image=${{ secrets.AWS_BUCKET_NAME_PROFILE_IMAGE }}" >> ./src/main/resources/application-infrastructure.properties
           echo "spring.cloud.aws.s3.bucket.font-paper=${{ secrets.AWS_BUCKET_NAME_FONT_PAPER }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.sqs.queue-name=${{ secrets.AWS_FONT_CREATE_QUEUE_NAME }}" >> ./src/main/resources/application-infrastructure.properties
 
           echo "discord.webhook.error-url=${{ secrets.DISCORD_WEBHOOK_ERROR_URL }}" >> ./src/main/resources/application-infrastructure.properties
           echo "url.base=https://fontory.co.kr" >> ./src/main/resources/application-infrastructure.properties
@@ -156,7 +174,7 @@ jobs:
           key: ${{ secrets.REMOTE_PRIVATE_KEY }} # ec2 instance pem key
           port: ${{ secrets.REMOTE_SSH_PORT }} # 접속포트
           script: | # 실행할 스크립트
-            cd /home/ubuntu/cicd/scripts
+            cd /home/ubuntu/cicd_template/rolling_update
             ./rolling-update.sh
 
       - name: Discord Webhook Action

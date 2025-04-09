@@ -1,10 +1,7 @@
 package org.fontory.fontorybe.authentication.adapter.inbound;
 
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.authentication.domain.exception.TokenNotFoundException;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

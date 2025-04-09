@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.fontory.fontorybe.font.domain.Font;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 public interface FontRepository {
     Font save(Font font);
