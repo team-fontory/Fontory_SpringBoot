@@ -1,0 +1,3 @@
+[submodule "cicd-pipeline"]
+	path = cicd-pipeline
+	url = https://github.com/tape4/spring-cicd-template
