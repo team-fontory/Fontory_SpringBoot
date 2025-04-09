@@ -1,0 +1,355 @@
+package org.fontory.fontorybe.integration.font;
+
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
+import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
+import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
+import org.fontory.fontorybe.font.infrastructure.entity.FontStatus;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
+import org.springframework.test.web.servlet.MockMvc;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Sql(value = "/sql/createFontTestData.sql", executionPhase = ExecutionPhase.BEFORE_TEST_METHOD)
+@Sql(value = "/sql/deleteFontTestData.sql", executionPhase = ExecutionPhase.AFTER_TEST_METHOD)
+class FontControllerIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+
+    private final Long existMemberId = 999L;
+    private final String existMemberName = "existMemberNickName";
+
+    private final Long existFontId = 999L;
+    private final String existFontName = "테스트폰트";
+    private final String existFontStatus = "DONE";
+    private final String existFontExample = "이것은 테스트용 예제입니다.";
+    private final Long existFontDownloadCount = 0L;
+    private final Long existFontBookmarkCount = 0L;
+    private final String existFontTtf = "ttf주소";
+    private final String existFontWoff = "woff주소";
+
+    private final String newFontName = "newFontName";
+    private final String newFontExample = "newFontExample";
+
+    private final String updateFontName = "updateFontName";
+    private final String updateFontExample = "updateFontExample";
+
+    private String validAccessToken;
+
+    @BeforeEach
+    void setUp() {
+        UserPrincipal userPrincipal = new UserPrincipal(existMemberId);
+        validAccessToken = "Bearer " + jwtTokenProvider.generateAccessToken(userPrincipal);
+    }
+
+    @Test
+    @DisplayName("POST /fonts - add font success with valid Authorization header")
+    void addFontSuccess() throws Exception {
+        // given
+        FontCreateDTO createDTO = FontCreateDTO.builder()
+                .name(newFontName)
+                .example(newFontExample)
+                .build();
+
+        String jsonRequest = objectMapper.writeValueAsString(createDTO);
+
+        // when & then
+        mockMvc.perform(post("/fonts")
+                        .header("Authorization", validAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name", is(newFontName)))
+                .andExpect(jsonPath("$.status", is("PROGRESS")))
+                .andExpect(jsonPath("$.memberId", is(existMemberId.intValue())))
+                .andExpect(jsonPath("$.createdAt").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("POST /fonts - add font without Authorization header returns 401")
+    void addFontWithoutAuthHeader() throws Exception {
+        // given
+        FontCreateDTO createDTO = FontCreateDTO.builder()
+                .name(newFontName)
+                .example(newFontExample)
+                .build();
+
+        String jsonRequest = objectMapper.writeValueAsString(createDTO);
+
+        // when & then
+        mockMvc.perform(post("/fonts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
+    }
+
+    @Test
+    @DisplayName("GET /fonts/progress - success with valid Authorization header")
+    void getFontProgressSuccess() throws Exception {
+        // when & then
+        mockMvc.perform(get("/fonts/progress")
+                        .header("Authorization", validAccessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].id").isNotEmpty())
+                .andExpect(jsonPath("$[0].name").isNotEmpty())
+                .andExpect(jsonPath("$[0].status").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("GET /fonts/progress - getFontProgress without Authorization header returns 401")
+    void getFontProgressWithoutAuthHeader() throws Exception {
+        // when & then
+        mockMvc.perform(get("/fonts/progress")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
+    }
+
+    @Test
+    @DisplayName("PUT /fonts/{fontId} - update font success with valid Authorization header")
+    void updateFontSuccess() throws Exception {
+        // given
+        FontUpdateDTO updateDTO = FontUpdateDTO.builder()
+                .name(updateFontName)
+                .example(updateFontExample)
+                .build();
+
+        String jsonRequest = objectMapper.writeValueAsString(updateDTO);
+
+        // when & then
+        mockMvc.perform(put("/fonts/{fontId}", existFontId)
+                        .header("Authorization", validAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(existFontId.intValue())))
+                .andExpect(jsonPath("$.name", is(updateFontName)))
+                .andExpect(jsonPath("$.status").isNotEmpty())
+                .andExpect(jsonPath("$.example", is(updateFontExample)))
+                .andExpect(jsonPath("$.memberId").isNotEmpty())
+                .andExpect(jsonPath("$.createdAt").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("PUT /fonts/{fontId} - update font without Authorization header returns 401")
+    void updateFontWithoutAuthHeader() throws Exception {
+        // given
+        FontUpdateDTO updateDTO = FontUpdateDTO.builder()
+                .name(updateFontName)
+                .example(updateFontExample)
+                .build();
+
+        String jsonRequest = objectMapper.writeValueAsString(updateDTO);
+
+        // when & then
+        mockMvc.perform(put("/fonts/{fontId}", existFontId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
+    }
+
+    @Test
+    @DisplayName("GET /fonts/members - success with valid Authorization header")
+    void getMyFontsSuccess() throws Exception {
+        // when & then
+        mockMvc.perform(get("/fonts/members")
+                        .header("Authorization", validAccessToken)
+                        .param("page", "0")
+                        .param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].id").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].name").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].example").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].downloadCount").isNumber())
+                .andExpect(jsonPath("$.content[0].bookmarkCount").isNumber())
+                .andExpect(jsonPath("$.content[0].bookmarked").isBoolean())
+                .andExpect(jsonPath("$.content[0].memberId").isNotEmpty())
+                .andExpect(jsonPath("$.totalElements").isNumber())
+                .andExpect(jsonPath("$.totalPages").isNumber())
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.number").value(0));
+    }
+
+    @Test
+    @DisplayName("GET /fonts/members - without Authorization header returns 401")
+    void getMyFontsWithoutAuthHeader() throws Exception {
+        // when & then
+        mockMvc.perform(get("/fonts/members")
+                        .param("page", "0")
+                        .param("size", "5"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
+    }
+
+    @Test
+    @DisplayName("GET /fonts/{fontId} - get font detail success without authentication")
+    void getFontDetailSuccess() throws Exception {
+        // when & then
+        mockMvc.perform(get("/fonts/{fontId}", existFontId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(existFontId.intValue())))
+                .andExpect(jsonPath("$.name", is(existFontName)))
+                .andExpect(jsonPath("$.example", is(existFontExample)))
+                .andExpect(jsonPath("$.writerName", is(existMemberName)))
+                .andExpect(jsonPath("$.downloadCount", is(existFontDownloadCount.intValue())))
+                .andExpect(jsonPath("$.bookmarkCount", is(existFontBookmarkCount.intValue())))
+                .andExpect(jsonPath("$.memberId", is(existMemberId.intValue())));
+    }
+
+    @Test
+    @DisplayName("DELETE /fonts/members/{fontId} - success when authorized and own font")
+    void deleteFontSuccess() throws Exception {
+        // when & then
+        mockMvc.perform(delete("/fonts/members/{fontId}", existFontId)
+                        .header("Authorization", validAccessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(existFontId.intValue())));
+    }
+
+    @Test
+    @DisplayName("DELETE /fonts/members/{fontId} - without Authorization header returns 401")
+    void deleteFontWithoutAuthHeader() throws Exception {
+        // when & then
+        mockMvc.perform(delete("/fonts/members/{fontId}", existFontId))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
+    }
+
+    @Test
+    @DisplayName("GET /fonts - success with valid pagination and optional keyword")
+    void getFontPageSuccess() throws Exception {
+        // when & then
+        mockMvc.perform(get("/fonts")
+                        .param("page", "0")
+                        .param("size", "5")
+                        .param("sortBy", "createdAt")
+                        .param("keyword", "")
+                        .header("Authorization", validAccessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].id").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].name").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].example").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].writerName").isNotEmpty())
+                .andExpect(jsonPath("$.content[0].downloadCount").isNumber())
+                .andExpect(jsonPath("$.content[0].bookmarkCount").isNumber())
+                .andExpect(jsonPath("$.content[0].bookmarked").isBoolean())
+                .andExpect(jsonPath("$.content[0].memberId").isNotEmpty())
+                .andExpect(jsonPath("$.totalPages").isNumber())
+                .andExpect(jsonPath("$.totalElements").isNumber())
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.number").value(0));
+    }
+
+    @Test
+    @DisplayName("GET /fonts/{fontId}/others - success")
+    void getOtherFontsByWriterSuccess() throws Exception {
+        // when & then
+        mockMvc.perform(get("/fonts/{fontId}/others", existFontId)
+                        .header("Authorization", validAccessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(lessThanOrEqualTo(3)));
+    }
+
+    @Test
+    @DisplayName("GET /fonts/members/popular - success with valid Authorization header")
+    void getMyPopularFontsSuccess() throws Exception {
+        mockMvc.perform(get("/fonts/members/popular")
+                        .header("Authorization", validAccessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(greaterThanOrEqualTo(0)));
+    }
+
+    @Test
+    @DisplayName("GET /fonts/members/popular - without Authorization header returns 401")
+    void getMyPopularFontsWithoutAuthHeader() throws Exception {
+        mockMvc.perform(get("/fonts/members/popular"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
+    }
+
+    @Test
+    @DisplayName("GET /fonts/popular - success with valid Authorization header")
+    void getPopularFontsSuccess() throws Exception {
+        mockMvc.perform(get("/fonts/popular")
+                        .header("Authorization", validAccessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(greaterThanOrEqualTo(0)));
+    }
+
+    @Test
+    @DisplayName("PATCH /fonts/progress/{fontId} - success")
+    void updateFontProgressSuccess() throws Exception {
+        FontProgressUpdateDTO updateDTO = FontProgressUpdateDTO.builder()
+                .status(FontStatus.DONE)
+                .build();
+
+        String content = objectMapper.writeValueAsString(updateDTO);
+
+        mockMvc.perform(patch("/fonts/progress/{fontId}", 999L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(content))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("DONE")));
+    }
+
+    @Test
+    @DisplayName("GET /fonts/{fontId}/download - success")
+    void downloadFontSuccess() throws Exception {
+        mockMvc.perform(get("/fonts/{fontId}/download", 999L)
+                        .header("Authorization", validAccessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(999)))
+                .andExpect(jsonPath("$.downloadCount").isNumber());
+    }
+
+    @Test
+    @DisplayName("GET /fonts/{fontId}/download - without Authorization header returns 401")
+    void downloadFontWithoutAuthHeader() throws Exception {
+        mockMvc.perform(get("/fonts/{fontId}/download", 999L))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType("application/json;charset=UTF-8"))
+                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
+    }
+}

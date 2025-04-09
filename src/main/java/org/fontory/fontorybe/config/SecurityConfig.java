@@ -104,9 +104,9 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         // 인증이 없어도 되는 (@Login(required= false) 가능) 요청 엔드포인트
-                        .requestMatchers(HttpMethod.GET, "/fonts/{fontId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/fonts/{fontId:[\\d]+}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/fonts").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/fonts/{fontId}/others").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/fonts/{fontId:[\\d]+}/others").permitAll()
                         .requestMatchers(HttpMethod.GET, "/fonts/popular").permitAll()
                         // 그 외엔 인증 필요
                         .anyRequest().authenticated()
