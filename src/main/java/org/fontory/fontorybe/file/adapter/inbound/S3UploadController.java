@@ -1,5 +1,6 @@
 package org.fontory.fontorybe.file.adapter.inbound;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.fontory.fontorybe.authentication.adapter.inbound.Login;
 import org.fontory.fontorybe.authentication.adapter.inbound.OAuth2;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
@@ -18,6 +19,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import static org.fontory.fontorybe.file.validator.MultipartFileValidator.*;
 
 @Slf4j
 @RestController
@@ -43,8 +46,11 @@ public class S3UploadController {
     @PostMapping("/profile-image")
     public ResponseEntity<?> uploadMemberProfileImage(
             @OAuth2 Provide provide,
-            @RequestPart MultipartFile file
+            HttpServletRequest request
+//            @RequestPart MultipartFile file
     ) {
+        MultipartFile file = extractSingleMultipartFile(request);
+
         log.info("Request received: Upload new profile image for oauth provider: {}, provideId: {}", 
                 provide.getProvider(), provide.getId());
         logFileDetails(file, "New profile image upload");
@@ -62,9 +68,12 @@ public class S3UploadController {
     @PutMapping("/profile-image")
     public ResponseEntity<?> uploadMemberProfileImage(
             @Login UserPrincipal userPrincipal,
-            @RequestPart MultipartFile file
+            HttpServletRequest request
+//            @RequestPart MultipartFile file
     ) {
         Long memberId = userPrincipal.getId();
+        MultipartFile file = extractSingleMultipartFile(request);
+
         log.info("Request received: Update profile image for member ID: {}", memberId);
         logFileDetails(file, "Profile image update");
         
