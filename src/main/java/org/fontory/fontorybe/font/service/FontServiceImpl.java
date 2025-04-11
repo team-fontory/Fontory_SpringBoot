@@ -16,7 +16,9 @@ import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
+import org.fontory.fontorybe.font.service.dto.FontRequestProduceDto;
 import org.fontory.fontorybe.font.service.port.FontRepository;
+import org.fontory.fontorybe.font.service.port.FontRequestProducer;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.springframework.data.domain.Page;
@@ -35,7 +37,10 @@ import lombok.extern.slf4j.Slf4j;
 public class FontServiceImpl implements FontService {
     private final FontRepository fontRepository;
     private final BookmarkRepository bookmarkRepository;
+
     private final MemberService memberService;
+
+    private final FontRequestProducer fontRequestProducer;
 
     @Override
     @Transactional
@@ -44,6 +49,8 @@ public class FontServiceImpl implements FontService {
         Member member = memberService.getOrThrowById(memberId);
 
         Font savedFont = fontRepository.save(Font.from(fontCreateDTO, member.getId()));
+        fontRequestProducer.sendFontRequest(FontRequestProduceDto.from(savedFont, member));
+
         log.info("Service completed: Font created with ID: {}", savedFont.getId());
         return savedFont;
     }
