@@ -6,6 +6,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.AbstractJackson2HttpMessageConverter;
 import org.springframework.stereotype.Component;
 
+/**
+ * For Swagger to use RequestPart and dto
+ */
 @Component
 public class OctetStreamReadMessageConverter extends AbstractJackson2HttpMessageConverter {
 

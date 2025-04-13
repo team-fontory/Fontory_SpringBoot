@@ -3,6 +3,9 @@ package org.fontory.fontorybe.integration.font;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -18,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.common.DevTokenInitializer;
+import org.fontory.fontorybe.file.application.FileService;
 import org.fontory.fontorybe.file.domain.FileCreate;
 import org.fontory.fontorybe.file.domain.FileDetails;
 import org.fontory.fontorybe.file.domain.FileType;
@@ -25,6 +29,7 @@ import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.infrastructure.entity.FontStatus;
+import org.fontory.fontorybe.font.service.port.FontRequestProducer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +38,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 import org.springframework.test.web.servlet.MockMvc;
@@ -51,6 +57,11 @@ class FontControllerIntegrationTest {
     private JwtTokenProvider jwtTokenProvider;
     @Autowired
     private DevTokenInitializer devTokenInitializer;
+
+    @MockitoBean
+    private FileService fileService;
+    @MockitoBean
+    private FontRequestProducer fontRequestProducer;
 
     private final Long existMemberId = 999L;
     private final String existMemberName = "existMemberNickName";
@@ -73,11 +84,23 @@ class FontControllerIntegrationTest {
     private String validAccessToken;
     private String validFontCreateServerToken;
 
+    private FileDetails fileDetails;
+
     @BeforeEach
     void setUp() {
         UserPrincipal userPrincipal = new UserPrincipal(existMemberId);
         validAccessToken = "Bearer " + jwtTokenProvider.generateAccessToken(userPrincipal);
         validFontCreateServerToken = "Bearer " + devTokenInitializer.getFixedTokenForFontCreateServer();
+
+        fileDetails = FileDetails.builder()
+                .fileName("fontTemplateImage.jpg")
+                .fileUrl("https://mock-s3.com/fake.jpg")
+                .size(1024L)
+                .build();
+
+        given(fileService.uploadFontTemplateImage(any())).willReturn(fileDetails);
+
+        doNothing().when(fontRequestProducer).sendFontRequest(any());
     }
 
     @Test

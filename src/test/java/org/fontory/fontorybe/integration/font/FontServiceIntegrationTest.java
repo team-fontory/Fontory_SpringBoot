@@ -3,6 +3,9 @@ package org.fontory.fontorybe.integration.font;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -25,6 +28,7 @@ import org.fontory.fontorybe.font.domain.Font;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
 import org.fontory.fontorybe.font.infrastructure.entity.FontStatus;
+import org.fontory.fontorybe.font.service.port.FontRequestProducer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 
@@ -41,8 +46,10 @@ import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 class FontServiceIntegrationTest {
     @Autowired
     private FontService fontService;
-    @Autowired
+    @MockitoBean
     private FileService fileService;
+    @MockitoBean
+    private FontRequestProducer fontRequestProducer;
 
     private final Long existMemberId = 999L;
     private final String existMemberName = "existMemberNickName";
@@ -63,21 +70,16 @@ class FontServiceIntegrationTest {
     private FileDetails fileDetails;
 
     @BeforeEach
-    void setup() throws Exception {
-        MockMultipartFile fakeImage = new MockMultipartFile(
-                "file",
-                "fontTemplateImage.jpg",
-                "image/jpeg",
-                "테스트용 이미지입니다.".getBytes(StandardCharsets.UTF_8)
-        );
-
-        FileCreate fileCreate = FileCreate.builder()
-                .fileName("fontTemplateImage")
-                .fileType(FileType.FONT_PAPER)
-                .file(fakeImage)
+    void setup() {
+        fileDetails = FileDetails.builder()
+                .fileName("fontTemplateImage.jpg")
+                .fileUrl("https://mock-s3.com/fake.jpg")
+                .size(1024L)
                 .build();
 
-        this.fileDetails = fileService.uploadFontTemplateImage(fileCreate);
+        given(fileService.uploadFontTemplateImage(any())).willReturn(fileDetails);
+
+        doNothing().when(fontRequestProducer).sendFontRequest(any());
     }
 
     @Test
