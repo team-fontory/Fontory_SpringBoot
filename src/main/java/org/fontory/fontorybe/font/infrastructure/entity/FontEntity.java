@@ -46,6 +46,8 @@ public class FontEntity extends BaseEntity {
 
     private Long memberId;
 
+    private String templateURL;
+
     public Font toModel() {
         return Font.builder()
                 .id(id)
@@ -57,6 +59,7 @@ public class FontEntity extends BaseEntity {
                 .ttf(ttf)
                 .woff(woff)
                 .memberId(memberId)
+                .templateURL(templateURL)
                 .createdAt(getCreatedAt())
                 .updatedAt(getUpdatedAt())
                 .build();
@@ -73,6 +76,7 @@ public class FontEntity extends BaseEntity {
                 .ttf(font.getTtf())
                 .woff(font.getWoff())
                 .memberId(font.getMemberId())
+                .templateURL(font.getTemplateURL())
                 .createdAt(font.getCreatedAt())
                 .updatedAt(font.getUpdatedAt())
                 .build();

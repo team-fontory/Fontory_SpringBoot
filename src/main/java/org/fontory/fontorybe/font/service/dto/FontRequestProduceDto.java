@@ -24,7 +24,7 @@ public class FontRequestProduceDto {
                 .memberId(member.getId())
                 .fontId(font.getId())
                 .fontName(font.getName())
-                .templateURL("temp")
+                .templateURL(font.getTemplateURL())
                 .author(member.getNickname())
                 .requestUUID(MDC.get("requestId"))
                 .build();

@@ -6,4 +6,6 @@ import org.fontory.fontorybe.file.domain.FileDetails;
 public interface FileService {
 
     FileDetails uploadProfileImage(FileCreate fileCreate);
+
+    FileDetails uploadFontTemplateImage(FileCreate fileCreate);
 }
