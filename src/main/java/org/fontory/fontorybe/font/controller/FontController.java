@@ -78,7 +78,7 @@ public class FontController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> addFont(
             @Login UserPrincipal userPrincipal,
-            @RequestPart FontCreateDTO fontCreateDTO,
+            @RequestPart("fontCreateDTO") FontCreateDTO fontCreateDTO,
                 @Parameter(
                         description = "업로드할 파일. 정확히 1개의 파일만 제공되어야 합니다.",
                         required = true,

@@ -4,9 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import org.fontory.fontorybe.file.application.FileService;
+import org.fontory.fontorybe.file.domain.FileCreate;
+import org.fontory.fontorybe.file.domain.FileDetails;
+import org.fontory.fontorybe.file.domain.FileType;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
@@ -20,11 +25,13 @@ import org.fontory.fontorybe.font.domain.Font;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
 import org.fontory.fontorybe.font.infrastructure.entity.FontStatus;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 
@@ -34,6 +41,8 @@ import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 class FontServiceIntegrationTest {
     @Autowired
     private FontService fontService;
+    @Autowired
+    private FileService fileService;
 
     private final Long existMemberId = 999L;
     private final String existMemberName = "existMemberNickName";
@@ -51,6 +60,26 @@ class FontServiceIntegrationTest {
     private final String existFontTtf = "ttf주소";
     private final String existFontWoff = "woff주소";
 
+    private FileDetails fileDetails;
+
+    @BeforeEach
+    void setup() throws Exception {
+        MockMultipartFile fakeImage = new MockMultipartFile(
+                "file",
+                "fontTemplateImage.jpg",
+                "image/jpeg",
+                "테스트용 이미지입니다.".getBytes(StandardCharsets.UTF_8)
+        );
+
+        FileCreate fileCreate = FileCreate.builder()
+                .fileName("fontTemplateImage")
+                .fileType(FileType.FONT_PAPER)
+                .file(fakeImage)
+                .build();
+
+        this.fileDetails = fileService.uploadFontTemplateImage(fileCreate);
+    }
+
     @Test
     @DisplayName("font - create success test")
     void createFontSuccess() {
@@ -61,7 +90,7 @@ class FontServiceIntegrationTest {
                 .build();
 
         // when
-        Font createdFont = fontService.create(existMemberId, dto);
+        Font createdFont = fontService.create(existMemberId, dto, fileDetails);
 
         // then
         assertAll(
@@ -83,10 +112,14 @@ class FontServiceIntegrationTest {
     @DisplayName("font - getFontProgress success test")
     void getFontProgressSuccess() {
         for (int i = 1; i <= 6; i++) {
-            fontService.create(existMemberId, FontCreateDTO.builder()
-                    .name("진행중폰트" + i)
-                    .example("예제" + i)
-                    .build());
+            fontService.create(
+                    existMemberId,
+                    FontCreateDTO.builder()
+                            .name("진행중폰트" + i)
+                            .example("예제" + i)
+                            .build(),
+                    fileDetails
+            );
         }
 
         // when
@@ -128,7 +161,7 @@ class FontServiceIntegrationTest {
                 .example("다른예제")
                 .build();
 
-        Font elseFont = fontService.create(createdMemberId, createDTO);
+        Font elseFont = fontService.create(createdMemberId, createDTO, fileDetails);
 
         FontUpdateDTO updateDTO = FontUpdateDTO.builder()
                 .name("수정시도")
@@ -175,10 +208,14 @@ class FontServiceIntegrationTest {
     void getFontsSuccess() {
         // given
         for (int i = 1; i <= 7; i++) {
-            fontService.create(existMemberId, FontCreateDTO.builder()
-                    .name("폰트" + i)
-                    .example("예제" + i)
-                    .build());
+            fontService.create(
+                    existMemberId,
+                    FontCreateDTO.builder()
+                            .name("폰트" + i)
+                            .example("예제" + i)
+                            .build(),
+                    fileDetails
+            );
         }
 
         int page = 0;
@@ -244,7 +281,7 @@ class FontServiceIntegrationTest {
                 .example("다른예제")
                 .build();
 
-        Font elseFont = fontService.create(createdMemberId, createDTO);
+        Font elseFont = fontService.create(createdMemberId, createDTO, fileDetails);
 
         // when & then
         assertThatThrownBy(() -> fontService.delete(existMemberId, elseFont.getId()))
@@ -255,20 +292,32 @@ class FontServiceIntegrationTest {
     @DisplayName("font - getFontPage success test")
     void getFontPageSuccess() {
         // given
-        Font font1 = fontService.create(existMemberId, FontCreateDTO.builder()
-                .name("페이지폰트1")
-                .example("예제1")
-                .build());
+        Font font1 = fontService.create(
+                existMemberId,
+                FontCreateDTO.builder()
+                        .name("페이지폰트1")
+                        .example("예제1")
+                        .build(),
+                fileDetails
+        );
 
-        Font font2 = fontService.create(existMemberId, FontCreateDTO.builder()
-                .name("페이지폰트2")
-                .example("예제2")
-                .build());
+        Font font2 = fontService.create(
+                existMemberId,
+                FontCreateDTO.builder()
+                        .name("페이지폰트2")
+                        .example("예제2")
+                        .build(),
+                fileDetails
+        );
 
-        Font font3 = fontService.create(existMemberId, FontCreateDTO.builder()
-                .name("페이지폰트")
-                .example("예제3")
-                .build());
+        Font font3 = fontService.create(
+                existMemberId,
+                FontCreateDTO.builder()
+                        .name("페이지폰트")
+                        .example("예제3")
+                        .build(),
+                fileDetails
+        );
 
         for (int i = 0; i < 10; i++) {
             fontService.fontDownload(existMemberId, font1.getId());
@@ -319,14 +368,32 @@ class FontServiceIntegrationTest {
     @DisplayName("font - getMyPopularFonts success test")
     void getMyPopularFontsSuccess() {
         // given
-        Font font1 = fontService.create(existMemberId, FontCreateDTO.builder()
-                .name("폰트1").example("예1").build());
+        Font font1 = fontService.create(
+                existMemberId,
+                FontCreateDTO.builder()
+                        .name("폰트1")
+                        .example("예1")
+                        .build(),
+                fileDetails
+                );
 
-        Font font2 = fontService.create(existMemberId, FontCreateDTO.builder()
-                .name("폰트2").example("예2").build());
+        Font font2 = fontService.create(
+                existMemberId,
+                FontCreateDTO.builder()
+                        .name("폰트2")
+                        .example("예2")
+                        .build(),
+                fileDetails
+                );
 
-        Font font3 = fontService.create(existMemberId, FontCreateDTO.builder()
-                .name("폰트3").example("예3").build());
+        Font font3 = fontService.create(
+                existMemberId,
+                FontCreateDTO.builder()
+                        .name("폰트3")
+                        .example("예3")
+                        .build(),
+                fileDetails
+                );
 
         for (int i = 0; i < 5; i++) {
             fontService.fontDownload(existMemberId, font1.getId());
@@ -360,14 +427,32 @@ class FontServiceIntegrationTest {
     @DisplayName("font - getPopularFonts success test")
     void getPopularFontsSuccess() {
         // given
-        Font font1 = fontService.create(existMemberId, FontCreateDTO.builder()
-                .name("폰트1").example("예1").build());
+        Font font1 = fontService.create(
+                existMemberId,
+                FontCreateDTO.builder()
+                        .name("폰트1")
+                        .example("예1")
+                        .build(),
+                fileDetails
+        );
 
-        Font font2 = fontService.create(existMemberId, FontCreateDTO.builder()
-                .name("폰트2").example("예2").build());
+        Font font2 = fontService.create(
+                existMemberId,
+                FontCreateDTO.builder()
+                        .name("폰트2")
+                        .example("예2")
+                        .build(),
+                fileDetails
+        );
 
-        Font font3 = fontService.create(existMemberId, FontCreateDTO.builder()
-                .name("폰트3").example("예3").build());
+        Font font3 = fontService.create(
+                existMemberId,
+                FontCreateDTO.builder()
+                        .name("폰트3")
+                        .example("예3")
+                        .build(),
+                fileDetails
+        );
 
         for (int i = 0; i < 5; i++) {
             fontService.fontDownload(existMemberId, font1.getId());
@@ -408,7 +493,7 @@ class FontServiceIntegrationTest {
                 .example("예제입니다")
                 .build();
 
-        Font createdFont = fontService.create(existMemberId, dto);
+        Font createdFont = fontService.create(existMemberId, dto, fileDetails);
 
         FontProgressUpdateDTO progressDto = FontProgressUpdateDTO.builder()
                 .status(FontStatus.DONE)
