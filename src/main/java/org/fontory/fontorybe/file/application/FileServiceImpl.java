@@ -19,4 +19,11 @@ public class FileServiceImpl implements FileService {
 
         return FileDetails.from(fileMetadata);
     }
+
+    @Override
+    public FileDetails uploadFontTemplateImage(FileCreate fileCreate) {
+        FileMetadata fileMetadata = cloudStorageService.uploadFontTemplateImage(fileCreate);
+
+        return FileDetails.from(fileMetadata);
+    }
 }

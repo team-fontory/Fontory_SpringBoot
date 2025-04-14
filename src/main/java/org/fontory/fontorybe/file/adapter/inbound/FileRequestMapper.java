@@ -45,6 +45,20 @@ public class FileRequestMapper {
                 .build();
     }
 
+    public FileCreate toFontTemplateImageFileCreate(MultipartFile file, Long memberId) {
+        Member foundMember = memberService.getOrThrowById(memberId);
+        Provide provide = provideService.getOrThrownById(foundMember.getProvideId());
+
+        validateImageFile(file);
+        String generatedFileName = generateFileName(file, provide);
+
+        return FileCreate.builder()
+                .file(file)
+                .fileType(FileType.FONT_PAPER)
+                .fileName(generatedFileName)
+                .build();
+    }
+
     private void validateImageFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new FileEmptyException("File is empty.");

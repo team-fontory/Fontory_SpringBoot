@@ -1,9 +1,25 @@
 package org.fontory.fontorybe.font.controller;
 
-import java.util.List;
+import static org.fontory.fontorybe.file.validator.MultipartFileValidator.extractSingleMultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.authentication.adapter.inbound.Login;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.file.adapter.inbound.FileRequestMapper;
+import org.fontory.fontorybe.file.adapter.inbound.dto.FileUploadResponse;
+import org.fontory.fontorybe.file.application.FileService;
+import org.fontory.fontorybe.file.domain.FileCreate;
+import org.fontory.fontorybe.file.domain.FileDetails;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontCreateResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
@@ -18,9 +34,11 @@ import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,16 +46,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Tag(name = "폰트 관리", description = "폰트 API")
@@ -46,7 +57,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class FontController {
     private final FontService fontService;
+    private final FileService fileService;
     private final ObjectMapper objectMapper;
+    private final FileRequestMapper fileRequestMapper;
     
     /**
      * Convert an object to JSON string for logging
@@ -62,19 +75,53 @@ public class FontController {
     }
 
     @Operation(summary = "폰트 생성")
-    @PostMapping
-    public ResponseEntity<?> addFont(@RequestBody FontCreateDTO fontCreateDTO, @Login UserPrincipal userPrincipal) {
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> addFont(
+            @Login UserPrincipal userPrincipal,
+            @RequestPart("fontCreateDTO") FontCreateDTO fontCreateDTO,
+                @Parameter(
+                        description = "업로드할 파일. 정확히 1개의 파일만 제공되어야 합니다.",
+                        required = true,
+                        content = @Content(
+                                mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                                array = @ArraySchema(
+                                        schema = @Schema(type = "string", format = "binary"),
+                                        maxItems = 1
+                                )
+                        )
+                )
+            @RequestPart("file") List<MultipartFile> files
+    ) {
         Long memberId = userPrincipal.getId();
-        log.info("Request received: Create font for member ID: {}, request: {}", 
+
+        MultipartFile file = extractSingleMultipartFile(files);
+
+        log.info("Request received: Create font and Upload font template image for member ID: {}, request: {}",
                 memberId, toJson(fontCreateDTO));
 
-        Font createdFont = fontService.create(memberId, fontCreateDTO);
-        log.info("Response sent: Font created with ID: {}, name: {}", 
-                createdFont.getId(), createdFont.getName());
+        logFileDetails(file, "Font template image upload");
+
+        FileCreate fileCreate = fileRequestMapper.toFontTemplateImageFileCreate(file, memberId);
+        FileDetails fileDetails = fileService.uploadFontTemplateImage(fileCreate);
+        FileUploadResponse fileUploadResponse = FileUploadResponse.from(fileDetails);
+
+        Font createdFont = fontService.create(memberId, fontCreateDTO, fileDetails);
+
+        log.info("Response sent: Font created with ID: {}, name: {} and Font template image uploaded successfully, url: {}, fileName: {}, size: {} bytes",
+                createdFont.getId(), createdFont.getName(), fileDetails.getFileUrl(), fileDetails.getFileName(), fileDetails.getSize());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(FontCreateResponse.from(createdFont));
+                .body(FontCreateResponse.from(createdFont, fileUploadResponse));
+    }
+
+    private void logFileDetails(MultipartFile file, String context) {
+        log.debug("{} - File details: name='{}', original name='{}', size={} bytes, contentType='{}'",
+                context,
+                file.getName(),
+                file.getOriginalFilename(),
+                file.getSize(),
+                file.getContentType());
     }
 
     @Operation(summary = "폰트 제작 상황")

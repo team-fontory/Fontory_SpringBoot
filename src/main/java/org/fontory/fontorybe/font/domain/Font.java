@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.fontory.fontorybe.file.domain.FileDetails;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
@@ -35,6 +36,8 @@ public class Font {
 
     private Long memberId;
 
+    private String templateURL;
+
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
@@ -51,7 +54,7 @@ public class Font {
         this.downloadCount++;
     }
 
-    public static Font from(FontCreateDTO fontCreateDTO, Long memberId) {
+    public static Font from(FontCreateDTO fontCreateDTO, Long memberId, FileDetails fileDetails) {
         return Font.builder()
                 .name(fontCreateDTO.getName())
                 .status(FontStatus.PROGRESS)
@@ -59,6 +62,7 @@ public class Font {
                 .downloadCount(0L)
                 .bookmarkCount(0L)
                 .memberId(memberId)
+                .templateURL(fileDetails.getFileUrl())
                 .build();
     }
 
@@ -73,6 +77,7 @@ public class Font {
                 .ttf(this.ttf)
                 .woff(this.woff)
                 .memberId(this.memberId)
+                .templateURL(this.templateURL)
                 .createdAt(this.createdAt)
                 .updatedAt(this.updatedAt)
                 .build();
@@ -89,6 +94,7 @@ public class Font {
                 .ttf(this.ttf)
                 .woff(this.woff)
                 .memberId(this.memberId)
+                .templateURL(this.templateURL)
                 .createdAt(this.createdAt)
                 .updatedAt(this.updatedAt)
                 .build();

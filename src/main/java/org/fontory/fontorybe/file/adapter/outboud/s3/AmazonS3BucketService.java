@@ -50,4 +50,22 @@ public class AmazonS3BucketService implements CloudStorageService{
         s3Template.deleteObject(profileImageBucketName,fileNameWithoutExtension + ".jpeg");
         s3Template.deleteObject(profileImageBucketName,fileNameWithoutExtension + ".png");
     }
+
+    @Override
+    public FileMetadata uploadFontTemplateImage(FileCreate request) {
+        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(request, clockHolder.getCurrentTimeStamp());
+
+        try (InputStream inputStream = amazonS3PutRequest.getFile().getInputStream()) {
+            S3Resource s3Resource = s3Template.upload(
+                    fontPaperBucketName,
+                    amazonS3PutRequest.getKey(),
+                    inputStream);
+
+            String objectUrl = s3Resource.getURL().toExternalForm();
+
+            return AmazonS3ObjectMetadata.from(amazonS3PutRequest, objectUrl).toModel();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

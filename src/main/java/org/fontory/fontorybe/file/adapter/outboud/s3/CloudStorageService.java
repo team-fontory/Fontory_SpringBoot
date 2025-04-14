@@ -6,4 +6,6 @@ import org.fontory.fontorybe.file.domain.FileMetadata;
 public interface CloudStorageService {
 
     FileMetadata uploadProfileImage(FileCreate fileCreate);
+
+    FileMetadata uploadFontTemplateImage(FileCreate fileCreate);
 }

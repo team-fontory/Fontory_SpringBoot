@@ -2,8 +2,10 @@ package org.fontory.fontorybe.font.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.bookmark.service.port.BookmarkRepository;
+import org.fontory.fontorybe.file.domain.FileDetails;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
@@ -16,7 +18,9 @@ import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
+import org.fontory.fontorybe.font.service.dto.FontRequestProduceDto;
 import org.fontory.fontorybe.font.service.port.FontRepository;
+import org.fontory.fontorybe.font.service.port.FontRequestProducer;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.springframework.data.domain.Page;
@@ -26,25 +30,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FontServiceImpl implements FontService {
     private final FontRepository fontRepository;
     private final BookmarkRepository bookmarkRepository;
+
     private final MemberService memberService;
+
+    private final FontRequestProducer fontRequestProducer;
 
     @Override
     @Transactional
-    public Font create(Long memberId, FontCreateDTO fontCreateDTO) {
+    public Font create(Long memberId, FontCreateDTO fontCreateDTO, FileDetails fileDetails) {
         log.info("Service executing: Creating font for member ID: {}, font name: {}", memberId, fontCreateDTO.getName());
         Member member = memberService.getOrThrowById(memberId);
 
-        Font savedFont = fontRepository.save(Font.from(fontCreateDTO, member.getId()));
-        log.info("Service completed: Font created with ID: {}", savedFont.getId());
+        Font savedFont = fontRepository.save(Font.from(fontCreateDTO, member.getId(), fileDetails));
+        fontRequestProducer.sendFontRequest(FontRequestProduceDto.from(savedFont, member));
+
+        log.info("Service completed: Font created with ID: {} and Font template image uploaded successfully", savedFont.getId());
         return savedFont;
     }
 
