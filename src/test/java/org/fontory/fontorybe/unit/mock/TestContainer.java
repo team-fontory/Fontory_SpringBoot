@@ -61,7 +61,7 @@ public class TestContainer {
         memberRepository = new FakeMemberRepository();
         provideRepository = new FakeProvideRepository();
 
-        tokenStorage = new RedisTokenStorage(jwtTokenProvider, fakeRedisTemplate, props);
+        tokenStorage = new RedisTokenStorage(fakeRedisTemplate, props);
 
         provideService = ProvideServiceImpl.builder()
                 .provideRepository(provideRepository)
