@@ -45,10 +45,10 @@ jobs:
 
       - name: Generate application.properties
         run: |
-          echo "jwt.access-secret-key=${{ secrets.JWT_SECRETKEY }}" >> ./src/main/resources/application-infrastructure.properties
-          echo "jwt.refresh-secret-key=${{ secrets.JWT_REFESH_SECRETKEY }}" >> ./src/main/resources/application-infrastructure.properties
-          echo "jwt.provide-secret-key=${{ secrets.JWT_PROVIDE_SECRETKEY }}" >> ./src/main/resources/application-infrastructure.properties
-          echo "jwt.font-create-server-secret-key=${{ secrets.JWT_FONT_CREATE_SERVER_SECRETKEY }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "jwt.access-secret-key=${{ secrets.JWT_SECRETKEY }}" >> ./src/main/resources/application.properties
+          echo "jwt.refresh-secret-key=${{ secrets.JWT_REFESH_SECRETKEY }}" >> ./src/main/resources/application.properties
+          echo "jwt.provide-secret-key=${{ secrets.JWT_PROVIDE_SECRETKEY }}" >> ./src/main/resources/application.properties
+          echo "jwt.font-create-server-secret-key=${{ secrets.JWT_FONT_CREATE_SERVER_SECRETKEY }}" >> ./src/main/resources/application.properties
 
           echo "spring.security.oauth2.client.registration.google.client-id=${{ secrets.OAUTH2_GOOGLE_CLIENT_ID }}" >> ./src/main/resources/application-infrastructure.properties
           echo "spring.security.oauth2.client.registration.google.client-secret=${{ secrets.OAUTH2_GOOGLE_CLIENT_SECRET }}" >> ./src/main/resources/application-infrastructure.properties
