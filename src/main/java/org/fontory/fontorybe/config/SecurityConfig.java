@@ -4,10 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2FailureHandler;
 import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2SuccessHandler;
 import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2UserService;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtAuthenticationFilter;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtFontCreateServerFilter;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtOnlyOAuth2RequireFilter;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.adapter.inbound.security.JwtAuthenticationFilter;
+import org.fontory.fontorybe.authentication.adapter.inbound.security.JwtFontCreateServerFilter;
+import org.fontory.fontorybe.authentication.adapter.inbound.security.JwtOnlyOAuth2RequireFilter;
+import org.fontory.fontorybe.authentication.application.AuthService;
+import org.fontory.fontorybe.authentication.application.port.CookieUtils;
+import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
+import org.fontory.fontorybe.config.jwt.JwtProperties;
+import org.fontory.fontorybe.config.security.RestAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -15,10 +19,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.annotation.web.configurers.FormLoginConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
@@ -33,9 +39,14 @@ public class SecurityConfig {
     private final CustomOauth2UserService oauth2UserService;
     private final CustomOauth2SuccessHandler oauth2SuccessHandler;
     private final CustomOauth2FailureHandler oauth2FailureHandler;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final CorsConfigurationSource corsConfigurationSource;
+
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final CorsConfigurationSource corsConfigurationSource;
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProperties jwtProperties;
+    private final AuthService authService;
+    private final CookieUtils cookieUtils;
 
     // 1. Chain for OAUTH2
     @Bean
@@ -65,17 +76,18 @@ public class SecurityConfig {
      */
     @Bean
     @Order(2)
-    public SecurityFilterChain FontCreateServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain fontCreateServerSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher(new OrRequestMatcher(
                         new AntPathRequestMatcher("/fonts/progress/{fontId:[\\d]+}", HttpMethod.PATCH.name())
                 ))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .sessionManagement(AbstractHttpConfigurer::disable)
                 .csrf(CsrfConfigurer::disable)
                 .httpBasic(HttpBasicConfigurer::disable)
                 .formLogin(FormLoginConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .addFilterBefore(new JwtFontCreateServerFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtFontCreateServerFilter(jwtTokenProvider, jwtProperties), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
@@ -93,6 +105,7 @@ public class SecurityConfig {
                         new AntPathRequestMatcher("/member", HttpMethod.POST.name())
                 ))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .sessionManagement(AbstractHttpConfigurer::disable)
                 .csrf(CsrfConfigurer::disable)
                 .httpBasic(HttpBasicConfigurer::disable)
                 .formLogin(FormLoginConfigurer::disable)
@@ -118,10 +131,12 @@ public class SecurityConfig {
                         )
                 ))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .sessionManagement(AbstractHttpConfigurer::disable)
                 .csrf(CsrfConfigurer::disable)
                 .httpBasic(HttpBasicConfigurer::disable)
                 .formLogin(FormLoginConfigurer::disable)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
+                .addFilterAfter(new JwtAuthenticationFilter(jwtTokenProvider, authService, cookieUtils), ExceptionTranslationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         // 인증이 없어도 되는 (@Login(required= false) 가능) 요청 엔드포인트
                         .requestMatchers(HttpMethod.GET, "/fonts/{fontId:[\\d]+}").permitAll()
@@ -131,7 +146,7 @@ public class SecurityConfig {
                         // 그 외엔 인증 필요
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+//                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
@@ -145,9 +160,7 @@ public class SecurityConfig {
                         "/swagger-resources/**",
                         "/webjars/**",
                         "/health-check",
-                        "/auth/token/**",
-                        "/actuator/prometheus",
-                        "/sqs-test"
+                        "/actuator/prometheus"
                 );
     }
 }

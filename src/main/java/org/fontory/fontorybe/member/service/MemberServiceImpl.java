@@ -2,7 +2,7 @@ package org.fontory.fontorybe.member.service;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
@@ -37,7 +37,7 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional(readOnly = true)
-    public Boolean isDuplicateNameExists(String targetName) {
+    public boolean isDuplicateNameExists(String targetName) {
         return memberRepository.existsByNickname(targetName);
     }
 

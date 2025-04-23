@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.config;
+package org.fontory.fontorybe.config.swagger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.Type;

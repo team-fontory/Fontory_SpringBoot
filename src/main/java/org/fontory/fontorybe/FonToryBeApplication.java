@@ -1,8 +1,10 @@
 package org.fontory.fontorybe;
 
+import org.fontory.fontorybe.config.jwt.JwtProperties;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -14,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 @EnableAsync
 @EnableJpaAuditing
 @SpringBootApplication
+@EnableConfigurationProperties(JwtProperties.class)
 public class FonToryBeApplication {
 
     public static void main(String[] args) {

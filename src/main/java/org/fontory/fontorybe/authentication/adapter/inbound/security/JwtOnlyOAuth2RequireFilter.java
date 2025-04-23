@@ -1,18 +1,17 @@
-package org.fontory.fontorybe.authentication.adapter.outbound;
+package org.fontory.fontorybe.authentication.adapter.inbound.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.common.domain.BaseErrorResponse;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -21,7 +20,7 @@ public class JwtOnlyOAuth2RequireFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request){
         String uri = request.getRequestURI();
         boolean isFiles = "POST".equalsIgnoreCase(request.getMethod()) && uri.equals("/files/profile-image");
         boolean isPostMember = "POST".equalsIgnoreCase(request.getMethod()) && uri.equals("/member");
@@ -30,8 +29,8 @@ public class JwtOnlyOAuth2RequireFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+                                    @NonNull HttpServletResponse response,
+                                    @NonNull FilterChain filterChain) throws IOException {
         log.info("JwtOnlyOAuth2RequireFilter");
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
@@ -52,18 +51,12 @@ public class JwtOnlyOAuth2RequireFilter extends OncePerRequestFilter {
         }
     }
 
-    private void sendUnauthorized(HttpServletResponse response, String errorMessage) throws IOException {
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
-
-        BaseErrorResponse errorResponse = new BaseErrorResponse(errorMessage);
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        String jsonError = mapper.writeValueAsString(errorResponse);
-
-        try (PrintWriter writer = response.getWriter()) {
-            writer.write(jsonError);
-            writer.flush();
-        }
+    private void sendUnauthorized(HttpServletResponse res, String msg) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        res.setContentType("application/json;charset=UTF-8");
+        BaseErrorResponse body = new BaseErrorResponse(msg);
+        res.getWriter().write(objectMapper.writeValueAsString(body));
+        res.getWriter().flush();
     }
 }

@@ -9,6 +9,6 @@ public interface MemberService {
     Member getOrThrowById(Long id);
     Member create(MemberCreateRequest memberCreateRequest, Provide provide);
     Member update(Long requestMemberId, MemberUpdateRequest memberUpdateRequest);
-    Boolean isDuplicateNameExists(String targetName);
+    boolean isDuplicateNameExists(String targetName);
     Member disable(Long requestMemberId);
 }

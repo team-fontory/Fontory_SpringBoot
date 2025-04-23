@@ -3,7 +3,7 @@ package org.fontory.fontorybe.file.adapter.outboud.s3;
 import io.awspring.cloud.s3.S3Resource;
 import io.awspring.cloud.s3.S3Template;
 import lombok.RequiredArgsConstructor;
-import org.fontory.fontorybe.common.ClockHolder;
+import org.fontory.fontorybe.common.application.ClockHolder;
 import org.fontory.fontorybe.file.domain.FileCreate;
 import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.springframework.beans.factory.annotation.Value;

@@ -3,7 +3,7 @@ package org.fontory.fontorybe.member.controller.dto;
 import lombok.Builder;
 import lombok.Getter;
 import org.fontory.fontorybe.member.domain.Member;
-import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
+import org.fontory.fontorybe.authentication.application.dto.TokenResponse;
 
 import java.time.LocalDateTime;
 

@@ -18,13 +18,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
+
+import jakarta.servlet.http.Cookie;
+import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
-import org.fontory.fontorybe.common.DevTokenInitializer;
+import org.fontory.fontorybe.common.application.DevTokenInitializer;
 import org.fontory.fontorybe.file.application.FileService;
-import org.fontory.fontorybe.file.domain.FileCreate;
 import org.fontory.fontorybe.file.domain.FileDetails;
-import org.fontory.fontorybe.file.domain.FileType;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
@@ -89,7 +89,7 @@ class FontControllerIntegrationTest {
     @BeforeEach
     void setUp() {
         UserPrincipal userPrincipal = new UserPrincipal(existMemberId);
-        validAccessToken = "Bearer " + jwtTokenProvider.generateAccessToken(userPrincipal);
+        validAccessToken = jwtTokenProvider.generateAccessToken(userPrincipal);
         validFontCreateServerToken = "Bearer " + devTokenInitializer.getFixedTokenForFontCreateServer();
 
         fileDetails = FileDetails.builder()
@@ -132,7 +132,7 @@ class FontControllerIntegrationTest {
         mockMvc.perform(multipart("/fonts")
                         .file(jsonPart)
                         .file(filePart)
-                        .header("Authorization", validAccessToken)
+                        .cookie(new Cookie("accessToken", validAccessToken))
                         .contentType(MediaType.MULTIPART_FORM_DATA)
                         .content(jsonRequest))
                 .andExpect(status().isCreated())
@@ -167,7 +167,7 @@ class FontControllerIntegrationTest {
     void getFontProgressSuccess() throws Exception {
         // when & then
         mockMvc.perform(get("/fonts/progress")
-                        .header("Authorization", validAccessToken))
+                        .cookie(new Cookie("accessToken", validAccessToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].id").isNotEmpty())
@@ -199,7 +199,7 @@ class FontControllerIntegrationTest {
 
         // when & then
         mockMvc.perform(put("/fonts/{fontId}", existFontId)
-                        .header("Authorization", validAccessToken)
+                        .cookie(new Cookie("accessToken", validAccessToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
                 .andExpect(status().isOk())
@@ -236,7 +236,7 @@ class FontControllerIntegrationTest {
     void getMyFontsSuccess() throws Exception {
         // when & then
         mockMvc.perform(get("/fonts/members")
-                        .header("Authorization", validAccessToken)
+                        .cookie(new Cookie("accessToken", validAccessToken))
                         .param("page", "0")
                         .param("size", "5"))
                 .andExpect(status().isOk())
@@ -286,7 +286,7 @@ class FontControllerIntegrationTest {
     void deleteFontSuccess() throws Exception {
         // when & then
         mockMvc.perform(delete("/fonts/members/{fontId}", existFontId)
-                        .header("Authorization", validAccessToken))
+                        .cookie(new Cookie("accessToken", validAccessToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(existFontId.intValue())));
     }
@@ -342,7 +342,7 @@ class FontControllerIntegrationTest {
     @DisplayName("GET /fonts/members/popular - success with valid Authorization header")
     void getMyPopularFontsSuccess() throws Exception {
         mockMvc.perform(get("/fonts/members/popular")
-                        .header("Authorization", validAccessToken))
+                        .cookie(new Cookie("accessToken", validAccessToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(greaterThanOrEqualTo(0)));
@@ -388,7 +388,7 @@ class FontControllerIntegrationTest {
     @DisplayName("GET /fonts/{fontId}/download - success")
     void downloadFontSuccess() throws Exception {
         mockMvc.perform(get("/fonts/{fontId}/download", 999L)
-                        .header("Authorization", validAccessToken))
+                    .cookie(new Cookie("accessToken", validAccessToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(999)))
                 .andExpect(jsonPath("$.downloadCount").isNumber());

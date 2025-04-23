@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.common.controller;
+package org.fontory.fontorybe.common.adapter.inbound;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;

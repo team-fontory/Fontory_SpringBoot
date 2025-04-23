@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.common;
+package org.fontory.fontorybe.common.adapter.outbound;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -66,7 +66,10 @@ public class DiscordExceptionLoggingAspect {
      * org.fontory 패키지 내부에서 발생하는 모든 예외를 가로채어
      * 디스코드 웹훅으로 메시지를 전송
      */
-    @AfterThrowing(pointcut = "within(org.fontory..*)", throwing = "ex")
+    @AfterThrowing(
+            pointcut = "within(org.fontory..*) && !within(org.fontory.fontorybe.authentication.adapter.outbound..*)",
+            throwing = "ex"
+    )
     public void handleException(JoinPoint joinPoint, Throwable ex) {
         if (shouldSkipNotification(ex)) {
             log.debug("Skipping Discord notification for exception: {}", ex.getClass().getSimpleName());

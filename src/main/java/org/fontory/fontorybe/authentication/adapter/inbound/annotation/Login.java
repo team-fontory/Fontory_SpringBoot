@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.authentication.adapter.inbound;
+package org.fontory.fontorybe.authentication.adapter.inbound.annotation;
 
 import io.swagger.v3.oas.annotations.Parameter;
 

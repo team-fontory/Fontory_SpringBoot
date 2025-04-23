@@ -1,8 +1,10 @@
-package org.fontory.fontorybe.authentication.application;
+package org.fontory.fontorybe.authentication.adapter.outbound;
 
 import lombok.RequiredArgsConstructor;
-import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.application.dto.TokenResponse;
+import org.fontory.fontorybe.config.jwt.JwtProperties;
+import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.application.port.TokenStorage;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.authentication.domain.exception.InvalidRefreshTokenException;
 import org.fontory.fontorybe.member.domain.Member;
@@ -13,14 +15,14 @@ import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
-public class TokenService {
+public class RedisTokenStorage implements TokenStorage {
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTemplate<String, String> redisTemplate;
+    private final JwtProperties jwtProperties;
     private static final String KEY_PREFIX = "refresh_token:";
-    private static final long REFRESH_TOKEN_VALIDITY = 7 * 24 * 60 * 60 * 1000; // 7 days
 
     public void saveRefreshToken(Member member, String refreshToken) {
-        redisTemplate.opsForValue().set(KEY_PREFIX + member.getId(), refreshToken, Duration.ofMillis(REFRESH_TOKEN_VALIDITY));
+        redisTemplate.opsForValue().set(KEY_PREFIX + member.getId(), refreshToken, Duration.ofMillis(jwtProperties.getRefreshTokenValidityMs()));
     }
 
     public String getRefreshToken(Member member) {

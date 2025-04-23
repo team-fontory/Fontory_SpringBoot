@@ -1,25 +1,35 @@
 package org.fontory.fontorybe.unit.mock;
 
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.adapter.outbound.CookieUtilsImpl;
+import org.fontory.fontorybe.config.jwt.JwtProperties;
+import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProviderImpl;
 import org.fontory.fontorybe.authentication.application.AuthService;
-import org.fontory.fontorybe.authentication.application.TokenService;
+import org.fontory.fontorybe.authentication.adapter.outbound.RedisTokenStorage;
+import org.fontory.fontorybe.authentication.application.port.CookieUtils;
+import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.application.port.TokenStorage;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.service.MemberServiceImpl;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.service.ProvideServiceImpl;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.security.NoSuchAlgorithmException;
 
-import static org.mockito.Mockito.mock;
-
 public class TestContainer {
+    public final JwtProperties props;
+
     public final String secretKeyForTest = generateSecretKey();
     public final String secretKeyForTest2 = generateSecretKey();
+    public final String secretKeyForTest3 = generateSecretKey();
+    public final String secretKeyForTest4 = generateSecretKey();
+    public final long accessTokenValidityMs = 900000;
+    public final long refreshTokenValidityMs = 604800000;
+    public final long tempTokenValidityMs = 900000;
+
     public final MemberRepository memberRepository;
     public final ProvideRepository provideRepository;
 
@@ -28,20 +38,30 @@ public class TestContainer {
 
     public final FakeRedisTemplate fakeRedisTemplate;
 
-    public final TokenService tokenService;
+    public final TokenStorage tokenStorage;
     public final AuthService authService;
 
     public final JwtTokenProvider jwtTokenProvider;
+    public final CookieUtils cookieUtils;
 
     public TestContainer() {
         fakeRedisTemplate = new FakeRedisTemplate();
-        jwtTokenProvider = new JwtTokenProvider(secretKeyForTest, secretKeyForTest2);
+        props = new JwtProperties(
+                secretKeyForTest,
+                secretKeyForTest2,
+                secretKeyForTest3,
+                secretKeyForTest4,
+                accessTokenValidityMs,
+                refreshTokenValidityMs,
+                tempTokenValidityMs);
+
+        jwtTokenProvider = new JwtTokenProviderImpl(props);
+        cookieUtils = new CookieUtilsImpl(props);
 
         memberRepository = new FakeMemberRepository();
         provideRepository = new FakeProvideRepository();
 
-        tokenService = new TokenService(jwtTokenProvider, fakeRedisTemplate);
-        authService = new AuthService(tokenService, jwtTokenProvider);
+        tokenStorage = new RedisTokenStorage(jwtTokenProvider, fakeRedisTemplate, props);
 
         provideService = ProvideServiceImpl.builder()
                 .provideRepository(provideRepository)
@@ -52,6 +72,8 @@ public class TestContainer {
                 .provideService(provideService)
                 .jwtTokenProvider(jwtTokenProvider)
                 .build();
+
+        authService = new AuthService(cookieUtils, tokenStorage, jwtTokenProvider, memberService);
     }
 
     private static String generateSecretKey() {

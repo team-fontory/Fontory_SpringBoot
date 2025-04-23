@@ -1,5 +1,6 @@
-package org.fontory.fontorybe.authentication.adapter.inbound;
+package org.fontory.fontorybe.authentication.adapter.inbound.resolver;
 
+import org.fontory.fontorybe.authentication.adapter.inbound.annotation.Login;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.authentication.domain.exception.TokenNotFoundException;
 import org.springframework.core.MethodParameter;

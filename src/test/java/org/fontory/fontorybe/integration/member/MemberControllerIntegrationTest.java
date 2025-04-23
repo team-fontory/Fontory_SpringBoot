@@ -1,8 +1,9 @@
 package org.fontory.fontorybe.integration.member;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
+import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
@@ -67,8 +68,7 @@ public class MemberControllerIntegrationTest {
     void setUp() {
         // 이미 존재하는 회원(testMemberId)의 UserPrincipal를 만들어 accessToken을 발급
         UserPrincipal userPrincipal = new UserPrincipal(existMemberId);
-        validAccessToken = "Bearer " + jwtTokenProvider.generateAccessToken(userPrincipal);
-
+        validAccessToken = jwtTokenProvider.generateAccessToken(userPrincipal);
         validProvideToken = "Bearer " + jwtTokenProvider.generateTemporalProvideToken(String.valueOf(existProvideId));
     }
 
@@ -76,7 +76,7 @@ public class MemberControllerIntegrationTest {
     @DisplayName("GET /member/check-duplicate - duplicate exists returns true with valid Authorization header")
     void checkDuplicateTrueTest() throws Exception {
         mockMvc.perform(get("/member/check-duplicate")
-                        .header("Authorization", validAccessToken)
+                        .cookie(new Cookie("accessToken", validAccessToken))
                         .param("nickname", existMemberNickName))
                 .andExpect(status().isOk())
                 .andExpect(content().string("true"));
@@ -86,20 +86,10 @@ public class MemberControllerIntegrationTest {
     @DisplayName("GET /member/check-duplicate - no duplicate returns false with valid Authorization header")
     void checkDuplicateFalseTest() throws Exception {
         mockMvc.perform(get("/member/check-duplicate")
-                        .header("Authorization", validAccessToken)
+                        .cookie(new Cookie("accessToken", validAccessToken))
                         .param("nickname", UUID.randomUUID().toString()))
                 .andExpect(status().isOk())
                 .andExpect(content().string("false"));
-    }
-
-    @Test
-    @DisplayName("GET /member/check-duplicate without Authorization header returns 401")
-    void getCheckDuplicateWithoutAuthHeader() throws Exception {
-        mockMvc.perform(get("/member/check-duplicate")
-                        .param("nickname", "someNickname"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType("application/json;charset=UTF-8"))
-                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
     }
 
     @Test
@@ -124,7 +114,7 @@ public class MemberControllerIntegrationTest {
         String jsonRequest = objectMapper.writeValueAsString(memberUpdateRequest);
 
         mockMvc.perform(put("/member")
-                        .header("Authorization", validAccessToken)
+                        .cookie(new Cookie("accessToken", validAccessToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
                 .andExpect(status().isOk())
@@ -151,7 +141,7 @@ public class MemberControllerIntegrationTest {
     @DisplayName("DELETE /member - disable member success with valid Authorization header")
     void disableMemberSuccessTest() throws Exception {
         mockMvc.perform(delete("/member")
-                        .header("Authorization", validAccessToken))
+                        .cookie(new Cookie("accessToken", validAccessToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.deletedAt").isNotEmpty());
     }

@@ -1,10 +1,10 @@
 package org.fontory.fontorybe.member.controller;
 
-import org.fontory.fontorybe.authentication.adapter.inbound.Login;
-import org.fontory.fontorybe.authentication.adapter.inbound.OAuth2;
-import org.fontory.fontorybe.authentication.adapter.inbound.dto.TokenResponse;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.adapter.inbound.annotation.Login;
+import org.fontory.fontorybe.authentication.adapter.inbound.annotation.OAuth2;
+import org.fontory.fontorybe.authentication.application.dto.TokenResponse;
 import org.fontory.fontorybe.authentication.application.AuthService;
+import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateResponse;
@@ -72,7 +72,7 @@ public class MemberController {
     ) {
         log.info("Request received: Check if nickname is duplicate: {}", nickname);
         
-        Boolean duplicateNameExists = memberService.isDuplicateNameExists(nickname);
+        boolean duplicateNameExists = memberService.isDuplicateNameExists(nickname);
         log.info("Response sent: Nickname {} is {}", nickname, duplicateNameExists ? "duplicate" : "available");
         
         return ResponseEntity
@@ -92,7 +92,7 @@ public class MemberController {
                 toJson(memberCreateRequest), provide.getProvider());
         
         Member createdMember = memberService.create(memberCreateRequest, provide);
-        TokenResponse tokens = authService.generateTokens(createdMember);
+        TokenResponse tokens = authService.issueNewTokens(createdMember);
         
         log.info("Response sent: Member created with ID: {}, nickname: {}", 
                 createdMember.getId(), createdMember.getNickname());

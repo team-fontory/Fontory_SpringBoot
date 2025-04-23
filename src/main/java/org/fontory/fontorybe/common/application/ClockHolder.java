@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.common;
+package org.fontory.fontorybe.common.application;
 
 import org.springframework.stereotype.Component;
 

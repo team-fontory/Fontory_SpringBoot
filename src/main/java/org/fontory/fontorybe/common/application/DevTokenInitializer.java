@@ -1,26 +1,24 @@
-package org.fontory.fontorybe.common;
+package org.fontory.fontorybe.common.application;
 
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import jakarta.transaction.Transactional;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
-import org.fontory.fontorybe.authentication.application.TokenService;
-import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
-import org.fontory.fontorybe.member.controller.port.MemberService;
+import org.fontory.fontorybe.config.jwt.JwtProperties;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.UUID;
@@ -30,18 +28,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DevTokenInitializer implements ApplicationListener<ContextRefreshedEvent> {
 
-    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProperties props;
     private final ProvideRepository provideRepository;
     private final MemberRepository memberRepository;
-
-    @Value("${jwt.secretKey}")
-    private String secretKeyForAuthentication;
-
-    @Value("${jwt.provide.secretKey}")
-    private String secretKeyForProvide;
-
-    @Value("${jwt.fontCreateServer.secretKey}")
-    private String secretKeyForFontCreateServer;
+    private final JwtProperties jwtProperties;
 
     // 고정된 발행 및 만료 시간
     private final Date issuedAt = new Date(1735689600000L);     // 2025-01-01T00:00:00Z
@@ -49,6 +39,11 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
 
     @Getter
     private String fixedTokenForFontCreateServer;
+
+    private SecretKey getSigningKey(String key) {
+        byte[] keyBytes = Decoders.BASE64.decode(key);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
 
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -65,6 +60,10 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
 
     @Transactional
     public void initTokens() {
+        SecretKey accessSecretKey = getSigningKey(props.getAccessSecretKey());
+        SecretKey provideSecretKey = getSigningKey(props.getProvideSecretKey());
+        SecretKey fontCreateSecretKey = getSigningKey(props.getFontCreateServerSecretKey());
+
         // 테스트용 Provide와 Member 생성
         Provide provide = Provide.builder()
                 .providedId(UUID.randomUUID().toString())
@@ -89,21 +88,21 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
                 .setSubject(String.valueOf(savedProvide.getId()))
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
-                .signWith(SignatureAlgorithm.HS512, secretKeyForProvide)
+                .signWith(provideSecretKey)
                 .compact();
 
         String fixedTokenForAuthentication = Jwts.builder()
                 .setSubject(String.valueOf(savedMember.getId()))
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
-                .signWith(SignatureAlgorithm.HS512, secretKeyForAuthentication)
+                .signWith(accessSecretKey)
                 .compact();
 
         fixedTokenForFontCreateServer = Jwts.builder()
-                .setSubject(jwtTokenProvider.getFontCreateServerSubject())
+                .setSubject(jwtProperties.getFontCreateServerSubject())
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
-                .signWith(SignatureAlgorithm.HS512, secretKeyForFontCreateServer)
+                .signWith(fontCreateSecretKey)
                 .compact();
 
         log.info("Provide JWT for development: {}", fixedTokenForProvide);

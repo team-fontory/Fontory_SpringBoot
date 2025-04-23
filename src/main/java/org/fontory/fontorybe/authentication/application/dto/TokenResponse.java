@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.authentication.adapter.inbound.dto;
+package org.fontory.fontorybe.authentication.application.dto;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 package org.fontory.fontorybe.bookmark.controller;
 
-import org.fontory.fontorybe.authentication.adapter.inbound.Login;
+import org.fontory.fontorybe.authentication.adapter.inbound.annotation.Login;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.bookmark.controller.dto.BookmarkCreateResponse;
 import org.fontory.fontorybe.bookmark.controller.dto.BookmarkDeleteResponse;

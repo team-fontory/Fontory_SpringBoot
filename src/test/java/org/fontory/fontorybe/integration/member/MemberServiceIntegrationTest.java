@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
@@ -18,7 +18,6 @@ import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
-import org.fontory.fontorybe.provide.domain.exception.ProvideNotFoundException;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +34,6 @@ class MemberServiceIntegrationTest {
 
     @Autowired private MemberService memberService;
     @Autowired private ProvideService provideService;
-    @Autowired private JwtTokenProvider jwtTokenProvider;
 
     /**
      * 기존 테스트에서 사용한 값

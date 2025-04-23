@@ -2,8 +2,8 @@ package org.fontory.fontorybe.config;
 
 import java.util.List;
 
-import org.fontory.fontorybe.authentication.adapter.inbound.LoginMemberArgumentResolver;
-import org.fontory.fontorybe.authentication.adapter.inbound.OAuth2InfoArgumentResolver;
+import org.fontory.fontorybe.authentication.adapter.inbound.resolver.LoginMemberArgumentResolver;
+import org.fontory.fontorybe.authentication.adapter.inbound.resolver.OAuth2InfoArgumentResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;

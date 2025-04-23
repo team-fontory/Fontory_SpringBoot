@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.common.filter;
+package org.fontory.fontorybe.common.adapter.inbound.filter;
 
 import java.io.IOException;
 import java.util.UUID;

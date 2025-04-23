@@ -1,14 +1,18 @@
-package org.fontory.fontorybe.authentication.adapter.inbound;
+package org.fontory.fontorybe.authentication.adapter.inbound.resolver;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.adapter.inbound.annotation.OAuth2;
+import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.springframework.core.MethodParameter;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
@@ -26,14 +30,18 @@ public class OAuth2InfoArgumentResolver implements HandlerMethodArgumentResolver
     }
 
     @Override
-    public Object resolveArgument(MethodParameter parameter,
+    public Object resolveArgument(@NonNull MethodParameter parameter,
                                   ModelAndViewContainer mavContainer,
-                                  NativeWebRequest webRequest,
-                                  WebDataBinderFactory binderFactory) throws Exception {
-        HttpServletRequest request = webRequest.getNativeRequest(HttpServletRequest.class);
-        String token = request.getHeader("Authorization");
+                                  @NonNull NativeWebRequest webRequest,
+                                  WebDataBinderFactory binderFactory) throws MissingRequestHeaderException {
+        HttpServletRequest request = ((ServletWebRequest) webRequest).getRequest();
 
-        token = token.substring(7);
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new MissingRequestHeaderException("Authorization", parameter);
+        }
+        String token = authHeader.substring(7);
+
         return provideService.getOrThrownById(jwtTokenProvider.getProvideId(token));
     }
 }
