@@ -7,14 +7,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import org.fontory.fontorybe.file.application.FileService;
-import org.fontory.fontorybe.file.domain.FileCreate;
-import org.fontory.fontorybe.file.domain.FileDetails;
-import org.fontory.fontorybe.file.domain.FileType;
+import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
@@ -35,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
@@ -67,11 +63,11 @@ class FontServiceIntegrationTest {
     private final String existFontTtf = "ttf주소";
     private final String existFontWoff = "woff주소";
 
-    private FileDetails fileDetails;
+    private FileUploadResult fileDetails;
 
     @BeforeEach
     void setup() {
-        fileDetails = FileDetails.builder()
+        fileDetails = FileUploadResult.builder()
                 .fileName("fontTemplateImage.jpg")
                 .fileUrl("https://mock-s3.com/fake.jpg")
                 .size(1024L)
@@ -101,8 +97,8 @@ class FontServiceIntegrationTest {
                 () -> assertThat(createdFont.getStatus()).isEqualTo(FontStatus.PROGRESS),
                 () -> assertThat(createdFont.getExample()).isEqualTo("생성 폰트 예제입니다."),
                 () -> assertThat(createdFont.getMemberId()).isEqualTo(existMemberId),
-                () -> assertThat(createdFont.getDownloadCount()).isEqualTo(0L),
-                () -> assertThat(createdFont.getBookmarkCount()).isEqualTo(0L),
+                () -> assertThat(createdFont.getDownloadCount()).isZero(),
+                () -> assertThat(createdFont.getBookmarkCount()).isZero(),
                 () -> assertThat(createdFont.getTtf()).isNull(),
                 () -> assertThat(createdFont.getWoff()).isNull(),
                 () -> assertThat(createdFont.getCreatedAt()).isNotNull(),
@@ -358,7 +354,7 @@ class FontServiceIntegrationTest {
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.size()).isLessThanOrEqualTo(3);
+        assertThat(result).hasSizeLessThanOrEqualTo(3);
 
         result.forEach(font -> {
             assertThat(font.getId()).isNotEqualTo(existFontId);

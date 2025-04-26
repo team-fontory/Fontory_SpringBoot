@@ -7,6 +7,7 @@ import jakarta.transaction.Transactional;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.fontory.fontorybe.config.S3Config;
 import org.fontory.fontorybe.config.jwt.JwtProperties;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
@@ -14,6 +15,7 @@ import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
@@ -79,7 +81,7 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
                 .terms(true)
                 .birth(LocalDate.now())
                 .nickname("Tester")
-                .profileImage("ProfileImage-URL")
+                .profileImageKey(S3Config.getDefaultProfileImageUrl())
                 .build();
 
         Member savedMember = memberRepository.save(member);

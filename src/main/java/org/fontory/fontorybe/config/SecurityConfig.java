@@ -49,6 +49,9 @@ public class SecurityConfig {
     private final AuthService authService;
     private final CookieUtils cookieUtils;
 
+    /**
+     * 0. Chain for Swagger Oauth2
+     */
     @Bean
     @Order(0)
     public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -66,14 +69,16 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 1. Chain for OAUTH2
+    /**
+     * 1. Chain for OAUTH2
+     */
     @Bean
     @Order(1)
     public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .securityMatcher( new OrRequestMatcher(
-                                new AntPathRequestMatcher("/oauth2/**"),
-                                new AntPathRequestMatcher("/login/oauth2/**")
+                .securityMatcher(new OrRequestMatcher(
+                        new AntPathRequestMatcher("/oauth2/**"),
+                        new AntPathRequestMatcher("/login/oauth2/**")
                 ))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(CsrfConfigurer::disable)
@@ -119,7 +124,6 @@ public class SecurityConfig {
     public SecurityFilterChain jwtOnlySecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher(new OrRequestMatcher(
-                        new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
                         new AntPathRequestMatcher("/member", HttpMethod.POST.name())
                 ))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
@@ -142,12 +146,10 @@ public class SecurityConfig {
     @Order(4)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .securityMatcher(new NegatedRequestMatcher(
-                        new OrRequestMatcher(
-                                new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
-                                new AntPathRequestMatcher("/member", HttpMethod.POST.name())
-                        )
-                ))
+                .securityMatcher(new NegatedRequestMatcher(new OrRequestMatcher(
+                        new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
+                        new AntPathRequestMatcher("/member", HttpMethod.POST.name())
+                )))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(AbstractHttpConfigurer::disable)
                 .csrf(CsrfConfigurer::disable)

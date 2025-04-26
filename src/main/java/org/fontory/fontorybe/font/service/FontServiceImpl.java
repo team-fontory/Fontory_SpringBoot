@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.bookmark.service.port.BookmarkRepository;
-import org.fontory.fontorybe.file.domain.FileDetails;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
@@ -36,14 +36,12 @@ import org.springframework.util.StringUtils;
 public class FontServiceImpl implements FontService {
     private final FontRepository fontRepository;
     private final BookmarkRepository bookmarkRepository;
-
     private final MemberService memberService;
-
     private final FontRequestProducer fontRequestProducer;
 
     @Override
     @Transactional
-    public Font create(Long memberId, FontCreateDTO fontCreateDTO, FileDetails fileDetails) {
+    public Font create(Long memberId, FontCreateDTO fontCreateDTO, FileUploadResult fileDetails) {
         log.info("Service executing: Creating font for member ID: {}, font name: {}", memberId, fontCreateDTO.getName());
         Member member = memberService.getOrThrowById(memberId);
 

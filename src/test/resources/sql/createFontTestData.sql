@@ -28,10 +28,10 @@ INSERT INTO `font` (
     '2025-04-08 10:00:00'
 );
 
-insert into `member` (`member_id`, `nickname`, `gender`, `birth`, `terms`, `profile_image`, `provide_id`, `created_at`, `updated_at`)
+insert into `member` (`member_id`, `nickname`, `gender`, `birth`, `terms`, `profile_image_key`, `provide_id`, `created_at`, `updated_at`)
 values (999, 'existMemberNickName', 'MALE', '2025-01-26', 1, 'existMemberProfileImage', 999, '1922-09-18 19:11:00.000000', '1922-09-18 19:11:00.000000');
 
-insert into `member` (`member_id`, `nickname`, `gender`, `birth`, `terms`, `profile_image`, `provide_id`, `created_at`, `updated_at`)
+insert into `member` (`member_id`, `nickname`, `gender`, `birth`, `terms`, `profile_image_key`, `provide_id`, `created_at`, `updated_at`)
 values (1, 'createdMemberNickName', 'MALE', '2025-01-26', 1, 'existMemberProfileImage', 1, '1922-09-18 19:11:00.000000', '1922-09-18 19:11:00.000000');
 
 insert into `provide` (`provide_id`, `provider`, `provided_id`, `email`, `member_id`)

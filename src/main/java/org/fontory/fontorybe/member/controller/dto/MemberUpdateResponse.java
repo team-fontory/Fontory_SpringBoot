@@ -17,7 +17,7 @@ public class MemberUpdateResponse {
     public static MemberUpdateResponse from(Member member) {
         return MemberUpdateResponse.builder()
                 .nickname(member.getNickname())
-                .profileImage(member.getProfileImage())
+                .profileImage(member.getProfileImageKey())
                 .terms(member.getTerms())
                 .updatedAt(member.getUpdatedAt())
                 .build();

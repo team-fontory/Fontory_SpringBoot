@@ -38,7 +38,7 @@ public class MemberEntity extends BaseEntity {
 
     private Boolean terms;
 
-    private String profileImage;
+    private String profileImageKey;
 
     private Long provideId;
 
@@ -51,7 +51,7 @@ public class MemberEntity extends BaseEntity {
                 .gender(gender)
                 .birth(birth)
                 .terms(terms)
-                .profileImage(profileImage)
+                .profileImageKey(profileImageKey)
                 .provideId(provideId)
                 .createdAt(getCreatedAt())
                 .updatedAt(getUpdatedAt())
@@ -66,7 +66,7 @@ public class MemberEntity extends BaseEntity {
                 .gender(member.getGender())
                 .birth(member.getBirth())
                 .terms(member.getTerms())
-                .profileImage(member.getProfileImage())
+                .profileImageKey(member.getProfileImageKey())
                 .provideId(member.getProvideId())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())

@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.fontory.fontorybe.file.domain.FileDetails;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
@@ -54,7 +54,7 @@ public class Font {
         this.downloadCount++;
     }
 
-    public static Font from(FontCreateDTO fontCreateDTO, Long memberId, FileDetails fileDetails) {
+    public static Font from(FontCreateDTO fontCreateDTO, Long memberId, FileUploadResult fileDetails) {
         return Font.builder()
                 .name(fontCreateDTO.getName())
                 .status(FontStatus.PROGRESS)

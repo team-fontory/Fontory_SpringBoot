@@ -24,7 +24,7 @@ public class Member {
 
     private boolean terms;
 
-    private String profileImage;
+    private String profileImageKey;
 
     private LocalDateTime createdAt;
 
@@ -40,7 +40,7 @@ public class Member {
                 .gender(memberCreateRequestDto.getGender())
                 .birth(memberCreateRequestDto.getBirth())
                 .terms(memberCreateRequestDto.getTerms())
-                .profileImage(memberCreateRequestDto.getProfileImage())
+                .profileImageKey(memberCreateRequestDto.getProfileImageKey())
                 .provideId(provide.getId())
                 .build();
     }
@@ -50,7 +50,8 @@ public class Member {
                 //tobe update
                 .nickname(memberUpdateRequest.getNickname())
                 .terms(memberUpdateRequest.getTerms())
-                .profileImage(memberUpdateRequest.getProfileImage())
+                .profileImageKey(memberUpdateRequest.getProfileImageKey())
+
                 //not to be update
                 .id(this.id)
                 .gender(this.gender)
@@ -58,6 +59,7 @@ public class Member {
                 .createdAt(this.createdAt)
                 .provideId(this.provideId)
                 .deletedAt(this.deletedAt)
+                .provideId(this.provideId)
                 .build();
     }
     public void disable() {
@@ -66,5 +68,21 @@ public class Member {
 
     public boolean getTerms() {
         return this.terms;
+    }
+
+    public Member setProfileImageKey(String profileImageKey) {
+        return Member.builder()
+                .profileImageKey(profileImageKey)
+
+                .id(this.id)
+                .nickname(this.nickname)
+                .gender(this.gender)
+                .birth(this.birth)
+                .createdAt(this.createdAt)
+                .provideId(this.provideId)
+                .deletedAt(this.deletedAt)
+                .terms(this.terms)
+                .provideId(this.provideId)
+                .build();
     }
 }

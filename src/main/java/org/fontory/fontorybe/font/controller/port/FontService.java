@@ -1,7 +1,7 @@
 package org.fontory.fontorybe.font.controller.port;
 
 import java.util.List;
-import org.fontory.fontorybe.file.domain.FileDetails;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
@@ -14,7 +14,7 @@ import org.fontory.fontorybe.font.domain.Font;
 import org.springframework.data.domain.Page;
 
 public interface FontService {
-    Font create(Long memberId, FontCreateDTO fontCreateDTO, FileDetails fileDetails);
+    Font create(Long memberId, FontCreateDTO fontCreateDTO, FileUploadResult fileDetails);
     List<FontProgressResponse> getFontProgress(Long memberId);
     Font update(Long memberId, Long fontId, FontUpdateDTO fontUpdateDTO);
     Font getOrThrowById(Long id);

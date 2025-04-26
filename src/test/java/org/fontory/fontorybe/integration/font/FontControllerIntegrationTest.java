@@ -23,8 +23,8 @@ import jakarta.servlet.http.Cookie;
 import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.common.application.DevTokenInitializer;
-import org.fontory.fontorybe.file.application.FileService;
-import org.fontory.fontorybe.file.domain.FileDetails;
+import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
@@ -84,7 +84,7 @@ class FontControllerIntegrationTest {
     private String validAccessToken;
     private String validFontCreateServerToken;
 
-    private FileDetails fileDetails;
+    private FileUploadResult fileDetails;
 
     @BeforeEach
     void setUp() {
@@ -92,7 +92,7 @@ class FontControllerIntegrationTest {
         validAccessToken = jwtTokenProvider.generateAccessToken(userPrincipal);
         validFontCreateServerToken = "Bearer " + devTokenInitializer.getFixedTokenForFontCreateServer();
 
-        fileDetails = FileDetails.builder()
+        fileDetails = FileUploadResult.builder()
                 .fileName("fontTemplateImage.jpg")
                 .fileUrl("https://mock-s3.com/fake.jpg")
                 .size(1024L)

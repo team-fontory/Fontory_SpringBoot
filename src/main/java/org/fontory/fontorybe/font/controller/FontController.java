@@ -17,9 +17,9 @@ import org.fontory.fontorybe.authentication.adapter.inbound.annotation.Login;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.file.adapter.inbound.FileRequestMapper;
 import org.fontory.fontorybe.file.adapter.inbound.dto.FileUploadResponse;
-import org.fontory.fontorybe.file.application.FileService;
+import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileCreate;
-import org.fontory.fontorybe.file.domain.FileDetails;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontCreateResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
@@ -92,7 +92,6 @@ public class FontController {
             @RequestPart("file") List<MultipartFile> files
     ) {
         Long memberId = userPrincipal.getId();
-
         MultipartFile file = extractSingleMultipartFile(files);
 
         log.info("Request received: Create font and Upload font template image for member ID: {}, request: {}",
@@ -101,7 +100,7 @@ public class FontController {
         logFileDetails(file, "Font template image upload");
 
         FileCreate fileCreate = fileRequestMapper.toFontTemplateImageFileCreate(file, memberId);
-        FileDetails fileDetails = fileService.uploadFontTemplateImage(fileCreate);
+        FileUploadResult fileDetails = fileService.uploadFontTemplateImage(fileCreate);
         FileUploadResponse fileUploadResponse = FileUploadResponse.from(fileDetails);
 
         Font createdFont = fontService.create(memberId, fontCreateDTO, fileDetails);

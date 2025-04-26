@@ -1,71 +1,72 @@
 package org.fontory.fontorybe.file.adapter.outboud.s3;
 
-import io.awspring.cloud.s3.S3Resource;
-import io.awspring.cloud.s3.S3Template;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.common.application.ClockHolder;
+import org.fontory.fontorybe.config.S3Config;
+import org.fontory.fontorybe.file.adapter.outboud.dto.AwsUploadFailException;
+import org.fontory.fontorybe.file.adapter.outboud.port.CloudStorageService;
 import org.fontory.fontorybe.file.domain.FileCreate;
 import org.fontory.fontorybe.file.domain.FileMetadata;
-import org.springframework.beans.factory.annotation.Value;
+import org.fontory.fontorybe.file.domain.FileType;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class AmazonS3BucketService implements CloudStorageService{
+public class AmazonS3BucketService implements CloudStorageService {
 
-    @Value("${spring.cloud.aws.s3.bucket.profile-image}")
+    private final S3Client s3;
+    private final S3Config s3Config;
+    private final ClockHolder clockHolder;
     private String profileImageBucketName;
-
-    @Value("${spring.cloud.aws.s3.bucket.font-paper}")
     private String fontPaperBucketName;
 
-    private final ClockHolder clockHolder;
-    private final S3Template s3Template;
+    @PostConstruct
+    void init() {
+        profileImageBucketName = s3Config.getBucketName(FileType.PROFILE_IMAGE);
+        fontPaperBucketName = s3Config.getBucketName(FileType.FONT_PAPER);
+    }
 
     @Override
-    public FileMetadata uploadProfileImage(FileCreate request) {
-        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(request, clockHolder.getCurrentTimeStamp());
-        deleteLastImages(request.getFileName());
-
-        try (InputStream inputStream = amazonS3PutRequest.getFile().getInputStream()) {
-            S3Resource s3Resource = s3Template.upload(
-                    profileImageBucketName,
-                    amazonS3PutRequest.getKey(),
-                    inputStream);
-
-            String objectUrl = s3Resource.getURL().toExternalForm();
-
-            return AmazonS3ObjectMetadata.from(amazonS3PutRequest, objectUrl).toModel();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public FileMetadata uploadProfileImage(FileCreate request, String key) {
+        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(request, key, profileImageBucketName, clockHolder.getCurrentTimeStamp());
+        return getFileUploadResult(amazonS3PutRequest).toModel();
     }
 
-    private void deleteLastImages(String fileName) {
-        String fileNameWithoutExtension = fileName.substring(0, fileName.lastIndexOf('.'));
-        s3Template.deleteObject(profileImageBucketName,fileNameWithoutExtension + ".jpg");
-        s3Template.deleteObject(profileImageBucketName,fileNameWithoutExtension + ".jpeg");
-        s3Template.deleteObject(profileImageBucketName,fileNameWithoutExtension + ".png");
+    public String getFileUrl(FileMetadata fileMetadata, String key) {
+        String bucketName = s3Config.getBucketName(fileMetadata.getFileType());
+        return s3.utilities()
+                .getUrl(builder -> builder
+                        .bucket(bucketName)
+                        .key(key))
+                .toExternalForm();
     }
 
+    /**
+     * use uuid as key
+     */
     @Override
     public FileMetadata uploadFontTemplateImage(FileCreate request) {
-        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(request, clockHolder.getCurrentTimeStamp());
+        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(request, UUID.randomUUID().toString(), fontPaperBucketName, clockHolder.getCurrentTimeStamp());
+        return getFileUploadResult(amazonS3PutRequest).toModel();
+    }
 
-        try (InputStream inputStream = amazonS3PutRequest.getFile().getInputStream()) {
-            S3Resource s3Resource = s3Template.upload(
-                    fontPaperBucketName,
-                    amazonS3PutRequest.getKey(),
-                    inputStream);
+    private AmazonS3ObjectMetadata getFileUploadResult(AmazonS3PutRequest amazonS3PutRequest) {
+        AmazonS3ObjectMetadata metadata = AmazonS3ObjectMetadata.from(amazonS3PutRequest);
 
-            String objectUrl = s3Resource.getURL().toExternalForm();
-
-            return AmazonS3ObjectMetadata.from(amazonS3PutRequest, objectUrl).toModel();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        try {
+            s3.putObject(amazonS3PutRequest.toPutObjectRequest(),
+                    RequestBody.fromBytes(amazonS3PutRequest.getFile().getBytes()));
+        } catch (Exception e) {
+            log.error("S3 업로드 오류 발생", e);
+            throw new AwsUploadFailException("Error occurred during upload to s3");
         }
+        return metadata;
     }
 }

@@ -6,6 +6,7 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import org.fontory.fontorybe.config.S3Config;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 
 @Getter
@@ -16,13 +17,13 @@ public class MemberCreateRequest {
     private Gender gender;
     private LocalDate birth;
     private Boolean terms;
-    private String profileImage;
+    private String profileImageKey;
 
     public static MemberCreateRequest defaultMemberCreateRequest() {
         return MemberCreateRequest.builder()
                 .nickname(UUID.randomUUID().toString())
                 .terms(false)
-//                .profileImage(null)
+                .profileImageKey(S3Config.getDefaultProfileImageUrl())
                 .build();
     }
 }

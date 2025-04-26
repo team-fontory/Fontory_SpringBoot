@@ -9,6 +9,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class MemberUpdateRequest {
     private String nickname;
-    private String profileImage;
+    private String profileImageKey;
     private Boolean terms;
 }

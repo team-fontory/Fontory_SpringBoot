@@ -7,17 +7,17 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-public class FileDetails {
+public class FileUploadResult {
     private final String fileName;
     private final String fileUrl;
     private final LocalDateTime fileUploadTime;
     private final long size;
 
-    public static FileDetails from(FileMetadata fileMetadata) {
-        return FileDetails.builder()
+    public static FileUploadResult from(FileMetadata fileMetadata, String fileUrl) {
+        return FileUploadResult.builder()
                 .fileName(fileMetadata.getFileName())
-                .fileUrl(fileMetadata.getUrl())
-                .fileUploadTime(fileMetadata.getRequestTime())
+                .fileUrl(fileUrl)
+                .fileUploadTime(fileMetadata.getUploadedAt())
                 .size(fileMetadata.getSize())
                 .build();
     }
