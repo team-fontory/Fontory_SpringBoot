@@ -48,13 +48,24 @@ public class MemberServiceImpl implements MemberService {
         if (provide.getMemberId() != null) {
             throw new MemberAlreadyExistException();
         } else if (isDuplicateNameExists(memberCreateRequest.getNickname())) {
-             throw new MemberDuplicateNameExistsException();
+            throw new MemberDuplicateNameExistsException();
         }
 
         Member createdMember = memberRepository.save(Member.from(memberCreateRequest, provide));
         provideService.setMember(provide, createdMember);
 
         return createdMember;
+    }
+
+    @Override
+    @Transactional
+    public Member initNewMemberInfo(Long requestMemberId, MemberCreateRequest memberCreateRequest) {
+        Member targetMember = getOrThrowById(requestMemberId);
+        if (isDuplicateNameExists(memberCreateRequest.getNickname())) {
+             throw new MemberDuplicateNameExistsException();
+        }
+
+        return memberRepository.save(targetMember.initNewMemberInfo(memberCreateRequest));
     }
 
     @Override
@@ -68,6 +79,12 @@ public class MemberServiceImpl implements MemberService {
         }
 
         return memberRepository.save(targetMember.update(memberUpdateRequest));
+    }
+
+    @Override
+    @Transactional
+    public Member setProfileImageKey(Member requetMember, String profileImageKey) {
+        return memberRepository.save(requetMember.setProfileImageKey(profileImageKey));
     }
 
     @Override

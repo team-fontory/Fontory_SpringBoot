@@ -17,7 +17,7 @@ public class S3Config {
     private final Map<FileType, String> bucketMap = new EnumMap<>(FileType.class);
 
     @Getter
-    private static String defaultProfileImageUrl;
+    private static String defaultProfileImageUrl = "testUrl";
 
     @Value("${default.profile.url}")
     public void setDefaultProfileImageUrl(String defaultProfileImageUrl) {

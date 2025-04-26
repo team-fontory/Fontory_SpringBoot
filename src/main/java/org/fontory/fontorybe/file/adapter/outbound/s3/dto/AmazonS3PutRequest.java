@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.file.adapter.outboud.s3;
+package org.fontory.fontorybe.file.adapter.outbound.s3.dto;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -53,18 +53,4 @@ public class AmazonS3PutRequest {
                 .acl(ObjectCannedACL.PRIVATE)
                 .build();
     }
-
-    /**
-     * for font-paper upload
-     */
-//    public static AmazonS3PutRequest from(FileCreate request, LocalDateTime datestamp, FontInfo fontInfo) {
-//        MultipartFile file = request.getFile();
-//        String key = fontInfo.getMemberId() + "/" + fontInfo.getFontName() + "/" + request.getFileName();
-//        return AmazonS3PutRequest.builder()
-//                .file(file)
-//                .key(request.getFileName())
-//                .requestTime(datestamp)
-//                .size(file.getSize())
-//                .build();
-//    }
 }

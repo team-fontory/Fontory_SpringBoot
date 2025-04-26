@@ -1,6 +1,5 @@
-package org.fontory.fontorybe.file.infrastructure;
+package org.fontory.fontorybe.file.adapter.outbound.persistence;
 
-import org.fontory.fontorybe.file.infrastructure.entity.FileEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface FileJpaRepository extends JpaRepository<FileEntity, Long> {

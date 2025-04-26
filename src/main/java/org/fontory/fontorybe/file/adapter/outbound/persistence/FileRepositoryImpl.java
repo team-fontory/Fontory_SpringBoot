@@ -1,10 +1,9 @@
-package org.fontory.fontorybe.file.infrastructure;
+package org.fontory.fontorybe.file.adapter.outbound.persistence;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.file.application.port.FileRepository;
 import org.fontory.fontorybe.file.domain.FileMetadata;
-import org.fontory.fontorybe.file.infrastructure.entity.FileEntity;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

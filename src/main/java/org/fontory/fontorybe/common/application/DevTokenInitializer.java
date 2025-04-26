@@ -3,10 +3,13 @@ package org.fontory.fontorybe.common.application;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.fontory.fontorybe.authentication.application.AuthService;
+import org.fontory.fontorybe.authentication.application.port.CookieUtils;
 import org.fontory.fontorybe.config.S3Config;
 import org.fontory.fontorybe.config.jwt.JwtProperties;
 import org.fontory.fontorybe.member.domain.Member;
@@ -15,9 +18,10 @@ import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -30,14 +34,19 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class DevTokenInitializer implements ApplicationListener<ContextRefreshedEvent> {
 
+    private final AuthService authService;
     private final JwtProperties props;
+    private final CookieUtils cookieUtils;
     private final ProvideRepository provideRepository;
     private final MemberRepository memberRepository;
     private final JwtProperties jwtProperties;
-
     // 고정된 발행 및 만료 시간
     private final Date issuedAt = new Date(1735689600000L);     // 2025-01-01T00:00:00Z
     private final Date expiration = new Date(1767225600000L);     // 2025-12-31T23:59:59Z
+
+    private String fixedTokenForProvide;
+    private String fixedTokenForAuthentication;
+    private Member testMember;
 
     @Getter
     private String fixedTokenForFontCreateServer;
@@ -85,15 +94,16 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
                 .build();
 
         Member savedMember = memberRepository.save(member);
+        testMember = savedMember;
 
-        String fixedTokenForProvide = Jwts.builder()
+        fixedTokenForProvide = Jwts.builder()
                 .setSubject(String.valueOf(savedProvide.getId()))
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
                 .signWith(provideSecretKey)
                 .compact();
 
-        String fixedTokenForAuthentication = Jwts.builder()
+        fixedTokenForAuthentication = Jwts.builder()
                 .setSubject(String.valueOf(savedMember.getId()))
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
@@ -110,5 +120,14 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
         log.info("Provide JWT for development: {}", fixedTokenForProvide);
         log.info("Authentication JWT for development: {}", fixedTokenForAuthentication);
         log.info("FontCreateServer JWT: {}", fixedTokenForFontCreateServer);
+    }
+
+    public void issueTestAccessCookies(HttpServletResponse response) {
+        ResponseCookie accessTokenCookie = cookieUtils.createAccessTokenCookie(fixedTokenForAuthentication);
+        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
+    }
+
+    public void removeTestAccessCookies(HttpServletResponse response) {
+        authService.clearAuthCookies(response, testMember);
     }
 }

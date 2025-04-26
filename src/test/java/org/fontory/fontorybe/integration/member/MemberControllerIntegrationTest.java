@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
+import org.fontory.fontorybe.font.service.port.FontRequestProducer;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
@@ -15,17 +18,20 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -38,6 +44,9 @@ public class MemberControllerIntegrationTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean private FileService fileService;
+
 
     /**
      * test values
@@ -64,12 +73,24 @@ public class MemberControllerIntegrationTest {
     private String validAccessToken;
     private String validProvideToken;
 
+    private final String testFileName = "testFileName";
+    private final String testFileUrl = "testFileUrl";
+    private final LocalDateTime testFileUploadTime = LocalDateTime.of(2025, 1, 22, 3, 25);
+    private final long testFileSize = 15232;
+
     @BeforeEach
     void setUp() {
         // 이미 존재하는 회원(testMemberId)의 UserPrincipal를 만들어 accessToken을 발급
         UserPrincipal userPrincipal = new UserPrincipal(existMemberId);
         validAccessToken = jwtTokenProvider.generateAccessToken(userPrincipal);
         validProvideToken = "Bearer " + jwtTokenProvider.generateTemporalProvideToken(String.valueOf(existProvideId));
+        FileUploadResult fileUploadResult = FileUploadResult.builder()
+                .fileName(testFileName)
+                .fileUrl(testFileUrl)
+                .fileUploadTime(testFileUploadTime)
+                .size(testFileSize)
+                .build();
+        given(fileService.uploadProfileImage(any(), any())).willReturn(fileUploadResult);
     }
 
     @Test
@@ -97,14 +118,24 @@ public class MemberControllerIntegrationTest {
     void addMemberSuccessTest() throws Exception {
         MemberCreateRequest memberCreateRequest = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
         String jsonRequest = objectMapper.writeValueAsString(memberCreateRequest);
-
-        mockMvc.perform(post("/member")
-                        .header("Authorization", validProvideToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonRequest))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                .andExpect(jsonPath("$.refreshToken").isNotEmpty());
+        MockMultipartFile jsonPart = new MockMultipartFile(
+                "memberCreateRequest",
+                null,
+                "application/json",
+                jsonRequest.getBytes(StandardCharsets.UTF_8)
+        );
+        MockMultipartFile filePart = new MockMultipartFile(
+                "file",
+                "profileImage.jpg",
+                "image/jpeg",
+                "fileBytes".getBytes(StandardCharsets.UTF_8)
+        );
+        mockMvc.perform(multipart("/member")
+                        .file(jsonPart)
+                        .file(filePart)
+                        .cookie(new Cookie("accessToken", validAccessToken))
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isCreated());
     }
 
     @Test

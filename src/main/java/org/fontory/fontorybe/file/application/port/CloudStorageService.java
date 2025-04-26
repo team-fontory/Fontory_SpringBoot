@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.file.adapter.outboud.port;
+package org.fontory.fontorybe.file.application.port;
 
 import org.fontory.fontorybe.file.domain.FileCreate;
 import org.fontory.fontorybe.file.domain.FileMetadata;

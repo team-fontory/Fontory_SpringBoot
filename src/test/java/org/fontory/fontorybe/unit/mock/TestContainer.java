@@ -1,5 +1,6 @@
 package org.fontory.fontorybe.unit.mock;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.fontory.fontorybe.authentication.adapter.outbound.CookieUtilsImpl;
 import org.fontory.fontorybe.config.jwt.JwtProperties;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProviderImpl;
@@ -8,12 +9,19 @@ import org.fontory.fontorybe.authentication.adapter.outbound.RedisTokenStorage;
 import org.fontory.fontorybe.authentication.application.port.CookieUtils;
 import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.application.port.TokenStorage;
+import org.fontory.fontorybe.file.adapter.inbound.FileRequestMapper;
+import org.fontory.fontorybe.file.application.FileServiceImpl;
+import org.fontory.fontorybe.file.application.port.CloudStorageService;
+import org.fontory.fontorybe.file.application.port.FileRepository;
+import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.member.controller.MemberController;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.service.MemberServiceImpl;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.service.ProvideServiceImpl;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
+import org.springframework.context.ApplicationEventPublisher;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -32,20 +40,24 @@ public class TestContainer {
 
     public final MemberRepository memberRepository;
     public final ProvideRepository provideRepository;
+    public final FileRepository fileRepository;
 
+    public final CloudStorageService cloudStorageService;
     public final ProvideService provideService;
     public final MemberService memberService;
-
-    public final FakeRedisTemplate fakeRedisTemplate;
-
     public final TokenStorage tokenStorage;
     public final AuthService authService;
+    public final FileService fileService;
 
+    public final MemberController memberController;
+
+    public final ApplicationEventPublisher eventPublisher;
+    public final FileRequestMapper fileRequestMapper;
+    public final FakeRedisTemplate fakeRedisTemplate;
     public final JwtTokenProvider jwtTokenProvider;
     public final CookieUtils cookieUtils;
 
     public TestContainer() {
-        fakeRedisTemplate = new FakeRedisTemplate();
         props = new JwtProperties(
                 secretKeyForTest,
                 secretKeyForTest2,
@@ -55,13 +67,19 @@ public class TestContainer {
                 refreshTokenValidityMs,
                 tempTokenValidityMs);
 
+        eventPublisher = new FakeApplicationEventPublisher();
+        fileRequestMapper = new FileRequestMapper();
+        fakeRedisTemplate = new FakeRedisTemplate();
         jwtTokenProvider = new JwtTokenProviderImpl(props);
         cookieUtils = new CookieUtilsImpl(props);
 
         memberRepository = new FakeMemberRepository();
         provideRepository = new FakeProvideRepository();
+        fileRepository = new FakeFileRepository();
 
         tokenStorage = new RedisTokenStorage(fakeRedisTemplate, props);
+
+        cloudStorageService = new FakeCloudStorageService();
 
         provideService = ProvideServiceImpl.builder()
                 .provideRepository(provideRepository)
@@ -73,7 +91,24 @@ public class TestContainer {
                 .jwtTokenProvider(jwtTokenProvider)
                 .build();
 
+        fileService = FileServiceImpl.builder()
+                .memberService(memberService)
+                .fileRepository(fileRepository)
+                .fileRequestMapper(fileRequestMapper)
+                .eventPublisher(eventPublisher)
+                .cloudStorageService(cloudStorageService)
+                .build();
+
         authService = new AuthService(cookieUtils, tokenStorage, jwtTokenProvider, memberService);
+
+        memberController = MemberController.builder()
+                .memberService(memberService)
+                .provideService(provideService)
+                .jwtTokenProvider(jwtTokenProvider)
+                .authService(authService)
+                .fileService(fileService)
+                .objectMapper(new ObjectMapper())
+                .build();
     }
 
     private static String generateSecretKey() {

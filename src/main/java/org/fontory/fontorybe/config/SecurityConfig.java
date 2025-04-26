@@ -6,7 +6,6 @@ import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2SuccessH
 import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2UserService;
 import org.fontory.fontorybe.authentication.adapter.inbound.security.JwtAuthenticationFilter;
 import org.fontory.fontorybe.authentication.adapter.inbound.security.JwtFontCreateServerFilter;
-import org.fontory.fontorybe.authentication.adapter.inbound.security.JwtOnlyOAuth2RequireFilter;
 import org.fontory.fontorybe.authentication.application.AuthService;
 import org.fontory.fontorybe.authentication.application.port.CookieUtils;
 import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
@@ -27,6 +26,7 @@ import org.springframework.security.config.annotation.web.configurers.HttpBasicC
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
@@ -115,41 +115,18 @@ public class SecurityConfig {
     }
 
     /**
-     * 3. jwtOnlySecurityFilterChain
-     * 회원가입전 OAUTH2를 발급한 임시 토큰을 검증하기 위한 JwtOnlyProvideRequireFilter만 적용되는 컨트롤러
-     * 회원가입전 사진업로드(POST, "/files/profile-image"), 회원가입(POST, "/member")
-     */
-    @Bean
-    @Order(3)
-    public SecurityFilterChain jwtOnlySecurityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .securityMatcher(new OrRequestMatcher(
-                        new AntPathRequestMatcher("/member", HttpMethod.POST.name())
-                ))
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                .sessionManagement(AbstractHttpConfigurer::disable)
-                .csrf(CsrfConfigurer::disable)
-                .httpBasic(HttpBasicConfigurer::disable)
-                .formLogin(FormLoginConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .addFilterBefore(new JwtOnlyOAuth2RequireFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
-
-    // 3. 기본 체인: 그 외의 모든 요청에 대해 JWT 인증 필터 적용
-
-    /**
-     * 4. defaultSecurityFilterChain
+     * 3. defaultSecurityFilterChain
      * 그 외의 모든 요청에 대해 JWT 인증 필터 적용
      */
     @Bean
-    @Order(4)
+    @Order(3)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .securityMatcher(new NegatedRequestMatcher(new OrRequestMatcher(
-                        new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
-                        new AntPathRequestMatcher("/member", HttpMethod.POST.name())
-                )))
+                .securityMatcher(
+                        new OrRequestMatcher(
+                                new NegatedRequestMatcher(new AntPathRequestMatcher("/debug/**")),
+                                new AntPathRequestMatcher("/debug/auth/me", HttpMethod.GET.name())
+                ))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(AbstractHttpConfigurer::disable)
                 .csrf(CsrfConfigurer::disable)
@@ -166,7 +143,6 @@ public class SecurityConfig {
                         // 그 외엔 인증 필요
                         .anyRequest().authenticated()
                 )
-//                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

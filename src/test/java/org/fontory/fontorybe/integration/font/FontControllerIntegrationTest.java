@@ -98,7 +98,7 @@ class FontControllerIntegrationTest {
                 .size(1024L)
                 .build();
 
-        given(fileService.uploadFontTemplateImage(any())).willReturn(fileDetails);
+        given(fileService.uploadFontTemplateImage(any(), any())).willReturn(fileDetails);
 
         doNothing().when(fontRequestProducer).sendFontRequest(any());
     }

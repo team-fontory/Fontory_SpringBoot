@@ -1,5 +1,6 @@
 package org.fontory.fontorybe.authentication.application;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.application.dto.ResponseCookies;
 import org.fontory.fontorybe.authentication.application.port.CookieUtils;
@@ -25,7 +26,7 @@ public class AuthService {
      * 새롭게 토큰 발급
      * 기존에 토큰이 존재한다면 제거, 기존 토큰이 존재할 필요 X
      */
-    public TokenResponse issueNewTokens(Member member) {
+    private TokenResponse issueNewTokens(Member member) {
         UserPrincipal user = UserPrincipal.from(member);
 
         String accessToken = jwtTokenProvider.generateAccessToken(user);
@@ -55,7 +56,8 @@ public class AuthService {
         return issueAuthCookies(member);
     }
 
-    public void removeRefreshToken(Member member) {
+    public void clearAuthCookies(HttpServletResponse res, Member member) {
+        cookieUtils.clearAuthCookies(res);
         tokenStorage.removeRefreshToken(member);
     }
 }

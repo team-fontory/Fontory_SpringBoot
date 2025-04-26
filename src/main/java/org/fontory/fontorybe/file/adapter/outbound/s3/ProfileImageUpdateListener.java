@@ -1,9 +1,10 @@
-package org.fontory.fontorybe.file.adapter.outboud.s3;
+package org.fontory.fontorybe.file.adapter.outbound.s3;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.config.S3Config;
+import org.fontory.fontorybe.file.adapter.outbound.s3.dto.ProfileImageUpdatedEvent;
 import org.fontory.fontorybe.file.domain.FileType;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;

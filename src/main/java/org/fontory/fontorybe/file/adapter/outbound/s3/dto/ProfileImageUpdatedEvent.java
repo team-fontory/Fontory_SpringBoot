@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.file.adapter.outboud.s3;
+package org.fontory.fontorybe.file.adapter.outbound.s3.dto;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -3,7 +3,6 @@ package org.fontory.fontorybe.config;
 import java.util.List;
 
 import org.fontory.fontorybe.authentication.adapter.inbound.resolver.LoginMemberArgumentResolver;
-import org.fontory.fontorybe.authentication.adapter.inbound.resolver.OAuth2InfoArgumentResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -20,13 +19,11 @@ import lombok.RequiredArgsConstructor;
 public class WebConfig implements WebMvcConfigurer {
 
     private final LoginMemberArgumentResolver loginMemberArgumentResolver;
-    private final OAuth2InfoArgumentResolver oAuth2InfoArgumentResolver;
     private final PerformanceInterceptor performanceInterceptor;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
         argumentResolvers.add(loginMemberArgumentResolver);
-        argumentResolvers.add(oAuth2InfoArgumentResolver);
     }
     
     @Override

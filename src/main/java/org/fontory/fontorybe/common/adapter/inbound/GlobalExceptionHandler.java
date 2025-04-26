@@ -8,6 +8,7 @@ import org.fontory.fontorybe.bookmark.domain.exception.BookmarkAlreadyException;
 import org.fontory.fontorybe.bookmark.domain.exception.BookmarkNotFoundException;
 import org.fontory.fontorybe.common.domain.BaseErrorResponse;
 import org.fontory.fontorybe.file.adapter.inbound.exception.FileUploadException;
+import org.fontory.fontorybe.file.adapter.inbound.exception.UnsupportedFileTypeException;
 import org.fontory.fontorybe.file.domain.exception.InvalidMultipartRequestException;
 import org.fontory.fontorybe.file.domain.exception.SingleFileRequiredException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
@@ -126,6 +127,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(InvalidMultipartRequestException.class)
     public BaseErrorResponse invalidMultipartRequest(InvalidMultipartRequestException e) {
+        return new BaseErrorResponse(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(UnsupportedFileTypeException.class)
+    public BaseErrorResponse unsupportedFileType(UnsupportedFileTypeException e) {
         return new BaseErrorResponse(e.getMessage());
     }
 }

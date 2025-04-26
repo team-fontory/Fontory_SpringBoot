@@ -5,8 +5,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.adapter.inbound.annotation.Login;
 import org.fontory.fontorybe.authentication.application.port.CookieUtils;
-import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.common.application.DevTokenInitializer;
 import org.fontory.fontorybe.font.service.dto.FontRequestProduceDto;
 import org.fontory.fontorybe.font.service.port.FontRequestProducer;
 import org.slf4j.MDC;
@@ -21,8 +21,8 @@ import static org.fontory.fontorybe.authentication.application.AuthConstants.*;
 @RestController
 @RequiredArgsConstructor
 public class DebugController {
+    private final DevTokenInitializer devTokenInitializer;
     private final FontRequestProducer fontRequestProducer;
-    private final JwtTokenProvider jwtTokenProvider;
     private final CookieUtils cookieUtils;
 
     @Value("${commit.hash}")
@@ -58,15 +58,18 @@ public class DebugController {
 
     @GetMapping("/debug/auth/me")
     public String me(
-            HttpServletRequest request,
             @Login UserPrincipal userPrincipal
     ) {
-//        if userprincipal null, exception in argument Resolver
         return String.valueOf(userPrincipal.getId());
     }
 
+    @GetMapping("/debug/login")
+    public void login(HttpServletResponse res) {
+        devTokenInitializer.issueTestAccessCookies(res);
+    }
+
     @GetMapping("/debug/logout")
-    public void me(HttpServletResponse res) {
-        cookieUtils.clearAuthCookies(res);
+    public void logout(HttpServletResponse res) {
+        devTokenInitializer.removeTestAccessCookies(res);
     }
 }

@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.file.application;
+package org.fontory.fontorybe.file.adapter.outbound;
 
 import org.fontory.fontorybe.file.domain.FileType;
 import org.springframework.beans.factory.annotation.Autowired;

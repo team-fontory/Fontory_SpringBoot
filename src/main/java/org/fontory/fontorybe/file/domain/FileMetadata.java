@@ -1,13 +1,12 @@
 package org.fontory.fontorybe.file.domain;
 
 import lombok.*;
-import org.fontory.fontorybe.file.adapter.outboud.s3.AmazonS3ObjectMetadata;
+import org.fontory.fontorybe.file.adapter.outbound.s3.dto.AmazonS3ObjectMetadata;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Builder
-@ToString
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileMetadata {

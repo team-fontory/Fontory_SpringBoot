@@ -16,8 +16,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,13 +68,7 @@ public class MemberControllerTest {
     @BeforeEach
     void init() {
         testContainer = new TestContainer();
-        memberController = MemberController.builder()
-                .memberService(testContainer.memberService)
-                .provideService(testContainer.provideService)
-                .jwtTokenProvider(testContainer.jwtTokenProvider)
-                .authService(testContainer.authService)
-                .objectMapper(new ObjectMapper())
-                .build();
+        memberController = testContainer.memberController;
 
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(existMemberProvider, existMemberProvidedId, existMemberEmail);
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
@@ -117,18 +115,22 @@ public class MemberControllerTest {
     @DisplayName("addMember returns created member response")
     void testAddMember() {
         //given
-        ProvideCreateDto provideCreateDto = new ProvideCreateDto(newMemberProvider, newMemberProvidedId, newMemberEmail);
-        Provide createdProvide = testContainer.provideService.create(provideCreateDto);
         MemberCreateRequest memberCreateRequest = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
+        MockMultipartFile file = new MockMultipartFile(
+                "file",              // RequestPart 이름
+                "test.png",          // 원본 파일명
+                "image/png",         // Content-Type
+                "dummy-image-data".getBytes()  // 파일 내용
+        );
+        List<MultipartFile> files = Collections.singletonList(file);
+
         //when
-        ResponseEntity<MemberCreateResponse> response = memberController.addMember(createdProvide, memberCreateRequest);
+        ResponseEntity<MemberCreateResponse> response = memberController.addMember(userPrincipal, memberCreateRequest, files);
         MemberCreateResponse body = response.getBody();
         //then
         assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED),
-                () -> assertThat(body).isNotNull(),
-                () -> assertThat(body.getAccessToken()).isNotNull(),
-                () -> assertThat(body.getRefreshToken()).isNotNull()
+                () -> assertThat(body).isNotNull()
         );
     }
 

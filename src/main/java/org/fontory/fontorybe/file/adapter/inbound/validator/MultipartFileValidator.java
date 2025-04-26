@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.file.validator;
+package org.fontory.fontorybe.file.adapter.inbound.validator;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

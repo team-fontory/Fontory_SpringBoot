@@ -1,13 +1,12 @@
 package org.fontory.fontorybe.file.application.port;
 
-import org.fontory.fontorybe.file.domain.FileCreate;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.file.domain.FileMetadata;
-import org.fontory.fontorybe.member.domain.Member;
+import org.springframework.web.multipart.MultipartFile;
 
 public interface FileService {
 
-    FileUploadResult uploadProfileImage(FileCreate fileCreate, Member requestMember);
+    FileUploadResult uploadProfileImage(MultipartFile file, Long memberId);
     FileMetadata getOrThrowById(Long id);
-    FileUploadResult uploadFontTemplateImage(FileCreate fileCreate);
+    FileUploadResult uploadFontTemplateImage(MultipartFile file, Long memberId);
 }

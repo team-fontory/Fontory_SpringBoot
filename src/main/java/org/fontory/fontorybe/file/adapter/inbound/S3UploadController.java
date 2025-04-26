@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
-import static org.fontory.fontorybe.file.validator.MultipartFileValidator.*;
+import static org.fontory.fontorybe.file.adapter.inbound.validator.MultipartFileValidator.extractSingleMultipartFile;
 
 @Slf4j
 @RestController
@@ -67,17 +67,15 @@ public class S3UploadController {
             )
             @RequestPart("file") List<MultipartFile> files
     ) {
-        Member requestMember = memberService.getOrThrowById(userPrincipal.getId());
         MultipartFile file = extractSingleMultipartFile(files);
 
-        log.info("Request received: Update profile image for member ID: {}", requestMember.getId());
+        log.info("Request received: Update profile image for member ID: {}", userPrincipal.getId());
         logFileDetails(file, "Profile image update");
         
-        FileCreate fileCreate = fileRequestMapper.toProfileImageFileCreate(file, requestMember);
-        FileUploadResult fileDetails = fileService.uploadProfileImage(fileCreate, requestMember);
+        FileUploadResult fileDetails = fileService.uploadProfileImage(file, userPrincipal.getId());
         
-        log.info("Response sent: Profile image updated successfully for member ID: {}, url: {}, fileName: {}, size: {} bytes", 
-                requestMember.getId(), fileDetails.getFileUrl(), fileDetails.getFileName(), fileDetails.getSize());
+        log.info("Response sent: Profile image updated successfully for member ID: {}, url: {}, fileName: {}, size: {} bytes",
+                userPrincipal.getId(), fileDetails.getFileUrl(), fileDetails.getFileName(), fileDetails.getSize());
 
         return ResponseEntity.ok()
                 .body(FileUploadResponse.from(fileDetails));

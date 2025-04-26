@@ -1,11 +1,15 @@
 package org.fontory.fontorybe.member.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.fontory.fontorybe.authentication.adapter.inbound.annotation.Login;
-import org.fontory.fontorybe.authentication.adapter.inbound.annotation.OAuth2;
-import org.fontory.fontorybe.authentication.application.dto.TokenResponse;
 import org.fontory.fontorybe.authentication.application.AuthService;
 import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateResponse;
 import org.fontory.fontorybe.member.controller.dto.MemberDisableResponse;
@@ -14,17 +18,10 @@ import org.fontory.fontorybe.member.controller.dto.MemberUpdateResponse;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
-import org.fontory.fontorybe.provide.domain.Provide;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +31,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+import static org.fontory.fontorybe.file.adapter.inbound.validator.MultipartFileValidator.extractSingleMultipartFile;
 
 
 @Slf4j
@@ -43,11 +45,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/member")
 @RequiredArgsConstructor
 public class MemberController {
-    private final MemberService memberService;
-    private final ProvideService provideService;
-    private final AuthService authService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ProvideService provideService;
+    private final MemberService memberService;
     private final ObjectMapper objectMapper;
+    private final AuthService authService;
+    private final FileService fileService;
 
     /**
      * Convert an object to JSON string for logging
@@ -83,23 +86,48 @@ public class MemberController {
     @Operation(
             summary = "회원가입"
     )
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MemberCreateResponse> addMember(
-            @OAuth2 Provide provide,
-            @RequestBody MemberCreateRequest memberCreateRequest
+            @Login UserPrincipal user,
+            @RequestPart MemberCreateRequest memberCreateRequest,
+            @Parameter(
+                    description = "업로드할 파일. 정확히 1개의 파일만 제공되어야 합니다.",
+                    required = true,
+                    content = @Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            array = @ArraySchema(
+                                    schema = @Schema(type = "string", format = "binary"),
+                                    maxItems = 1
+                            )
+                    )
+            )
+            @RequestPart("file") List<MultipartFile> files
     ) {
-        log.info("Request received: Create member with request: {} and provider: {}", 
-                toJson(memberCreateRequest), provide.getProvider());
-        
-        Member createdMember = memberService.create(memberCreateRequest, provide);
-        TokenResponse tokens = authService.issueNewTokens(createdMember);
-        
-        log.info("Response sent: Member created with ID: {}, nickname: {}", 
-                createdMember.getId(), createdMember.getNickname());
-        
+        Long requestMemberId = user.getId();
+        MultipartFile file = extractSingleMultipartFile(files);
+
+        log.info("Request received: Create member ID: {} with request: {}",
+                requestMemberId, toJson(memberCreateRequest));
+        logFileDetails(file, "Member profile image upload");
+
+        FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
+        Member updatedMember = memberService.initNewMemberInfo(requestMemberId, memberCreateRequest);
+
+        log.info("Response sent: Member ID: {} Created successfully with nickname: {}",
+                updatedMember.getId(), updatedMember.getNickname());
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(MemberCreateResponse.from(createdMember, tokens));
+                .body(MemberCreateResponse.from(updatedMember, fileUploadResult.getFileUrl()));
+    }
+
+    private void logFileDetails(MultipartFile file, String context) {
+        log.debug("{} - File details: name='{}', original name='{}', size={} bytes, contentType='{}'",
+                context,
+                file.getName(),
+                file.getOriginalFilename(),
+                file.getSize(),
+                file.getContentType());
     }
 
     @Operation(

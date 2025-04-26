@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.file.infrastructure.entity;
+package org.fontory.fontorybe.file.adapter.outbound.persistence;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

@@ -45,6 +45,21 @@ public class Member {
                 .build();
     }
 
+    public Member initNewMemberInfo(MemberCreateRequest memberCreateRequestDto) {
+        return Member.builder()
+                .id(this.id)
+                .nickname(memberCreateRequestDto.getNickname())
+                .gender(memberCreateRequestDto.getGender())
+                .birth(memberCreateRequestDto.getBirth())
+                .terms(memberCreateRequestDto.getTerms())
+                .profileImageKey(memberCreateRequestDto.getProfileImageKey())
+                .createdAt(this.createdAt)
+                .provideId(this.provideId)
+                .deletedAt(this.deletedAt)
+                .provideId(this.provideId)
+                .build();
+    }
+
     public Member update(MemberUpdateRequest memberUpdateRequest) {
         return Member.builder()
                 //tobe update

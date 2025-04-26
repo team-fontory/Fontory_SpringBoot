@@ -1,6 +1,6 @@
 package org.fontory.fontorybe.font.controller;
 
-import static org.fontory.fontorybe.file.validator.MultipartFileValidator.extractSingleMultipartFile;
+import static org.fontory.fontorybe.file.adapter.inbound.validator.MultipartFileValidator.extractSingleMultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,8 +58,7 @@ public class FontController {
     private final FontService fontService;
     private final FileService fileService;
     private final ObjectMapper objectMapper;
-    private final FileRequestMapper fileRequestMapper;
-    
+
     /**
      * Convert an object to JSON string for logging
      * If conversion fails, falls back to toString()
@@ -99,8 +98,7 @@ public class FontController {
 
         logFileDetails(file, "Font template image upload");
 
-        FileCreate fileCreate = fileRequestMapper.toFontTemplateImageFileCreate(file, memberId);
-        FileUploadResult fileDetails = fileService.uploadFontTemplateImage(fileCreate);
+        FileUploadResult fileDetails = fileService.uploadFontTemplateImage(file, memberId);
         FileUploadResponse fileUploadResponse = FileUploadResponse.from(fileDetails);
 
         Font createdFont = fontService.create(memberId, fontCreateDTO, fileDetails);
