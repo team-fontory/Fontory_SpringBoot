@@ -8,7 +8,6 @@ import org.fontory.fontorybe.bookmark.service.port.BookmarkRepository;
 import org.fontory.fontorybe.file.domain.FileDetails;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
-import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
 import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
@@ -106,8 +105,10 @@ public class FontServiceImpl implements FontService {
 
         Page<FontResponse> result = fontPage.map(font -> {
             boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, font.getId());
-            return FontResponse.from(font, bookmarked);
+            Member writer = memberService.getOrThrowById(font.getMemberId());
+            return FontResponse.from(font, bookmarked, writer.getNickname());
         });
+
         
         log.info("Service completed: Retrieved {} fonts out of {} total for member ID: {}", 
                 result.getNumberOfElements(), result.getTotalElements(), memberId);
@@ -116,15 +117,22 @@ public class FontServiceImpl implements FontService {
 
     @Override
     @Transactional(readOnly = true)
-    public FontDetailResponse getFont(Long fontId) {
+    public FontResponse getFont(Long fontId, Long memberId) {
         log.info("Service executing: Fetching font details for font ID: {}", fontId);
         Font targetFont = getOrThrowById(fontId);
-        Member member = memberService.getOrThrowById(targetFont.getMemberId());
+        Member writer = memberService.getOrThrowById(targetFont.getMemberId());
 
-        FontDetailResponse response = FontDetailResponse.from(targetFont, member.getNickname());
+        boolean isBookmarked = false;
+        if (memberId != null) {
+            isBookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, fontId);
+        }
+
+        FontResponse fontResponse = FontResponse.from(targetFont, isBookmarked, writer.getNickname());
+
         log.info("Service completed: Retrieved font details for font ID: {} with name: {}", 
                 fontId, targetFont.getName());
-        return response;
+
+        return fontResponse;
     }
 
     @Override
@@ -198,7 +206,8 @@ public class FontServiceImpl implements FontService {
         List<FontResponse> result = fonts.stream()
                 .map(f -> {
                     boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), f.getId());
-                    return FontResponse.from(f, bookmarked);
+                    Member writer = memberService.getOrThrowById(f.getMemberId());
+                    return FontResponse.from(f, bookmarked, writer.getNickname());
                 })
                 .collect(Collectors.toList());
                 
@@ -218,7 +227,8 @@ public class FontServiceImpl implements FontService {
         List<FontResponse> result = fonts.stream()
                 .map(f -> {
                     boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), f.getId());
-                    return FontResponse.from(f, bookmarked);
+                    Member writer = memberService.getOrThrowById(f.getMemberId());
+                    return FontResponse.from(f, bookmarked, writer.getNickname());
                 })
                 .collect(Collectors.toList());
                 
@@ -236,14 +246,18 @@ public class FontServiceImpl implements FontService {
         List<FontResponse> result;
         if (memberId == null) {
             result = fonts.stream()
-                    .map(font -> FontResponse.from(font, false))
+                    .map(font -> {
+                        Member writer = memberService.getOrThrowById(font.getMemberId());
+                        return FontResponse.from(font, false, writer.getNickname());
+                    })
                     .collect(Collectors.toList());
         } else {
             Member member = memberService.getOrThrowById(memberId);
             result = fonts.stream()
-                    .map(f -> {
-                        boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), f.getId());
-                        return FontResponse.from(f, bookmarked);
+                    .map(font -> {
+                        boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), font.getId());
+                        Member writer = memberService.getOrThrowById(font.getMemberId());
+                        return FontResponse.from(font, bookmarked, writer.getNickname());
                     })
                     .collect(Collectors.toList());
         }
@@ -276,9 +290,11 @@ public class FontServiceImpl implements FontService {
 
         fontRepository.save(targetFont);
 
+        Member writer = memberService.getOrThrowById(targetFont.getMemberId());
+
         log.info("Service completed: Font ID: {} download successfully", fontId);
 
-        return FontResponse.from(targetFont, isBookmarked);
+        return FontResponse.from(targetFont, isBookmarked, writer.getNickname());
     }
 
     private void checkFontOwnership(Long requestMemberId, Long targetMemberId) {

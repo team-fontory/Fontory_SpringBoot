@@ -4,7 +4,6 @@ import java.util.List;
 import org.fontory.fontorybe.file.domain.FileDetails;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
-import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
 import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
@@ -19,7 +18,7 @@ public interface FontService {
     Font update(Long memberId, Long fontId, FontUpdateDTO fontUpdateDTO);
     Font getOrThrowById(Long id);
     Page<FontResponse> getFonts(Long memberId, int page, int size);
-    FontDetailResponse getFont(Long fondId);
+    FontResponse getFont(Long fondId, Long memberId);
     FontDeleteResponse delete(Long memberId, Long fontId);
     Page<FontPageResponse> getFontPage(Long memberId, int page, int size, String sortBy, String keyword);
     List<FontResponse> getOtherFonts(Long fontId);

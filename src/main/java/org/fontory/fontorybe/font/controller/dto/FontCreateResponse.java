@@ -13,7 +13,6 @@ public class FontCreateResponse {
     private Long id;
     private String name;
     private FontStatus status;
-    private Long memberId;
     private LocalDateTime createdAt;
     private FileUploadResponse fileUploadResponse;
 
@@ -22,7 +21,6 @@ public class FontCreateResponse {
                 .id(font.getId())
                 .name(font.getName())
                 .status(font.getStatus())
-                .memberId(font.getMemberId())
                 .createdAt(font.getCreatedAt())
                 .fileUploadResponse(fileUploadResponse)
                 .build();
