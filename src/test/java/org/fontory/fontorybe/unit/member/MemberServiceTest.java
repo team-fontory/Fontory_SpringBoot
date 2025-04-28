@@ -1,15 +1,19 @@
 package org.fontory.fontorybe.unit.member;
 
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.config.S3Config;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
+import org.fontory.fontorybe.member.controller.port.MemberOnboardService;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.member.domain.MemberDefaults;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyExistException;
 import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
+import org.fontory.fontorybe.member.infrastructure.entity.MemberStatus;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.fontory.fontorybe.provide.domain.exception.ProvideNotFoundException;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
@@ -28,6 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class MemberServiceTest {
     MemberService memberService;
+    MemberOnboardService memberOnboardService;
+    MemberDefaults memberDefaults;
 
     /**
      * testValues
@@ -67,11 +73,13 @@ public class MemberServiceTest {
     void init() {
         testContainer = new TestContainer();
         memberService = testContainer.memberService;
+        memberOnboardService = testContainer.memberOnboardService;
+        memberDefaults = testContainer.memberDefaults;
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(existMemberProvider, existMemberProvidedId, existMemberEmail);
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
 
         MemberCreateRequest memberCreateRequest = new MemberCreateRequest(existMemberNickName, existMemberGender, existMemberBirth, existMemberTerms, existMemberProfileImage);
-        Member createdMember = testContainer.memberService.create(memberCreateRequest, createdProvide);
+        Member createdMember = testContainer.create(memberCreateRequest, createdProvide);
         existMemberId = createdMember.getId();
         existMemberProvideId = createdProvide.getId();
         userPrincipal = UserPrincipal.from(createdMember);
@@ -104,13 +112,34 @@ public class MemberServiceTest {
     }
 
     @Test
+    @DisplayName("OAUTH2 Login Success and make default Member")
+    void makeDefaultMember() {
+        //givne
+        ProvideCreateDto provideCreateDto = new ProvideCreateDto(newMemberProvider, newMemberProvidedId, newMemberEmail);
+        Provide createdProvide = testContainer.provideService.create(provideCreateDto);
+
+        Member defaultMember = memberOnboardService.createDefaultMember(createdProvide);
+
+        assertAll(
+                () -> assertThat(defaultMember.getId()).isNotNull(),
+                () -> assertThat(defaultMember.getProvideId()).isEqualTo(createdProvide.getId()),
+                () -> assertThat(defaultMember.getNickname()).isNotNull(),
+                () -> assertThat(defaultMember.getGender()).isEqualTo(memberDefaults.getGender()),
+                () -> assertThat(defaultMember.getBirth()).isEqualTo(memberDefaults.getBirth()),
+                () -> assertThat(defaultMember.getProfileImageKey()).isEqualTo(memberDefaults.getProfileImageUrl()),
+                () -> assertThat(defaultMember.getCreatedAt()).isNotNull(),
+                () -> assertThat(defaultMember.getUpdatedAt()).isNotNull()
+        );
+    }
+
+    @Test
     @DisplayName("member - create success test")
     void createTest() {
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(newMemberProvider, newMemberProvidedId, newMemberEmail);
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
 
         MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        Member createdMember = memberService.create(memberCreateRequestDto, createdProvide);
+        Member createdMember = testContainer.create(memberCreateRequestDto, createdProvide);
 
         assertAll(
                 () -> assertThat(createdMember.getId()).isNotNull(),
@@ -135,12 +164,12 @@ public class MemberServiceTest {
         Provide createdProvide2 = testContainer.provideService.create(provideCreateDto2);
 
         MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        memberService.create(memberCreateRequestDto, createdProvide1);
+        testContainer.create(memberCreateRequestDto, createdProvide1);
 
         // 동일 닉네임으로 또 회원 생성 시 예외 발생
         MemberCreateRequest duplicateMemberCreateRequestDto = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
         assertThatThrownBy(
-                () -> memberService.create(duplicateMemberCreateRequestDto, createdProvide2))
+                () -> testContainer.create(duplicateMemberCreateRequestDto, createdProvide2))
                 .isExactlyInstanceOf(MemberDuplicateNameExistsException.class);
     }
 
@@ -178,8 +207,8 @@ public class MemberServiceTest {
         String uniqueNickname2 = UUID.randomUUID().toString();
         MemberCreateRequest memberCreateRequestDto1 = new MemberCreateRequest(uniqueNickname1, Gender.MALE, newMemberBirth, existMemberTerms, existMemberProfileImage);
         MemberCreateRequest memberCreateRequestDto2 = new MemberCreateRequest(uniqueNickname2, Gender.FEMALE, newMemberBirth, existMemberTerms, existMemberProfileImage);
-        Member member1 = memberService.create(memberCreateRequestDto1, createdProvide1);
-        memberService.create(memberCreateRequestDto2, createdProvide2);
+        Member member1 = testContainer.create(memberCreateRequestDto1, createdProvide1);
+        testContainer.create(memberCreateRequestDto2, createdProvide2);
 
         // member1의 닉네임을 이미 존재하는 이름으로 업데이트 시도하면 예외 발생
         MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(uniqueNickname2, updateProfileImage, updateTerms);
@@ -199,9 +228,9 @@ public class MemberServiceTest {
         MemberCreateRequest memberCreateRequestDto1 = new MemberCreateRequest(uniqueNickname1, Gender.MALE, newMemberBirth, existMemberTerms, existMemberProfileImage);
         MemberCreateRequest memberCreateRequestDto2 = new MemberCreateRequest(uniqueNickname2, Gender.MALE, newMemberBirth, existMemberTerms, existMemberProfileImage);
 
-        memberService.create(memberCreateRequestDto1, createdProvide);
+        testContainer.create(memberCreateRequestDto1, createdProvide);
         assertThatThrownBy(
-                () -> memberService.create(memberCreateRequestDto2, createdProvide))
+                () -> testContainer.create(memberCreateRequestDto2, createdProvide))
                 .isInstanceOf(MemberAlreadyExistException.class);
     }
 
@@ -250,11 +279,14 @@ public class MemberServiceTest {
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
 
         MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        Member member = memberService.create(memberCreateRequestDto, createdProvide);
+        Member member = testContainer.create(memberCreateRequestDto, createdProvide);
 
         // 회원 비활성화
         Member disabledMember = memberService.disable(member.getId());
-        assertThat(disabledMember.getDeletedAt()).isNotNull();
+        assertAll(
+                () -> assertThat(disabledMember.getDeletedAt()).isNotNull(),
+                () -> assertThat(disabledMember.getStatus()).isEqualTo(MemberStatus.DEACTIVATE)
+        );
     }
 
     @Test
@@ -265,7 +297,7 @@ public class MemberServiceTest {
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
 
         MemberCreateRequest memberCreateRequestDto = new MemberCreateRequest(newMemberNickName, newMemberGender, newMemberBirth, newMemberTerms, newMemberProfileImage);
-        Member member = memberService.create(memberCreateRequestDto, createdProvide);
+        Member member = testContainer.create(memberCreateRequestDto, createdProvide);
 
         // 회원 비활성화
         memberService.disable(member.getId());

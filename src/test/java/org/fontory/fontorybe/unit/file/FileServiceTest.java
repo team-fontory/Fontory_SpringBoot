@@ -50,10 +50,7 @@ class FileServiceTest {
                 "test@example.com"
         );
 
-        existMember = testContainer.memberService.create(
-                createMemberRequest("testUser"),
-                testContainer.provideService.create(provideCreateDto)
-        );
+        existMember = testContainer.create(createMemberRequest("testUser") ,testContainer.provideService.create(provideCreateDto));
         existMemberId = existMember.getId();
     }
 

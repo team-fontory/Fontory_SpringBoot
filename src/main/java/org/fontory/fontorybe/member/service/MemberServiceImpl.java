@@ -8,12 +8,10 @@ import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
-import org.fontory.fontorybe.member.domain.exception.MemberAlreadyExistException;
 import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
-import org.fontory.fontorybe.provide.domain.Provide;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,33 +41,6 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     @Transactional
-    public Member create(MemberCreateRequest memberCreateRequest, Provide provide) {
-        // 존재하는지 가입했는지, 닉네임 중복확인
-        if (provide.getMemberId() != null) {
-            throw new MemberAlreadyExistException();
-        } else if (isDuplicateNameExists(memberCreateRequest.getNickname())) {
-            throw new MemberDuplicateNameExistsException();
-        }
-
-        Member createdMember = memberRepository.save(Member.from(memberCreateRequest, provide));
-        provideService.setMember(provide, createdMember);
-
-        return createdMember;
-    }
-
-    @Override
-    @Transactional
-    public Member initNewMemberInfo(Long requestMemberId, MemberCreateRequest memberCreateRequest) {
-        Member targetMember = getOrThrowById(requestMemberId);
-        if (isDuplicateNameExists(memberCreateRequest.getNickname())) {
-             throw new MemberDuplicateNameExistsException();
-        }
-
-        return memberRepository.save(targetMember.initNewMemberInfo(memberCreateRequest));
-    }
-
-    @Override
-    @Transactional
     public Member update(Long requestMemberId, MemberUpdateRequest memberUpdateRequest) {
         Member targetMember = getOrThrowById(requestMemberId);
 
@@ -95,8 +66,11 @@ public class MemberServiceImpl implements MemberService {
         if (targetMember.getDeletedAt() != null) {
             throw new MemberAlreadyDisabledException();
         }
-
+        System.out.println("targetMember = " + targetMember);
         targetMember.disable();
+        System.out.println("targetMember = " + targetMember);
+        Member save = memberRepository.save(targetMember);
+        System.out.println("save = " + save);
         return memberRepository.save(targetMember);
     }
 }

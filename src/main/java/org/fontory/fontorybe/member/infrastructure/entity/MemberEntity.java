@@ -42,6 +42,9 @@ public class MemberEntity extends BaseEntity {
 
     private Long provideId;
 
+    @Enumerated(EnumType.STRING)
+    private MemberStatus status;
+
     private LocalDateTime deletedAt;
 
     public Member toModel() {
@@ -53,6 +56,7 @@ public class MemberEntity extends BaseEntity {
                 .terms(terms)
                 .profileImageKey(profileImageKey)
                 .provideId(provideId)
+                .status(status)
                 .createdAt(getCreatedAt())
                 .updatedAt(getUpdatedAt())
                 .deletedAt(getDeletedAt())
@@ -68,6 +72,7 @@ public class MemberEntity extends BaseEntity {
                 .terms(member.getTerms())
                 .profileImageKey(member.getProfileImageKey())
                 .provideId(member.getProvideId())
+                .status(member.getStatus())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
                 .deletedAt(member.getDeletedAt())

@@ -7,8 +7,10 @@ import org.fontory.fontorybe.authentication.application.dto.ResponseCookies;
 import org.fontory.fontorybe.authentication.application.AuthService;
 import org.fontory.fontorybe.authentication.application.port.CookieUtils;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
+import org.fontory.fontorybe.member.controller.port.MemberOnboardService;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.member.infrastructure.entity.MemberStatus;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -25,7 +27,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class CustomOauth2SuccessHandler implements AuthenticationSuccessHandler {
     private final AuthService authService;
-    private final MemberService memberService;
+    private final MemberOnboardService memberOnboardService;
     private final CookieUtils cookieUtils;
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
@@ -41,24 +43,15 @@ public class CustomOauth2SuccessHandler implements AuthenticationSuccessHandler 
         Provide provide = authUser.getAttribute("provide");
         Objects.requireNonNull(provide, "OAuth2User must have 'provide' attribute");
 
-        Member member = fetchOrCreateMember(provide);
+        Member member = memberOnboardService.fetchOrCreateMember(provide);
         ResponseCookies cookies = authService.issueAuthCookies(member);
         cookieUtils.addCookies(response, cookies);
 
-        redirectStrategy.sendRedirect(request, response, buildRedirectUrl(provide));
+        redirectStrategy.sendRedirect(request, response, buildRedirectUrl(member));
     }
 
-    private Member fetchOrCreateMember(Provide provide) {
-        if (provide.getMemberId() == null) {
-            MemberCreateRequest req = MemberCreateRequest.defaultMemberCreateRequest();
-            return memberService.create(req, provide);
-        } else {
-            return memberService.getOrThrowById(provide.getMemberId());
-        }
-    }
-
-    private String buildRedirectUrl(Provide provide) {
-        String path = (provide.getMemberId() == null) ? signUpPath : authPath;
+    private String buildRedirectUrl(Member member) {
+        String path = (member.getStatus() == MemberStatus.ONBOARDING) ? signUpPath : authPath;
         return baseUrl + path;
     }
 }

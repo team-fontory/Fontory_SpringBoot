@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
-public class FileRequestMapperTest {
+class FileRequestMapperTest {
     private FileRequestMapper fileRequestMapper;
     private TestContainer testContainer;
 
@@ -45,10 +45,7 @@ public class FileRequestMapperTest {
                 "test@example.com"
         );
 
-        existMember = testContainer.memberService.create(
-                createMemberRequest("testUser"),
-                testContainer.provideService.create(provideCreateDto)
-        );
+        existMember = testContainer.create(createMemberRequest("testUser") ,testContainer.provideService.create(provideCreateDto));
         existMemberId = existMember.getId();
     }
 

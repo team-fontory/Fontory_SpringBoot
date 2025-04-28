@@ -1,12 +1,10 @@
 package org.fontory.fontorybe.member.controller.dto;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import org.fontory.fontorybe.config.S3Config;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 
 @Getter
@@ -18,12 +16,4 @@ public class MemberCreateRequest {
     private LocalDate birth;
     private Boolean terms;
     private String profileImageKey;
-
-    public static MemberCreateRequest defaultMemberCreateRequest() {
-        return MemberCreateRequest.builder()
-                .nickname(UUID.randomUUID().toString())
-                .terms(false)
-                .profileImageKey(S3Config.getDefaultProfileImageUrl())
-                .build();
-    }
 }

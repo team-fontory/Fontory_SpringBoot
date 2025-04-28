@@ -19,7 +19,7 @@ public class S3Config {
     @Getter
     private static String defaultProfileImageUrl = "testUrl";
 
-    @Value("${default.profile.url}")
+    @Value("${member.default.profile-image-url}")
     public void setDefaultProfileImageUrl(String defaultProfileImageUrl) {
         S3Config.defaultProfileImageUrl = defaultProfileImageUrl;
     }

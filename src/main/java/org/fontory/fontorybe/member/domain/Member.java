@@ -7,6 +7,7 @@ import lombok.*;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
+import org.fontory.fontorybe.member.infrastructure.entity.MemberStatus;
 import org.fontory.fontorybe.provide.domain.Provide;
 
 @Getter
@@ -34,6 +35,8 @@ public class Member {
 
     private Long provideId;
 
+    private MemberStatus status;
+
     public static Member from(MemberCreateRequest memberCreateRequestDto, Provide provide) {
         return Member.builder()
                 .nickname(memberCreateRequestDto.getNickname())
@@ -42,6 +45,7 @@ public class Member {
                 .terms(memberCreateRequestDto.getTerms())
                 .profileImageKey(memberCreateRequestDto.getProfileImageKey())
                 .provideId(provide.getId())
+                .status(MemberStatus.ONBOARDING)
                 .build();
     }
 
@@ -57,6 +61,7 @@ public class Member {
                 .provideId(this.provideId)
                 .deletedAt(this.deletedAt)
                 .provideId(this.provideId)
+                .status(MemberStatus.ACTIVATE)
                 .build();
     }
 
@@ -75,9 +80,11 @@ public class Member {
                 .provideId(this.provideId)
                 .deletedAt(this.deletedAt)
                 .provideId(this.provideId)
+                .status(this.status)
                 .build();
     }
     public void disable() {
+        this.status = MemberStatus.DEACTIVATE;
         this.deletedAt = LocalDateTime.now();
     }
 
@@ -98,6 +105,7 @@ public class Member {
                 .deletedAt(this.deletedAt)
                 .terms(this.terms)
                 .provideId(this.provideId)
+                .status(this.status)
                 .build();
     }
 }

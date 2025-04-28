@@ -1,6 +1,5 @@
 package org.fontory.fontorybe.unit.member;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.member.controller.MemberController;
 import org.fontory.fontorybe.member.controller.dto.*;
@@ -73,7 +72,8 @@ public class MemberControllerTest {
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(existMemberProvider, existMemberProvidedId, existMemberEmail);
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
         MemberCreateRequest memberCreateRequest = new MemberCreateRequest(existMemberNickName, existMemberGender, existMemberBirth, existMemberTerms, existMemberProfileImage);
-        Member createdMember = testContainer.memberService.create(memberCreateRequest, createdProvide);
+        Member createdMember = testContainer.create(memberCreateRequest, testContainer.provideService.create(provideCreateDto));
+
         existMemberId = createdMember.getId();
         existMemberProvideId = createdProvide.getId();
         userPrincipal = UserPrincipal.from(createdMember);

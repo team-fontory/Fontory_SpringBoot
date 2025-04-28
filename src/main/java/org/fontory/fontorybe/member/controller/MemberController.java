@@ -15,6 +15,7 @@ import org.fontory.fontorybe.member.controller.dto.MemberCreateResponse;
 import org.fontory.fontorybe.member.controller.dto.MemberDisableResponse;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdateResponse;
+import org.fontory.fontorybe.member.controller.port.MemberOnboardService;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
@@ -45,6 +46,7 @@ import static org.fontory.fontorybe.file.adapter.inbound.validator.MultipartFile
 @RequestMapping("/member")
 @RequiredArgsConstructor
 public class MemberController {
+    private final MemberOnboardService memberOnboardService;
     private final JwtTokenProvider jwtTokenProvider;
     private final ProvideService provideService;
     private final MemberService memberService;
@@ -111,7 +113,7 @@ public class MemberController {
         logFileDetails(file, "Member profile image upload");
 
         FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
-        Member updatedMember = memberService.initNewMemberInfo(requestMemberId, memberCreateRequest);
+        Member updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, memberCreateRequest);
 
         log.info("Response sent: Member ID: {} Created successfully with nickname: {}",
                 updatedMember.getId(), updatedMember.getNickname());

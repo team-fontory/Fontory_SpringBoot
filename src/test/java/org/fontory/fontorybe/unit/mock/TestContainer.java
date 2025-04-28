@@ -15,10 +15,16 @@ import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileRepository;
 import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.member.controller.MemberController;
+import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
+import org.fontory.fontorybe.member.controller.port.MemberOnboardService;
 import org.fontory.fontorybe.member.controller.port.MemberService;
+import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.member.domain.MemberDefaults;
+import org.fontory.fontorybe.member.service.MemberOnboardServiceImpl;
 import org.fontory.fontorybe.member.service.MemberServiceImpl;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
+import org.fontory.fontorybe.provide.domain.Provide;
 import org.fontory.fontorybe.provide.service.ProvideServiceImpl;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -26,6 +32,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.security.NoSuchAlgorithmException;
+import java.time.LocalDate;
 
 public class TestContainer {
     public final JwtProperties props;
@@ -42,6 +49,7 @@ public class TestContainer {
     public final ProvideRepository provideRepository;
     public final FileRepository fileRepository;
 
+    public final MemberOnboardService memberOnboardService;
     public final CloudStorageService cloudStorageService;
     public final ProvideService provideService;
     public final MemberService memberService;
@@ -56,6 +64,7 @@ public class TestContainer {
     public final FakeRedisTemplate fakeRedisTemplate;
     public final JwtTokenProvider jwtTokenProvider;
     public final CookieUtils cookieUtils;
+    public final MemberDefaults memberDefaults;
 
     public TestContainer() {
         props = new JwtProperties(
@@ -100,8 +109,14 @@ public class TestContainer {
                 .build();
 
         authService = new AuthService(cookieUtils, tokenStorage, jwtTokenProvider, memberService);
+        memberDefaults = new MemberDefaults(
+                LocalDate.of(1999, 12, 31),
+                false,
+                "testUrl");
+        memberOnboardService = new MemberOnboardServiceImpl(memberDefaults, memberService, memberRepository, provideService);
 
         memberController = MemberController.builder()
+                .memberOnboardService(memberOnboardService)
                 .memberService(memberService)
                 .provideService(provideService)
                 .jwtTokenProvider(jwtTokenProvider)
@@ -128,5 +143,10 @@ public class TestContainer {
             sb.append(String.format("%02x", b));
         }
         return sb.toString();
+    }
+
+    public Member create(MemberCreateRequest memberCreateRequest, Provide provide) {
+        Member defaultMember = memberOnboardService.createDefaultMember(provide);
+        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), memberCreateRequest);
     }
 }

@@ -26,6 +26,7 @@ public class FakeMemberRepository implements MemberRepository {
                     .terms(member.getTerms())
                     .profileImageKey(member.getProfileImageKey())
                     .provideId(member.getProvideId())
+                    .status(member.getStatus())
                     .createdAt(now)
                     .updatedAt(now)
                     .build();
@@ -41,6 +42,7 @@ public class FakeMemberRepository implements MemberRepository {
                     .terms(member.getTerms())
                     .profileImageKey(member.getProfileImageKey())
                     .provideId(member.getProvideId())
+                    .status(member.getStatus())
                     .createdAt(member.getCreatedAt())
                     .updatedAt(now)
                     .deletedAt(member.getDeletedAt())
