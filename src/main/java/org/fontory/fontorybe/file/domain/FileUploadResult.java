@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class FileUploadResult {
+    private final Long id;
     private final String fileName;
     private final String fileUrl;
     private final LocalDateTime fileUploadTime;
@@ -15,6 +16,7 @@ public class FileUploadResult {
 
     public static FileUploadResult from(FileMetadata fileMetadata, String fileUrl) {
         return FileUploadResult.builder()
+                .id(fileMetadata.getId())
                 .fileName(fileMetadata.getFileName())
                 .fileUrl(fileUrl)
                 .fileUploadTime(fileMetadata.getUploadedAt())

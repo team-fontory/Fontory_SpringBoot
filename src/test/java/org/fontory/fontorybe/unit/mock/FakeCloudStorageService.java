@@ -21,7 +21,7 @@ public class FakeCloudStorageService implements CloudStorageService {
 
     @Override
     public String getFileUrl(FileMetadata fileMetadata, String key) {
-        return fileMetadata.getFileType().toString() + key;
+        return key;
     }
 
     @Override
@@ -32,7 +32,7 @@ public class FakeCloudStorageService implements CloudStorageService {
     }
 
     private AmazonS3ObjectMetadata uploadFile(AmazonS3PutRequest amazonS3PutRequest) {
-
-        return AmazonS3ObjectMetadata.from(amazonS3PutRequest);
+        AmazonS3ObjectMetadata result = AmazonS3ObjectMetadata.from(amazonS3PutRequest);
+        return result;
     }
 }

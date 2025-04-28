@@ -2,7 +2,6 @@ package org.fontory.fontorybe.file.adapter.outbound.s3.dto;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.ToString;
 import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileType;
 
@@ -10,7 +9,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-@ToString
 public class AmazonS3ObjectMetadata {
     private final String fileName;
     private final FileType fileType;

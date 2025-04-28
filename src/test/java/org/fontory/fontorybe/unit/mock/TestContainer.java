@@ -118,7 +118,7 @@ public class TestContainer {
             SecretKey secretKey = keyGenerator.generateKey();
             return bytesToHex(secretKey.getEncoded());
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Failed to generate secret key", e);
+            throw new RuntimeException("Failed to generate secret fileKey", e);
         }
     }
 

@@ -27,7 +27,7 @@ public class ProfileImageUpdateListener {
     }
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void afterCommit(ProfileImageUpdatedEvent event) {
+    public void beforeCommit(ProfileImageUpdatedEvent event) {
         s3.copyObject(CopyObjectRequest.builder()
                         .sourceBucket(profileImageBucketName)
                         .sourceKey(event.getTempKey())

@@ -22,7 +22,7 @@ class RedisConnectivityTest {
 
     @Test
     void testRedisConnectivity() {
-        final String key = "key";
+        final String key = "fileKey";
         final String value = "value";
 
         redisTemplate.opsForValue().set(key, value);

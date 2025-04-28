@@ -19,6 +19,7 @@ public class FakeFileRepository implements FileRepository {
         if (file.getId() == null || file.getId() == 0) {
             FileMetadata newFile = FileMetadata.builder()
                     .id(authGeneratedID.incrementAndGet())
+                    .fileName(file.getFileName())
                     .extension(file.getExtension())
                     .key(file.getKey())
                     .size(file.getSize())
@@ -34,6 +35,7 @@ public class FakeFileRepository implements FileRepository {
             data.removeIf(m -> m.getId().equals(file.getId()));
             FileMetadata newFile = FileMetadata.builder()
                     .id(file.getId())
+                    .fileName(file.getFileName())
                     .extension(file.getExtension())
                     .key(file.getKey())
                     .size(file.getSize())
@@ -53,5 +55,9 @@ public class FakeFileRepository implements FileRepository {
         return data.stream()
                 .filter(item -> item.getId().equals(id))
                 .findAny();
+    }
+
+    public List<FileMetadata> findAll() {
+        return new ArrayList<>(data);
     }
 }

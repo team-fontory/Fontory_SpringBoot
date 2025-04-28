@@ -24,9 +24,10 @@ public class FileEntity extends BaseEntity {
     @Column(name = "file_id")
     private Long id;
     private String fileName;
+    @Enumerated(EnumType.STRING)
     private FileType fileType;
     private String extension;
-    private String s3Key;
+    private String fileKey;
     private Long uploaderId;
     private Long size;
     private LocalDateTime uploadedAt;
@@ -37,7 +38,7 @@ public class FileEntity extends BaseEntity {
                 .fileName(file.getFileName())
                 .fileType(file.getFileType())
                 .extension(file.getExtension())
-                .s3Key(file.getKey())
+                .fileKey(file.getKey())
                 .uploaderId(file.getUploaderId())
                 .size(file.getSize())
                 .uploadedAt(file.getUploadedAt())
@@ -52,7 +53,7 @@ public class FileEntity extends BaseEntity {
                 .fileName(this.fileName)
                 .extension(this.extension)
                 .fileType(this.fileType)
-                .key(this.s3Key)
+                .key(this.fileKey)
                 .uploaderId(this.uploaderId)
                 .size(this.size)
                 .uploadedAt(this.uploadedAt)

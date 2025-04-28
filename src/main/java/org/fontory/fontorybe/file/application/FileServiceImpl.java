@@ -59,14 +59,13 @@ public class FileServiceImpl implements FileService {
 
         log.info("Uploading profile image to cloud storage: memberId={}, tempKey={}", memberId, tempKey);
         FileMetadata metadata = cloudStorageService.uploadProfileImage(profileImageFileCreate, tempKey);
+        metadata.updateKey(fixedKey);
         FileMetadata savedMetaData = fileRepository.save(metadata);
-
         memberService.setProfileImageKey(requestMember, fixedKey);
 
         log.info("Publishing image update event: tempKey={}, fixedKey={}", tempKey, fixedKey);
         eventPublisher.publishEvent(new ProfileImageUpdatedEvent(tempKey, fixedKey));
         String fileUrl = cloudStorageService.getFileUrl(savedMetaData, fixedKey);
-
         FileUploadResult result = FileUploadResult.from(savedMetaData, fileUrl);
         log.info("Profile image upload completed successfully: memberId={}, fileUrl={}", memberId, fileUrl);
         return result;

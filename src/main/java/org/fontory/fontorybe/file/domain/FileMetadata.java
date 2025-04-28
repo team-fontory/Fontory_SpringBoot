@@ -50,4 +50,8 @@ public class FileMetadata {
                 .updatedAt(this.updatedAt)
                 .build();
     }
+
+    public void updateKey(String key) {
+        this.key = key;
+    }
 }
