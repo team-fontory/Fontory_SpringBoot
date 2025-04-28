@@ -68,5 +68,5 @@ jobs:
           echo "url.base=https://fontory.co.kr" >> ./src/main/resources/application-infrastructure.properties
 
       - name: Build with Gradle Wrapper
-        run: ./gradlew build
+        run: ./gradlew clean test --stacktrace --info
 
