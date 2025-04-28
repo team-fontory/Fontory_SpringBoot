@@ -106,4 +106,9 @@ public class FontRepositoryImpl implements FontRepository {
                 .map(FontEntity::toModel)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public boolean existsByName(String fontName) {
+        return fontJpaRepository.existsByName(fontName);
+    }
 }

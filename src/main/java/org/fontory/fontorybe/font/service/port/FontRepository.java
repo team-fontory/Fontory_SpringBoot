@@ -18,4 +18,5 @@ public interface FontRepository {
     List<Font> findAllByIdIn(List<Long> ids);
     List<Font> findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(Long memberId);
     List<Font> findTop3OrderByDownloadAndBookmarkCountDesc();
+    boolean existsByName(String fontName);
 }

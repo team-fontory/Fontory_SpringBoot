@@ -15,6 +15,7 @@ import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
+import org.fontory.fontorybe.font.domain.exception.FontDuplicateNameExistsException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
 import org.fontory.fontorybe.font.service.dto.FontRequestProduceDto;
@@ -45,6 +46,10 @@ public class FontServiceImpl implements FontService {
     public Font create(Long memberId, FontCreateDTO fontCreateDTO, FileDetails fileDetails) {
         log.info("Service executing: Creating font for member ID: {}, font name: {}", memberId, fontCreateDTO.getName());
         Member member = memberService.getOrThrowById(memberId);
+
+        if (isDuplicateNameExists(memberId, fontCreateDTO.getName())) {
+            throw new FontDuplicateNameExistsException();
+        }
 
         Font savedFont = fontRepository.save(Font.from(fontCreateDTO, member.getId(), fileDetails));
         fontRequestProducer.sendFontRequest(FontRequestProduceDto.from(savedFont, member));
@@ -295,6 +300,13 @@ public class FontServiceImpl implements FontService {
         log.info("Service completed: Font ID: {} download successfully", fontId);
 
         return FontResponse.from(targetFont, isBookmarked, writer.getNickname());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Boolean isDuplicateNameExists(Long memberId, String fontName) {
+        Member member = memberService.getOrThrowById(memberId);
+        return fontRepository.existsByName(fontName);
     }
 
     private void checkFontOwnership(Long requestMemberId, Long targetMemberId) {
