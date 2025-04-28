@@ -7,17 +7,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import org.fontory.fontorybe.file.application.FileService;
-import org.fontory.fontorybe.file.domain.FileCreate;
 import org.fontory.fontorybe.file.domain.FileDetails;
-import org.fontory.fontorybe.file.domain.FileType;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
-import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
 import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
@@ -35,7 +31,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
@@ -231,10 +226,6 @@ class FontServiceIntegrationTest {
         assertThat(result.getContent()).hasSizeLessThanOrEqualTo(size);
         assertThat(result.getTotalElements()).isGreaterThanOrEqualTo(7);
 
-        result.getContent().forEach(font ->
-                assertThat(font.getMemberId()).isEqualTo(existMemberId)
-        );
-
         List<Long> ids = result.getContent().stream()
                 .map(FontResponse::getId)
                 .toList();
@@ -249,7 +240,7 @@ class FontServiceIntegrationTest {
     @DisplayName("font - getFont detail success test")
     void getFontDetailSuccess() {
         // when
-        FontDetailResponse detail = fontService.getFont(existFontId);
+        FontResponse detail = fontService.getFont(existFontId, null);
 
         // then
         assertAll(
@@ -362,7 +353,6 @@ class FontServiceIntegrationTest {
 
         result.forEach(font -> {
             assertThat(font.getId()).isNotEqualTo(existFontId);
-            assertThat(font.getMemberId()).isEqualTo(existMemberId);
         });
     }
 
@@ -422,7 +412,6 @@ class FontServiceIntegrationTest {
 
         assertThat(scores).isEqualTo(sorted);
 
-        result.forEach(font -> assertThat(font.getMemberId()).isEqualTo(existMemberId));
     }
 
     @Test

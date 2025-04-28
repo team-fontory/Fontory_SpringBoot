@@ -13,9 +13,9 @@ public class FontResponse {
     private Long downloadCount;
     private Long bookmarkCount;
     private boolean isBookmarked;
-    private Long memberId;
+    private String writerName;
 
-    public static FontResponse from(Font font, boolean isBookmarked) {
+    public static FontResponse from(Font font, boolean isBookmarked, String writerName) {
         return FontResponse.builder()
                 .id(font.getId())
                 .name(font.getName())
@@ -23,7 +23,7 @@ public class FontResponse {
                 .downloadCount(font.getDownloadCount())
                 .bookmarkCount(font.getBookmarkCount())
                 .isBookmarked(isBookmarked)
-                .memberId(font.getMemberId())
+                .writerName(writerName)
                 .build();
     }
 }

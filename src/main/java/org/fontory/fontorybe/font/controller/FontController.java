@@ -23,7 +23,6 @@ import org.fontory.fontorybe.file.domain.FileDetails;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontCreateResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
-import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
 import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
@@ -38,7 +37,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -180,10 +178,14 @@ public class FontController {
     @Operation(summary = "폰트 상세보기")
     @Parameter(name = "fontId", description = "상세 조회 할 폰트 ID")
     @GetMapping("/{fontId}")
-    public ResponseEntity<?> getFont(@PathVariable Long fontId) {
+    public ResponseEntity<?> getFont(
+            @PathVariable Long fontId,
+            @Login(required = false) UserPrincipal userPrincipal
+    ) {
+        Long memberId = userPrincipal != null ? userPrincipal.getId() : null;
         log.info("Request received: Get font details for font ID: {}", fontId);
 
-        FontDetailResponse font = fontService.getFont(fontId);
+        FontResponse font = fontService.getFont(fontId, memberId);
         log.info("Response sent: Font details returned for font ID: {}, name: {}", 
                 fontId, font.getName());
 
