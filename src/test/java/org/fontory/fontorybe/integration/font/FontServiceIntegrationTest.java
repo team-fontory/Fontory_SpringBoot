@@ -226,10 +226,6 @@ class FontServiceIntegrationTest {
         assertThat(result.getContent()).hasSizeLessThanOrEqualTo(size);
         assertThat(result.getTotalElements()).isGreaterThanOrEqualTo(7);
 
-        result.getContent().forEach(font ->
-                assertThat(font.getMemberId()).isEqualTo(existMemberId)
-        );
-
         List<Long> ids = result.getContent().stream()
                 .map(FontResponse::getId)
                 .toList();
@@ -244,7 +240,7 @@ class FontServiceIntegrationTest {
     @DisplayName("font - getFont detail success test")
     void getFontDetailSuccess() {
         // when
-        FontDetailResponse detail = fontService.getFont(existFontId);
+        FontResponse detail = fontService.getFont(existFontId, null);
 
         // then
         assertAll(
@@ -357,7 +353,6 @@ class FontServiceIntegrationTest {
 
         result.forEach(font -> {
             assertThat(font.getId()).isNotEqualTo(existFontId);
-            assertThat(font.getMemberId()).isEqualTo(existMemberId);
         });
     }
 
@@ -417,7 +412,6 @@ class FontServiceIntegrationTest {
 
         assertThat(scores).isEqualTo(sorted);
 
-        result.forEach(font -> assertThat(font.getMemberId()).isEqualTo(existMemberId));
     }
 
     @Test

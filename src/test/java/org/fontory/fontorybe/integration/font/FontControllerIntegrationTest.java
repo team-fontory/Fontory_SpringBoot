@@ -138,7 +138,6 @@ class FontControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name", is(newFontName)))
                 .andExpect(jsonPath("$.status", is("PROGRESS")))
-                .andExpect(jsonPath("$.memberId", is(existMemberId.intValue())))
                 .andExpect(jsonPath("$.createdAt").isNotEmpty());
     }
 
@@ -247,7 +246,6 @@ class FontControllerIntegrationTest {
                 .andExpect(jsonPath("$.content[0].downloadCount").isNumber())
                 .andExpect(jsonPath("$.content[0].bookmarkCount").isNumber())
                 .andExpect(jsonPath("$.content[0].bookmarked").isBoolean())
-                .andExpect(jsonPath("$.content[0].memberId").isNotEmpty())
                 .andExpect(jsonPath("$.totalElements").isNumber())
                 .andExpect(jsonPath("$.totalPages").isNumber())
                 .andExpect(jsonPath("$.size").value(5))
@@ -277,8 +275,7 @@ class FontControllerIntegrationTest {
                 .andExpect(jsonPath("$.example", is(existFontExample)))
                 .andExpect(jsonPath("$.writerName", is(existMemberName)))
                 .andExpect(jsonPath("$.downloadCount", is(existFontDownloadCount.intValue())))
-                .andExpect(jsonPath("$.bookmarkCount", is(existFontBookmarkCount.intValue())))
-                .andExpect(jsonPath("$.memberId", is(existMemberId.intValue())));
+                .andExpect(jsonPath("$.bookmarkCount", is(existFontBookmarkCount.intValue())));
     }
 
     @Test
@@ -320,7 +317,6 @@ class FontControllerIntegrationTest {
                 .andExpect(jsonPath("$.content[0].downloadCount").isNumber())
                 .andExpect(jsonPath("$.content[0].bookmarkCount").isNumber())
                 .andExpect(jsonPath("$.content[0].bookmarked").isBoolean())
-                .andExpect(jsonPath("$.content[0].memberId").isNotEmpty())
                 .andExpect(jsonPath("$.totalPages").isNumber())
                 .andExpect(jsonPath("$.totalElements").isNumber())
                 .andExpect(jsonPath("$.size").value(5))
