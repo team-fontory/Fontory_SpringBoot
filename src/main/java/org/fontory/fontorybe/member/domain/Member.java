@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import lombok.*;
-import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
+import org.fontory.fontorybe.member.controller.dto.InitMemberInfoRequest;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 import org.fontory.fontorybe.member.infrastructure.entity.MemberStatus;
@@ -37,26 +37,26 @@ public class Member {
 
     private MemberStatus status;
 
-    public static Member from(MemberCreateRequest memberCreateRequestDto, Provide provide) {
+    public static Member fromDefaults(MemberDefaults memberDefaults, String nickname, Provide provide) {
         return Member.builder()
-                .nickname(memberCreateRequestDto.getNickname())
-                .gender(memberCreateRequestDto.getGender())
-                .birth(memberCreateRequestDto.getBirth())
-                .terms(memberCreateRequestDto.getTerms())
-                .profileImageKey(memberCreateRequestDto.getProfileImageKey())
+                .nickname(nickname)
+                .gender(memberDefaults.getGender())
+                .birth(memberDefaults.getBirth())
+                .terms(memberDefaults.getTerms())
+                .profileImageKey(memberDefaults.getProfileImageKey())
                 .provideId(provide.getId())
                 .status(MemberStatus.ONBOARDING)
                 .build();
     }
 
-    public Member initNewMemberInfo(MemberCreateRequest memberCreateRequestDto) {
+    public Member initNewMemberInfo(InitMemberInfoRequest initNewMemberInfo) {
         return Member.builder()
                 .id(this.id)
-                .nickname(memberCreateRequestDto.getNickname())
-                .gender(memberCreateRequestDto.getGender())
-                .birth(memberCreateRequestDto.getBirth())
-                .terms(memberCreateRequestDto.getTerms())
-                .profileImageKey(memberCreateRequestDto.getProfileImageKey())
+                .nickname(initNewMemberInfo.getNickname())
+                .gender(initNewMemberInfo.getGender())
+                .birth(initNewMemberInfo.getBirth())
+                .terms(initNewMemberInfo.getTerms())
+                .profileImageKey(initNewMemberInfo.getProfileImageKey())
                 .createdAt(this.createdAt)
                 .provideId(this.provideId)
                 .deletedAt(this.deletedAt)
@@ -70,7 +70,6 @@ public class Member {
                 //tobe update
                 .nickname(memberUpdateRequest.getNickname())
                 .terms(memberUpdateRequest.getTerms())
-                .profileImageKey(memberUpdateRequest.getProfileImageKey())
 
                 //not to be update
                 .id(this.id)
@@ -81,6 +80,7 @@ public class Member {
                 .deletedAt(this.deletedAt)
                 .provideId(this.provideId)
                 .status(this.status)
+                .profileImageKey(this.profileImageKey)
                 .build();
     }
     public void disable() {

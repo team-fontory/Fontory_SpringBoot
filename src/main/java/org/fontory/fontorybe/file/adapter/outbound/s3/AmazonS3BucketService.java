@@ -56,6 +56,20 @@ public class AmazonS3BucketService implements CloudStorageService {
         return uploadFile(amazonS3PutRequest).toModel();
     }
 
+    private String getFileUrl(FileType fileType, String key) {
+        return String.format("%s/%s/%s", s3Config.getCdnUrl(), s3Config.getPrefix(fileType), key);
+    }
+
+    @Override
+    public String getProfileImageUrl(String key) {
+        return getFileUrl(FileType.PROFILE_IMAGE, key);
+    }
+
+    @Override
+    public String getFontPaperUrl(String key) {
+        return getFileUrl(FileType.FONT_PAPER, key);
+    }
+
     @Override
     public String getFileUrl(FileMetadata fileMetadata, String key) {
         String bucketName = s3Config.getBucketName(fileMetadata.getFileType());

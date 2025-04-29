@@ -4,7 +4,8 @@ import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileType;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
-import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
+import org.fontory.fontorybe.member.controller.dto.InitMemberInfoRequest;
+import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 class FileServiceTest {
     private FileService fileService;
     private TestContainer testContainer;
+    private MemberLookupService memberLookupService;
 
     // 테스트 값
     private Long existMemberId;
@@ -42,6 +44,7 @@ class FileServiceTest {
     void init() {
         testContainer = new TestContainer();
         fileService = testContainer.fileService;
+        memberLookupService = testContainer.memberLookupService;
 
         // Create a member for testing
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(
@@ -63,8 +66,8 @@ class FileServiceTest {
         );
     }
 
-    private static MemberCreateRequest createMemberRequest(String nickname) {
-        return new MemberCreateRequest(
+    private static InitMemberInfoRequest createMemberRequest(String nickname) {
+        return new InitMemberInfoRequest(
                 nickname,
                 Gender.MALE,
                 LocalDate.of(2025, 1, 26),
@@ -133,7 +136,7 @@ class FileServiceTest {
         );
 
         // 멤버의 프로필 이미지가 업데이트되었는지 확인
-        Member updatedMember = testContainer.memberService.getOrThrowById(existMemberId);
+        Member updatedMember = memberLookupService.getOrThrowById(existMemberId);
         assertThat(updatedMember.getProfileImageKey()).isNotNull();
     }
 
@@ -227,7 +230,7 @@ class FileServiceTest {
         );
 
         // Member should have profile image updated
-        Member updatedMember = testContainer.memberService.getOrThrowById(existMemberId);
+        Member updatedMember = memberLookupService.getOrThrowById(existMemberId);
         assertThat(updatedMember.getProfileImageKey()).isNotNull();
     }
 }

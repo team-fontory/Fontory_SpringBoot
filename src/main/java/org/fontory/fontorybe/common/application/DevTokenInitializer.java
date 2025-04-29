@@ -10,9 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.authentication.application.AuthService;
 import org.fontory.fontorybe.authentication.application.port.CookieUtils;
-import org.fontory.fontorybe.config.S3Config;
 import org.fontory.fontorybe.config.jwt.JwtProperties;
-import org.fontory.fontorybe.member.controller.port.MemberOnboardService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.MemberDefaults;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
@@ -145,6 +143,6 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
     }
 
     public void removeTestAccessCookies(HttpServletResponse response) {
-        authService.clearAuthCookies(response, testMember);
+        authService.clearAuthCookies(response, testMember.getId());
     }
 }

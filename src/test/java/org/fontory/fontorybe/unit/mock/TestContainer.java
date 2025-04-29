@@ -1,7 +1,7 @@
 package org.fontory.fontorybe.unit.mock;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.fontory.fontorybe.authentication.adapter.outbound.CookieUtilsImpl;
+import org.fontory.fontorybe.config.S3Config;
 import org.fontory.fontorybe.config.jwt.JwtProperties;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProviderImpl;
 import org.fontory.fontorybe.authentication.application.AuthService;
@@ -15,17 +15,24 @@ import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileRepository;
 import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.member.controller.MemberController;
-import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
+import org.fontory.fontorybe.member.controller.ProfileController;
+import org.fontory.fontorybe.member.controller.RegistrationController;
+import org.fontory.fontorybe.member.controller.dto.InitMemberInfoRequest;
+import org.fontory.fontorybe.member.controller.port.MemberCreationService;
+import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.controller.port.MemberOnboardService;
-import org.fontory.fontorybe.member.controller.port.MemberService;
+import org.fontory.fontorybe.member.controller.port.MemberUpdateService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.MemberDefaults;
+import org.fontory.fontorybe.member.service.MemberCreationServiceImpl;
+import org.fontory.fontorybe.member.service.MemberLookupServiceImpl;
 import org.fontory.fontorybe.member.service.MemberOnboardServiceImpl;
-import org.fontory.fontorybe.member.service.MemberServiceImpl;
+import org.fontory.fontorybe.member.service.MemberUpdateServiceImpl;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.fontory.fontorybe.provide.service.ProvideServiceImpl;
+import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -33,6 +40,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
+
+import static org.fontory.fontorybe.TestConstants.*;
 
 public class TestContainer {
     public final JwtProperties props;
@@ -49,22 +58,27 @@ public class TestContainer {
     public final ProvideRepository provideRepository;
     public final FileRepository fileRepository;
 
+    public final MemberLookupService memberLookupService;
+    public final MemberCreationService memberCreationService;
     public final MemberOnboardService memberOnboardService;
     public final CloudStorageService cloudStorageService;
     public final ProvideService provideService;
-    public final MemberService memberService;
+    public final MemberUpdateService memberUpdateService;
     public final TokenStorage tokenStorage;
     public final AuthService authService;
     public final FileService fileService;
 
+    public final ProfileController profileController;
     public final MemberController memberController;
+    public final RegistrationController registrationController;
 
     public final ApplicationEventPublisher eventPublisher;
     public final FileRequestMapper fileRequestMapper;
     public final FakeRedisTemplate fakeRedisTemplate;
     public final JwtTokenProvider jwtTokenProvider;
-    public final CookieUtils cookieUtils;
     public final MemberDefaults memberDefaults;
+    public final CookieUtils cookieUtils;
+    public final S3Config s3Config;
 
     public TestContainer() {
         props = new JwtProperties(
@@ -88,13 +102,26 @@ public class TestContainer {
 
         tokenStorage = new RedisTokenStorage(fakeRedisTemplate, props);
 
-        cloudStorageService = new FakeCloudStorageService();
+        s3Config = new S3Config(
+                TEST_AWS_REGION,
+                TEST_CDN_URL,
+                TEST_PROFILE_BUCKET_NAME,
+                TEST_TEMPLATE_BUCKET_NAME,
+                TEST_PROFILE_PREFIX,
+                TEST_TEMPLATE_PREFIX);
+
+        cloudStorageService = new FakeCloudStorageService(s3Config);
 
         provideService = ProvideServiceImpl.builder()
                 .provideRepository(provideRepository)
                 .build();
 
-        memberService = MemberServiceImpl.builder()
+        memberLookupService = MemberLookupServiceImpl.builder()
+                .memberRepository(memberRepository)
+                .build();
+
+        memberUpdateService = MemberUpdateServiceImpl.builder()
+                .memberLookupService(memberLookupService)
                 .memberRepository(memberRepository)
                 .provideService(provideService)
                 .jwtTokenProvider(jwtTokenProvider)
@@ -106,25 +133,53 @@ public class TestContainer {
                 "testUrl");
 
         fileService = FileServiceImpl.builder()
+                .memberLookupService(memberLookupService)
                 .memberDefaults(memberDefaults)
-                .memberService(memberService)
+                .memberUpdateService(memberUpdateService)
                 .fileRepository(fileRepository)
                 .fileRequestMapper(fileRequestMapper)
                 .eventPublisher(eventPublisher)
                 .cloudStorageService(cloudStorageService)
                 .build();
 
-        authService = new AuthService(cookieUtils, tokenStorage, jwtTokenProvider, memberService);
-        memberOnboardService = new MemberOnboardServiceImpl(memberDefaults, memberService, memberRepository, provideService);
+        memberCreationService = MemberCreationServiceImpl.builder()
+                .memberDefaults(memberDefaults)
+                .memberRepository(memberRepository)
+                .provideService(provideService)
+                .build();
+
+        authService = AuthService.builder()
+                .memberLookupService(memberLookupService)
+                .cookieUtils(cookieUtils)
+                .tokenStorage(tokenStorage)
+                .jwtTokenProvider(jwtTokenProvider)
+                .build();
+
+        memberOnboardService = MemberOnboardServiceImpl
+                .builder()
+                .memberRepository(memberRepository)
+                .memberLookupService(memberLookupService)
+                .memberCreationService(memberCreationService)
+                .build();
 
         memberController = MemberController.builder()
-                .memberOnboardService(memberOnboardService)
-                .memberService(memberService)
-                .provideService(provideService)
-                .jwtTokenProvider(jwtTokenProvider)
+                .memberLookupService(memberLookupService)
+                .cloudStorageService(cloudStorageService)
+                .build();
+
+
+        profileController = ProfileController.builder()
                 .authService(authService)
                 .fileService(fileService)
-                .objectMapper(new ObjectMapper())
+                .memberLookupService(memberLookupService)
+                .memberUpdateService(memberUpdateService)
+                .cloudStorageService(cloudStorageService)
+                .build();
+
+        registrationController = RegistrationController.builder()
+                .memberLookupService(memberLookupService)
+                .memberOnboardService(memberOnboardService)
+                .fileService(fileService)
                 .build();
     }
 
@@ -147,8 +202,32 @@ public class TestContainer {
         return sb.toString();
     }
 
-    public Member create(MemberCreateRequest memberCreateRequest, Provide provide) {
-        Member defaultMember = memberOnboardService.createDefaultMember(provide);
-        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), memberCreateRequest);
+    public Member create(InitMemberInfoRequest initNewMemberInfoRequest, Provide provide) {
+        Member defaultMember = memberCreationService.createDefaultMember(provide);
+        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), initNewMemberInfoRequest);
+    }
+
+    public final ProvideCreateDto testMemberProvideCreateDto = new ProvideCreateDto(TEST_MEMBER_PROVIDER, TEST_MEMBER_PROVIDED_ID, TEST_MEMBER_EMAIL);
+    public Provide testMemberProvide;
+    public Provide newMemberProvide;
+
+    public final InitMemberInfoRequest newInitMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+    public final ProvideCreateDto newMemberProvideCreateDto = new ProvideCreateDto(NEW_MEMBER_PROVIDER, NEW_MEMBER_PROVIDED_ID, NEW_MEMBER_EMAIL);
+
+    public Member createNotInitedMember() {
+        Provide newMemberProvide = provideService.create(newMemberProvideCreateDto);
+        return memberOnboardService.fetchOrCreateMember(newMemberProvide);
+    }
+
+    public Member createTestMember() {
+        testMemberProvide = provideService.create(testMemberProvideCreateDto);
+        InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(TEST_MEMBER_NICKNAME, TEST_MEMBER_GENDER, TEST_MEMBER_BIRTH, TEST_MEMBER_TERMS, TEST_MEMBER_PROFILE_KEY);
+        return create(initMemberInfoRequest, testMemberProvide);
+    }
+
+    public Member createNewMember() {
+        newMemberProvide = provideService.create(newMemberProvideCreateDto);
+        InitMemberInfoRequest initNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        return create(initNewMemberInfoRequest, newMemberProvide);
     }
 }

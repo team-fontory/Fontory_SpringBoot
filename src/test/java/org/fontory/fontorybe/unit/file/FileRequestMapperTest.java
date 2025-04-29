@@ -6,7 +6,7 @@ import org.fontory.fontorybe.file.adapter.inbound.exception.MissingFileExtension
 import org.fontory.fontorybe.file.adapter.inbound.exception.UnsupportedFileTypeException;
 import org.fontory.fontorybe.file.domain.FileCreate;
 import org.fontory.fontorybe.file.domain.FileType;
-import org.fontory.fontorybe.member.controller.dto.MemberCreateRequest;
+import org.fontory.fontorybe.member.controller.dto.InitMemberInfoRequest;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
@@ -103,8 +103,8 @@ class FileRequestMapperTest {
         );
     }
 
-    private static MemberCreateRequest createMemberRequest(String nickname) {
-        return new MemberCreateRequest(
+    private static InitMemberInfoRequest createMemberRequest(String nickname) {
+        return new InitMemberInfoRequest(
                 nickname,
                 Gender.MALE,
                 LocalDate.of(2025, 1, 26),

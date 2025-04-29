@@ -135,4 +135,10 @@ public class GlobalExceptionHandler {
     public BaseErrorResponse unsupportedFileType(UnsupportedFileTypeException e) {
         return new BaseErrorResponse(e.getMessage());
     }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(MemberAlreadyJoinedException.class)
+    public BaseErrorResponse memberAlreadyJoined(MemberAlreadyJoinedException e) {
+        return new BaseErrorResponse(e.getMessage());
+    }
 }

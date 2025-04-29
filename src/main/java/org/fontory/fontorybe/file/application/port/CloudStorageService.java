@@ -8,4 +8,6 @@ public interface CloudStorageService {
     FileMetadata uploadProfileImage(FileCreate fileCreate, String key);
     String getFileUrl(FileMetadata fileMetadata, String key);
     FileMetadata uploadFontTemplateImage(FileCreate request);
+    String getProfileImageUrl(String key);
+    String getFontPaperUrl(String key);
 }

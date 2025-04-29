@@ -21,7 +21,7 @@ import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
 import org.fontory.fontorybe.font.service.dto.FontRequestProduceDto;
 import org.fontory.fontorybe.font.service.port.FontRepository;
 import org.fontory.fontorybe.font.service.port.FontRequestProducer;
-import org.fontory.fontorybe.member.controller.port.MemberService;
+import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,14 +36,14 @@ import org.springframework.util.StringUtils;
 public class FontServiceImpl implements FontService {
     private final FontRepository fontRepository;
     private final BookmarkRepository bookmarkRepository;
-    private final MemberService memberService;
+    private final MemberLookupService memberLookupService;
     private final FontRequestProducer fontRequestProducer;
 
     @Override
     @Transactional
     public Font create(Long memberId, FontCreateDTO fontCreateDTO, FileUploadResult fileDetails) {
         log.info("Service executing: Creating font for member ID: {}, font name: {}", memberId, fontCreateDTO.getName());
-        Member member = memberService.getOrThrowById(memberId);
+        Member member = memberLookupService.getOrThrowById(memberId);
 
         Font savedFont = fontRepository.save(Font.from(fontCreateDTO, member.getId(), fileDetails));
         fontRequestProducer.sendFontRequest(FontRequestProduceDto.from(savedFont, member));
@@ -71,7 +71,7 @@ public class FontServiceImpl implements FontService {
     @Transactional
     public Font update(Long memberId, Long fontId, FontUpdateDTO fontUpdateDTO) {
         log.info("Service executing: Updating font ID: {} for member ID: {}", fontId, memberId);
-        Member member = memberService.getOrThrowById(memberId);
+        Member member = memberLookupService.getOrThrowById(memberId);
         Font targetFont = getOrThrowById(fontId);
 
         checkFontOwnership(member.getId(), targetFont.getMemberId());
@@ -117,7 +117,7 @@ public class FontServiceImpl implements FontService {
     public FontDetailResponse getFont(Long fontId) {
         log.info("Service executing: Fetching font details for font ID: {}", fontId);
         Font targetFont = getOrThrowById(fontId);
-        Member member = memberService.getOrThrowById(targetFont.getMemberId());
+        Member member = memberLookupService.getOrThrowById(targetFont.getMemberId());
 
         FontDetailResponse response = FontDetailResponse.from(targetFont, member.getNickname());
         log.info("Service completed: Retrieved font details for font ID: {} with name: {}", 
@@ -129,7 +129,7 @@ public class FontServiceImpl implements FontService {
     @Transactional
     public FontDeleteResponse delete(Long memberId, Long fontId) {
         log.info("Service executing: Deleting font ID: {} for member ID: {}", fontId, memberId);
-        Member member = memberService.getOrThrowById(memberId);
+        Member member = memberLookupService.getOrThrowById(memberId);
         Font targetFont = getOrThrowById(fontId);
 
         checkFontOwnership(member.getId(), targetFont.getMemberId());
@@ -167,12 +167,12 @@ public class FontServiceImpl implements FontService {
         Page<FontPageResponse> result;
         if (memberId == null) {
             result = fontPage.map(font -> {
-                Member member = memberService.getOrThrowById(font.getMemberId());
+                Member member = memberLookupService.getOrThrowById(font.getMemberId());
                 return FontPageResponse.from(font, member.getNickname(), false);
             });
         } else {
             result = fontPage.map(font -> {
-                Member member = memberService.getOrThrowById(font.getMemberId());
+                Member member = memberLookupService.getOrThrowById(font.getMemberId());
                 boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, font.getId());
                 return FontPageResponse.from(font, member.getNickname(), bookmarked);
             });
@@ -188,7 +188,7 @@ public class FontServiceImpl implements FontService {
     public List<FontResponse> getOtherFonts(Long fontId) {
         log.info("Service executing: Fetching other fonts from the same creator for font ID: {}", fontId);
         Font font = getOrThrowById(fontId);
-        Member member = memberService.getOrThrowById(font.getMemberId());
+        Member member = memberLookupService.getOrThrowById(font.getMemberId());
 
         List<Font> fonts = fontRepository.findTop3ByMemberIdAndIdNotOrderByCreatedAtDesc(member.getId(), fontId);
         log.debug("Service detail: Found {} other fonts from the same creator", fonts.size());
@@ -208,7 +208,7 @@ public class FontServiceImpl implements FontService {
     @Transactional(readOnly = true)
     public List<FontResponse> getMyPopularFonts(Long memberId) {
         log.info("Service executing: Fetching popular fonts for member ID: {}", memberId);
-        Member member = memberService.getOrThrowById(memberId);
+        Member member = memberLookupService.getOrThrowById(memberId);
 
         List<Font> fonts = fontRepository.findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(memberId);
         log.debug("Service detail: Found {} popular fonts for member ID: {}", fonts.size(), memberId);
@@ -237,7 +237,7 @@ public class FontServiceImpl implements FontService {
                     .map(font -> FontResponse.from(font, false))
                     .collect(Collectors.toList());
         } else {
-            Member member = memberService.getOrThrowById(memberId);
+            Member member = memberLookupService.getOrThrowById(memberId);
             result = fonts.stream()
                     .map(f -> {
                         boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), f.getId());
