@@ -12,10 +12,17 @@ import java.util.UUID;
 public class FakeCloudStorageService implements CloudStorageService {
     private static final String profileImageBucketName = "test-profile-image-bucket";
     private static final String fontPaperBucketName = "test-font-paper-bucket";
+    private static final String profileImagePrefix = "profiles";
+    private static final String fontPaperPrefix = "templates";
 
     @Override
     public FileMetadata uploadProfileImage(FileCreate fileCreate, String key) {
-        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(fileCreate, key, profileImageBucketName, LocalDateTime.now());
+        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(
+                fileCreate,
+                key,
+                profileImageBucketName,
+                profileImagePrefix,
+                LocalDateTime.now());
         return uploadFile(amazonS3PutRequest).toModel();
     }
 
@@ -27,7 +34,12 @@ public class FakeCloudStorageService implements CloudStorageService {
     @Override
     public FileMetadata uploadFontTemplateImage(FileCreate request) {
         String key = UUID.randomUUID().toString();
-        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(request, key, fontPaperBucketName, LocalDateTime.now());
+        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(
+                request,
+                key,
+                fontPaperBucketName,
+                fontPaperPrefix,
+                LocalDateTime.now());
         return uploadFile(amazonS3PutRequest).toModel();
     }
 

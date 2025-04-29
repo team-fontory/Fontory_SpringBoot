@@ -29,11 +29,15 @@ public class AmazonS3BucketService implements CloudStorageService {
     private final ClockHolder clockHolder;
     private String profileImageBucketName;
     private String fontPaperBucketName;
+    private String profileImagePrefix;
+    private String fontPaperPrefix;
 
     @PostConstruct
     void init() {
         profileImageBucketName = s3Config.getBucketName(FileType.PROFILE_IMAGE);
         fontPaperBucketName = s3Config.getBucketName(FileType.FONT_PAPER);
+        profileImagePrefix = s3Config.getPrefix(FileType.PROFILE_IMAGE);
+        fontPaperPrefix = s3Config.getPrefix(FileType.FONT_PAPER);
     }
 
     @Override
@@ -41,7 +45,12 @@ public class AmazonS3BucketService implements CloudStorageService {
         log.info("Uploading profile image: fileName={}, contentType={}, size={} bytes, fileKey={}",
             request.getFileName(), request.getFile().getContentType(), request.getFile().getSize(), key);
 
-        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(request, key, profileImageBucketName, clockHolder.getCurrentTimeStamp());
+        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(
+                request,
+                key,
+                profileImageBucketName,
+                profileImagePrefix,
+                clockHolder.getCurrentTimeStamp());
 
         log.info("Profile image uploaded successfully: fileKey={}, bucket={}", key, profileImageBucketName);
         return uploadFile(amazonS3PutRequest).toModel();
@@ -50,14 +59,11 @@ public class AmazonS3BucketService implements CloudStorageService {
     @Override
     public String getFileUrl(FileMetadata fileMetadata, String key) {
         String bucketName = s3Config.getBucketName(fileMetadata.getFileType());
+        String prefix = s3Config.getPrefix(fileMetadata.getFileType());
         log.debug("Generating file URL: fileType={}, fileKey={}, bucket={}",
                 fileMetadata.getFileType(), key, bucketName);
 
-        return s3.utilities()
-                .getUrl(builder -> builder
-                        .bucket(bucketName)
-                        .key(key))
-                .toExternalForm();
+        return s3Config.getCdnUrl() + "/" + prefix + "/" + key;
     }
 
     /**
@@ -68,7 +74,12 @@ public class AmazonS3BucketService implements CloudStorageService {
         String key = UUID.randomUUID().toString();
         log.info("Uploading font template image: fileName={}, contentType={}, fileType={} bytes, fileKey={}",
                 request.getFileName(), request.getFile().getContentType(), request.getFileType(), key);
-        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(request, key, fontPaperBucketName, clockHolder.getCurrentTimeStamp());
+        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(
+                request,
+                key,
+                fontPaperBucketName,
+                fontPaperPrefix,
+                clockHolder.getCurrentTimeStamp());
         FileMetadata result = uploadFile(amazonS3PutRequest).toModel();
         log.info("Font template image uploaded successfully: fileKey={}, bucket={}", key, fontPaperBucketName);
         return result;

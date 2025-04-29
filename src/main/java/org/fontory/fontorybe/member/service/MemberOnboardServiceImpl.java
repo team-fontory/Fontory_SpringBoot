@@ -35,7 +35,7 @@ public class MemberOnboardServiceImpl implements MemberOnboardService {
                 .gender(defaults.getGender())
                 .birth(defaults.getBirth())
                 .terms(defaults.getTerms())
-                .profileImageKey(defaults.getProfileImageUrl())
+                .profileImageKey(defaults.getProfileImageKey())
                 .build();
         Member defaultMember = memberRepository.save(Member.from(req, p));
         provideService.setMember(p, defaultMember);

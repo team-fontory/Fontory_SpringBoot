@@ -14,6 +14,7 @@ import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.member.controller.port.MemberService;
 import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.member.domain.MemberDefaults;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class FileServiceImpl implements FileService {
     private final MemberService memberService;
+    private final MemberDefaults memberDefaults;
     private final FileRepository fileRepository;
     private final FileRequestMapper fileRequestMapper;
     private final CloudStorageService cloudStorageService;
@@ -50,7 +52,7 @@ public class FileServiceImpl implements FileService {
 
         Member requestMember = memberService.getOrThrowById(memberId);
         FileCreate profileImageFileCreate = fileRequestMapper.toProfileImageFileCreate(file, requestMember);
-        boolean isInitial = S3Config.getDefaultProfileImageUrl().equals(requestMember.getProfileImageKey());
+        boolean isInitial = memberDefaults.getProfileImageKey().equals(requestMember.getProfileImageKey());
         String fixedKey = isInitial
                 ? UUID.randomUUID().toString()
                 : requestMember.getProfileImageKey();

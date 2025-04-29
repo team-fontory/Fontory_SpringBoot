@@ -100,7 +100,13 @@ public class TestContainer {
                 .jwtTokenProvider(jwtTokenProvider)
                 .build();
 
+        memberDefaults = new MemberDefaults(
+                LocalDate.of(1999, 12, 31),
+                false,
+                "testUrl");
+
         fileService = FileServiceImpl.builder()
+                .memberDefaults(memberDefaults)
                 .memberService(memberService)
                 .fileRepository(fileRepository)
                 .fileRequestMapper(fileRequestMapper)
@@ -109,10 +115,6 @@ public class TestContainer {
                 .build();
 
         authService = new AuthService(cookieUtils, tokenStorage, jwtTokenProvider, memberService);
-        memberDefaults = new MemberDefaults(
-                LocalDate.of(1999, 12, 31),
-                false,
-                "testUrl");
         memberOnboardService = new MemberOnboardServiceImpl(memberDefaults, memberService, memberRepository, provideService);
 
         memberController = MemberController.builder()

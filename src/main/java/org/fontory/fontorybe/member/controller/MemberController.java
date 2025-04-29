@@ -54,19 +54,6 @@ public class MemberController {
     private final AuthService authService;
     private final FileService fileService;
 
-    /**
-     * Convert an object to JSON string for logging
-     * If conversion fails, falls back to toString()
-     */
-    private String toJson(Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
-            log.warn("Failed to convert object to JSON for logging: {}", e.getMessage());
-            return obj.toString();
-        }
-    }
-
     @Operation(
             summary = "닉네임 중복 확인",
             description = "주어진 닉네임으로 생성되어있는 사용자가 있는지 검색 후 결과를 반환합니다."
@@ -123,14 +110,6 @@ public class MemberController {
                 .body(MemberCreateResponse.from(updatedMember, fileUploadResult.getFileUrl()));
     }
 
-    private void logFileDetails(MultipartFile file, String context) {
-        log.debug("{} - File details: name='{}', original name='{}', size={} bytes, contentType='{}'",
-                context,
-                file.getName(),
-                file.getOriginalFilename(),
-                file.getSize(),
-                file.getContentType());
-    }
 
     @Operation(
             summary = "회원정보 수정"
@@ -141,13 +120,13 @@ public class MemberController {
         @Login UserPrincipal userPrincipal
     ) {
         Long requestMemberId = userPrincipal.getId();
-        log.info("Request received: Update member ID: {} with request: {}", 
+        log.info("Request received: Update member ID: {} with request: {}",
                 requestMemberId, toJson(memberUpdateRequest));
 
         Member updatedMember = memberService.update(requestMemberId, memberUpdateRequest);
-        log.info("Response sent: Member ID: {} updated successfully with nickname: {}", 
+        log.info("Response sent: Member ID: {} updated successfully with nickname: {}",
                 updatedMember.getId(), updatedMember.getNickname());
-        
+
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(MemberUpdateResponse.from(updatedMember));
@@ -165,9 +144,31 @@ public class MemberController {
 
         Member disabledMember = memberService.disable(requestMemberId);
         log.info("Response sent: Member ID: {} disabled successfully", disabledMember.getId());
-        
+
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(MemberDisableResponse.from(disabledMember));
+    }
+
+    /**
+     * Convert an object to JSON string for logging
+     * If conversion fails, falls back to toString()
+     */
+    private String toJson(Object obj) {
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to convert object to JSON for logging: {}", e.getMessage());
+            return obj.toString();
+        }
+    }
+
+    private void logFileDetails(MultipartFile file, String context) {
+        log.debug("{} - File details: name='{}', original name='{}', size={} bytes, contentType='{}'",
+                context,
+                file.getName(),
+                file.getOriginalFilename(),
+                file.getSize(),
+                file.getContentType());
     }
 }

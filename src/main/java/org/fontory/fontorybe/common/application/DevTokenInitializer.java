@@ -12,7 +12,9 @@ import org.fontory.fontorybe.authentication.application.AuthService;
 import org.fontory.fontorybe.authentication.application.port.CookieUtils;
 import org.fontory.fontorybe.config.S3Config;
 import org.fontory.fontorybe.config.jwt.JwtProperties;
+import org.fontory.fontorybe.member.controller.port.MemberOnboardService;
 import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.member.domain.MemberDefaults;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.domain.Provide;
@@ -29,11 +31,15 @@ import java.time.LocalDate;
 import java.util.Date;
 import java.util.UUID;
 
+import static org.fontory.fontorybe.authentication.application.AuthConstants.ACCESS_TOKEN_COOKIE_NAME;
+import static org.fontory.fontorybe.authentication.application.AuthConstants.ACCESS_TOKEN_COOKIE_SAME_SITE;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class DevTokenInitializer implements ApplicationListener<ContextRefreshedEvent> {
 
+    private final MemberDefaults memberDefaults;
     private final AuthService authService;
     private final JwtProperties props;
     private final CookieUtils cookieUtils;
@@ -90,7 +96,7 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
                 .terms(true)
                 .birth(LocalDate.now())
                 .nickname("Tester")
-                .profileImageKey(S3Config.getDefaultProfileImageUrl())
+                .profileImageKey(memberDefaults.getProfileImageKey())
                 .build();
 
         Member savedMember = memberRepository.save(member);
@@ -123,7 +129,18 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
     }
 
     public void issueTestAccessCookies(HttpServletResponse response) {
-        ResponseCookie accessTokenCookie = cookieUtils.createAccessTokenCookie(fixedTokenForAuthentication);
+        long nowMs      = System.currentTimeMillis();
+        long expireMs   = expiration.getTime();
+        long remainingSec = Math.max(0, (expireMs - nowMs) /1000);
+
+        log.info("Test access cookies issued: remainingSec={}", remainingSec);
+
+        ResponseCookie accessTokenCookie = cookieUtils.createCookie(
+                ACCESS_TOKEN_COOKIE_NAME,
+                fixedTokenForAuthentication,
+                remainingSec,
+                ACCESS_TOKEN_COOKIE_SAME_SITE
+        );
         response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
     }
 

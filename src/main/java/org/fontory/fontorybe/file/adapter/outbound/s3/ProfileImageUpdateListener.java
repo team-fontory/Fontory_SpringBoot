@@ -20,24 +20,26 @@ public class ProfileImageUpdateListener {
     private final S3Client s3;
     private final S3Config s3Config;
     private String profileImageBucketName;
+    private String profileImagePrefix;
 
     @PostConstruct
     void init() {
         profileImageBucketName = s3Config.getBucketName(FileType.PROFILE_IMAGE);
+        profileImagePrefix = s3Config.getPrefix(FileType.PROFILE_IMAGE);
     }
 
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void beforeCommit(ProfileImageUpdatedEvent event) {
         s3.copyObject(CopyObjectRequest.builder()
                         .sourceBucket(profileImageBucketName)
-                        .sourceKey(event.getTempKey())
+                        .sourceKey(profileImagePrefix + "/" + event.getTempKey())
                         .destinationBucket(profileImageBucketName)
-                        .destinationKey(event.getFixedKey())
+                        .destinationKey(profileImagePrefix + "/" + event.getFixedKey())
                         .build());
 
         s3.deleteObject(DeleteObjectRequest.builder()
                 .bucket(profileImageBucketName)
-                .key(event.getTempKey())
+                .key(profileImagePrefix + "/" + event.getTempKey())
                 .build());
     }
 
@@ -46,7 +48,7 @@ public class ProfileImageUpdateListener {
         try {
             s3.deleteObject(DeleteObjectRequest.builder()
                     .bucket(profileImageBucketName)
-                    .key(event.getTempKey())
+                    .key(profileImagePrefix + "/" + event.getTempKey())
                     .build());
         } catch (Exception e) {
             log.warn("Rollback profile image failed", e);

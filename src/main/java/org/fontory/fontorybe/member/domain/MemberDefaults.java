@@ -14,14 +14,16 @@ import java.time.LocalDate;
 public class MemberDefaults {
     private LocalDate birth;
     private boolean termsAgree;
-    private String profileImageUrl;
+    private String profileImageKey;
     private Gender gender;
 
     @ConstructorBinding
-    public MemberDefaults(LocalDate birth, boolean termsAgree, String profileImageUrl) {
+    public MemberDefaults(LocalDate birth,
+                          boolean termsAgree,
+                          String profileImageKey) {
         this.birth = birth;
         this.termsAgree = termsAgree;
-        this.profileImageUrl = profileImageUrl;
+        this.profileImageKey = profileImageKey;
         this.gender = Gender.NONE;
     }
 

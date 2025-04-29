@@ -126,7 +126,7 @@ public class MemberServiceTest {
                 () -> assertThat(defaultMember.getNickname()).isNotNull(),
                 () -> assertThat(defaultMember.getGender()).isEqualTo(memberDefaults.getGender()),
                 () -> assertThat(defaultMember.getBirth()).isEqualTo(memberDefaults.getBirth()),
-                () -> assertThat(defaultMember.getProfileImageKey()).isEqualTo(memberDefaults.getProfileImageUrl()),
+                () -> assertThat(defaultMember.getProfileImageKey()).isEqualTo(memberDefaults.getProfileImageKey()),
                 () -> assertThat(defaultMember.getCreatedAt()).isNotNull(),
                 () -> assertThat(defaultMember.getUpdatedAt()).isNotNull()
         );

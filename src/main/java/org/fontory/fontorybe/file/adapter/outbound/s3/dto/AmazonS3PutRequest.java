@@ -16,6 +16,7 @@ public class AmazonS3PutRequest {
     private final String fileName;
     private final FileType fileType;
     private final String bucketName;
+    private final String prefix;
     private final MultipartFile file;
     private final String extension;
     private final Long uploaderId;
@@ -29,6 +30,7 @@ public class AmazonS3PutRequest {
     public static AmazonS3PutRequest from(FileCreate request,
                                           String key,
                                           String bucketName,
+                                          String prefix,
                                           LocalDateTime datestamp) {
         MultipartFile file = request.getFile();
 
@@ -38,6 +40,7 @@ public class AmazonS3PutRequest {
                 .file(file)
                 .key(key)
                 .bucketName(bucketName)
+                .prefix(prefix)
                 .extension(request.getExtension())
                 .uploaderId(request.getUploaderId())
                 .requestTime(datestamp)
@@ -48,7 +51,7 @@ public class AmazonS3PutRequest {
     public PutObjectRequest toPutObjectRequest() {
         return PutObjectRequest.builder()
                 .bucket(this.bucketName)
-                .key(this.key)
+                .key(this.prefix + "/" + this.key)
                 .contentType(this.getFile().getContentType())
                 .acl(ObjectCannedACL.PRIVATE)
                 .build();
