@@ -85,7 +85,7 @@ public class Font {
 
     public Font updateProgress(FontProgressUpdateDTO fontProgressUpdateDTO, Long fontId) {
         String ttf = "https://fontory-font.s3.ap-northeast-2.amazonaws.com/" + fontId + ".ttf";
-        String woff = "https://fontory-font.s3.ap-northeast-2.amazonaws.com/" + fontId + ".woff";
+        String woff = "https://fontory-font.s3.ap-northeast-2.amazonaws.com/" + fontId + ".woff2";
 
         if (fontProgressUpdateDTO.getStatus() == FontStatus.DONE) {
             return Font.builder()
