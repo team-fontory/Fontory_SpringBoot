@@ -277,7 +277,7 @@ public class FontServiceImpl implements FontService {
         log.info("Service executing: Updating font ID: {}", fontId);
         Font targetFont = getOrThrowById(fontId);
 
-        Font updatedFont = fontRepository.save(targetFont.updateProgress(fontProgressUpdateDTO));
+        Font updatedFont = fontRepository.save(targetFont.updateProgress(fontProgressUpdateDTO, fontId));
         log.info("Service completed: Font ID: {} updated successfully", fontId);
         return updatedFont;
     }
