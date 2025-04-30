@@ -4,6 +4,7 @@ import java.util.List;
 import org.fontory.fontorybe.file.domain.FileDetails;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
+import org.fontory.fontorybe.font.controller.dto.FontDownloadResponse;
 import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
@@ -25,6 +26,6 @@ public interface FontService {
     List<FontResponse> getMyPopularFonts(Long memberId);
     List<FontResponse> getPopularFonts(Long memberId);
     Font updateProgress(Long fontId, FontProgressUpdateDTO fontProgressUpdateDTO);
-    Font fontDownload(Long memberId, Long fontId);
+    FontDownloadResponse fontDownload(Long memberId, Long fontId);
     Boolean isDuplicateNameExists(Long memberId, String fontName);
 }
