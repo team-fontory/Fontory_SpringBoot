@@ -14,6 +14,7 @@ public class FontPageResponse {
     private Long downloadCount;
     private Long bookmarkCount;
     private boolean isBookmarked;
+    private String woff;
 
     public static FontPageResponse from(Font font, String writerName, boolean isBookmarked) {
         return FontPageResponse.builder()
@@ -24,6 +25,7 @@ public class FontPageResponse {
                 .downloadCount(font.getDownloadCount())
                 .bookmarkCount(font.getBookmarkCount())
                 .isBookmarked(isBookmarked)
+                .woff(font.getWoff())
                 .build();
     }
 }

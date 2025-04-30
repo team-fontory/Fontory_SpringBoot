@@ -10,6 +10,9 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +35,7 @@ import org.fontory.fontorybe.font.controller.dto.FontUpdateResponse;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -300,12 +304,12 @@ public class FontController {
         Long memberId = userPrincipal.getId();
         log.info("Request received: Get font download for font ID : {}, requesting memberId : {}", fontId, memberId);
 
-        FontResponse res = fontService.fontDownload(memberId, fontId);
+        Font font = fontService.fontDownload(memberId, fontId);
         log.info("Response sent: Font downloaded with ID: {}", fontId);
 
         return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(res);
+                .status(HttpStatus.FOUND)
+                .body(font.getTtf());
     }
 
     @Operation(
