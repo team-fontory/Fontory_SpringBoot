@@ -62,6 +62,8 @@ class FontServiceIntegrationTest {
     private final String existFontTtf = "ttf주소";
     private final String existFontWoff = "woff주소";
 
+    private final FontProgressUpdateDTO fontProgressUpdateDTO = FontProgressUpdateDTO.builder().status(FontStatus.DONE).build();
+
     private FileDetails fileDetails;
 
     @BeforeEach
@@ -205,7 +207,7 @@ class FontServiceIntegrationTest {
     void getFontsSuccess() {
         // given
         for (int i = 1; i <= 7; i++) {
-            fontService.create(
+            Font font = fontService.create(
                     existMemberId,
                     FontCreateDTO.builder()
                             .name("폰트" + i)
@@ -213,6 +215,7 @@ class FontServiceIntegrationTest {
                             .build(),
                     fileDetails
             );
+            fontService.updateProgress(font.getId(), fontProgressUpdateDTO);
         }
 
         int page = 0;
@@ -275,6 +278,7 @@ class FontServiceIntegrationTest {
                 .build();
 
         Font elseFont = fontService.create(createdMemberId, createDTO, fileDetails);
+        fontService.updateProgress(elseFont.getId(), fontProgressUpdateDTO);
 
         // when & then
         assertThatThrownBy(() -> fontService.delete(existMemberId, elseFont.getId()))
@@ -311,6 +315,10 @@ class FontServiceIntegrationTest {
                         .build(),
                 fileDetails
         );
+
+        fontService.updateProgress(font1.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font2.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font3.getId(), fontProgressUpdateDTO);
 
         for (int i = 0; i < 10; i++) {
             fontService.fontDownload(existMemberId, font1.getId());
@@ -387,6 +395,10 @@ class FontServiceIntegrationTest {
                 fileDetails
                 );
 
+        fontService.updateProgress(font1.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font2.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font3.getId(), fontProgressUpdateDTO);
+
         for (int i = 0; i < 5; i++) {
             fontService.fontDownload(existMemberId, font1.getId());
         }
@@ -444,6 +456,10 @@ class FontServiceIntegrationTest {
                         .build(),
                 fileDetails
         );
+
+        fontService.updateProgress(font1.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font2.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font3.getId(), fontProgressUpdateDTO);
 
         for (int i = 0; i < 5; i++) {
             fontService.fontDownload(existMemberId, font1.getId());
