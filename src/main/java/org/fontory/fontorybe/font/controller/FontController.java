@@ -308,8 +308,9 @@ public class FontController {
         log.info("Response sent: Font downloaded with ID: {}", fontId);
 
         return ResponseEntity
-                .status(HttpStatus.FOUND)
-                .body(font.getTtf());
+                .status(HttpStatus.OK)
+                .location(URI.create(font.getTtf()))
+                .build();
     }
 
     @Operation(
