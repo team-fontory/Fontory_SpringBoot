@@ -20,7 +20,11 @@ public class FontProgressResponse {
                 .id(font.getId())
                 .name(font.getName())
                 .status(font.getStatus())
-                .createdAt(font.getCreatedAt())
+                .createdAt(
+                        font.getCreatedAt()
+                                .atZone(ZoneId.of("UTC"))
+                                .withZoneSameInstant(ZoneId.of("Asia/Seoul"))
+                                .toLocalDateTime())
                 .build();
     }
 }

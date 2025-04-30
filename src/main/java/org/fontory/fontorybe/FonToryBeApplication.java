@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FonToryBeApplication {
 
     public static void main(String[] args) {
-        TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         SpringApplication.run(FonToryBeApplication.class, args);
     }
 
