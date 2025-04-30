@@ -8,6 +8,7 @@ import org.fontory.fontorybe.bookmark.service.port.BookmarkRepository;
 import org.fontory.fontorybe.file.domain.FileDetails;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
+import org.fontory.fontorybe.font.controller.dto.FontDownloadResponse;
 import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
@@ -284,7 +285,7 @@ public class FontServiceImpl implements FontService {
 
     @Override
     @Transactional
-    public Font fontDownload(Long memberId, Long fontId) {
+    public FontDownloadResponse fontDownload(Long memberId, Long fontId) {
         log.info("Service executing: Download font ID: {}", fontId);
         Font targetFont = getOrThrowById(fontId);
         targetFont.increaseDownloadCount();
@@ -293,7 +294,7 @@ public class FontServiceImpl implements FontService {
 
         log.info("Service completed: Font ID: {} download successfully", fontId);
 
-        return targetFont;
+        return FontDownloadResponse.from(targetFont);
     }
 
     @Override

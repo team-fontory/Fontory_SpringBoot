@@ -26,6 +26,7 @@ import org.fontory.fontorybe.file.domain.FileDetails;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontCreateResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
+import org.fontory.fontorybe.font.controller.dto.FontDownloadResponse;
 import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
@@ -304,13 +305,12 @@ public class FontController {
         Long memberId = userPrincipal.getId();
         log.info("Request received: Get font download for font ID : {}, requesting memberId : {}", fontId, memberId);
 
-        Font font = fontService.fontDownload(memberId, fontId);
+        FontDownloadResponse res = fontService.fontDownload(memberId, fontId);
         log.info("Response sent: Font downloaded with ID: {}", fontId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .location(URI.create(font.getTtf()))
-                .build();
+                .body(res);
     }
 
     @Operation(
