@@ -19,4 +19,5 @@ public interface FontJpaRepository extends JpaRepository<FontEntity, Long> {
     List<FontEntity> findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(@Param("memberId") Long memberId, Pageable pageable);
     @Query("SELECT f FROM FontEntity f ORDER BY (f.downloadCount + f.bookmarkCount) DESC")
     List<FontEntity> findTop3OrderByDownloadAndBookmarkCountDesc(Pageable pageable);
+    boolean existsByName(String fontName);
 }

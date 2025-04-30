@@ -10,6 +10,7 @@ import org.fontory.fontorybe.common.domain.BaseErrorResponse;
 import org.fontory.fontorybe.file.adapter.inbound.exception.FileUploadException;
 import org.fontory.fontorybe.file.domain.exception.InvalidMultipartRequestException;
 import org.fontory.fontorybe.file.domain.exception.SingleFileRequiredException;
+import org.fontory.fontorybe.font.domain.exception.FontDuplicateNameExistsException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
 import org.fontory.fontorybe.font.domain.exception.FontSQSProduceExcepetion;
@@ -34,8 +35,8 @@ public class GlobalExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    @ExceptionHandler(MemberDuplicateNameExistsException.class)
-    public BaseErrorResponse memberDuplicateNameExists(MemberDuplicateNameExistsException e) {
+    @ExceptionHandler({MemberDuplicateNameExistsException.class, FontDuplicateNameExistsException.class})
+    public BaseErrorResponse duplicateNameExists(Exception e) {
         return new BaseErrorResponse(e.getMessage());
     }
 

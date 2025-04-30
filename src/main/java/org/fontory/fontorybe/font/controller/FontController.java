@@ -307,4 +307,24 @@ public class FontController {
                 .status(HttpStatus.OK)
                 .body(res);
     }
+
+    @Operation(
+            summary = "폰트 이름 중복 검사",
+            description = "이름이 중복이면 true를 반환합니다."
+    )
+    @PostMapping("/verify-name")
+    public ResponseEntity<?> verifyFontName(
+            @Login UserPrincipal userPrincipal,
+            @RequestBody FontCreateDTO fontCreateDTO
+    ) {
+        Long memberId = userPrincipal.getId();
+        log.info("Request received: Check if font name is duplicate: {}", fontCreateDTO.getName());
+
+        Boolean duplicateNameExist = fontService.isDuplicateNameExists(memberId, fontCreateDTO.getName());
+        log.info("Response sent: Font name {} is {}", fontCreateDTO.getName(), duplicateNameExist ? "duplicate" : "available");
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(duplicateNameExist);
+    }
 }

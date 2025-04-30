@@ -26,4 +26,5 @@ public interface FontService {
     List<FontResponse> getPopularFonts(Long memberId);
     Font updateProgress(Long fontId, FontProgressUpdateDTO fontProgressUpdateDTO);
     FontResponse fontDownload(Long memberId, Long fontId);
+    Boolean isDuplicateNameExists(Long memberId, String fontName);
 }
