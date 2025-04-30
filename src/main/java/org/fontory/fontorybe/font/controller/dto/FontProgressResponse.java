@@ -1,6 +1,7 @@
 package org.fontory.fontorybe.font.controller.dto;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import lombok.Builder;
 import lombok.Getter;
 import org.fontory.fontorybe.font.domain.Font;
@@ -19,7 +20,11 @@ public class FontProgressResponse {
                 .id(font.getId())
                 .name(font.getName())
                 .status(font.getStatus())
-                .createdAt(font.getCreatedAt())
+                .createdAt(
+                        font.getCreatedAt()
+                                .atZone(ZoneId.of("UTC"))
+                                .withZoneSameInstant(ZoneId.of("Asia/Seoul"))
+                                .toLocalDateTime())
                 .build();
     }
 }
