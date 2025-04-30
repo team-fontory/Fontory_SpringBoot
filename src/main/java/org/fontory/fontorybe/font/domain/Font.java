@@ -83,20 +83,40 @@ public class Font {
                 .build();
     }
 
-    public Font updateProgress(FontProgressUpdateDTO fontProgressUpdateDTO) {
-        return Font.builder()
-                .name(this.getName())
-                .example(this.getExample())
-                .id(this.id)
-                .status(fontProgressUpdateDTO.getStatus())
-                .downloadCount(this.downloadCount)
-                .bookmarkCount(this.bookmarkCount)
-                .ttf(this.ttf)
-                .woff(this.woff)
-                .memberId(this.memberId)
-                .templateURL(this.templateURL)
-                .createdAt(this.createdAt)
-                .updatedAt(this.updatedAt)
-                .build();
+    public Font updateProgress(FontProgressUpdateDTO fontProgressUpdateDTO, Long fontId) {
+        String ttf = "https://fontory-font.s3.ap-northeast-2.amazonaws.com/" + fontId + ".ttf";
+        String woff = "https://fontory-font.s3.ap-northeast-2.amazonaws.com/" + fontId + ".woff";
+
+        if (fontProgressUpdateDTO.getStatus() == FontStatus.DONE) {
+            return Font.builder()
+                    .name(this.getName())
+                    .example(this.getExample())
+                    .id(this.id)
+                    .status(fontProgressUpdateDTO.getStatus())
+                    .downloadCount(this.downloadCount)
+                    .bookmarkCount(this.bookmarkCount)
+                    .ttf(ttf)
+                    .woff(woff)
+                    .memberId(this.memberId)
+                    .templateURL(this.templateURL)
+                    .createdAt(this.createdAt)
+                    .updatedAt(this.updatedAt)
+                    .build();
+        } else {
+            return Font.builder()
+                    .name(this.getName())
+                    .example(this.getExample())
+                    .id(this.id)
+                    .status(fontProgressUpdateDTO.getStatus())
+                    .downloadCount(this.downloadCount)
+                    .bookmarkCount(this.bookmarkCount)
+                    .ttf(this.ttf)
+                    .woff(this.woff)
+                    .memberId(this.memberId)
+                    .templateURL(this.templateURL)
+                    .createdAt(this.createdAt)
+                    .updatedAt(this.updatedAt)
+                    .build();
+        }
     }
 }
