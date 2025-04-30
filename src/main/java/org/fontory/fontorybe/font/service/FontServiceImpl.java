@@ -17,8 +17,10 @@ import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
 import org.fontory.fontorybe.font.domain.exception.FontDuplicateNameExistsException;
+import org.fontory.fontorybe.font.domain.exception.FontInvalidStatusException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
+import org.fontory.fontorybe.font.infrastructure.entity.FontStatus;
 import org.fontory.fontorybe.font.service.dto.FontRequestProduceDto;
 import org.fontory.fontorybe.font.service.port.FontRepository;
 import org.fontory.fontorybe.font.service.port.FontRequestProducer;
@@ -105,7 +107,7 @@ public class FontServiceImpl implements FontService {
         Sort sort = Sort.by(Sort.Order.desc("createdAt"));
         PageRequest pageRequest = PageRequest.of(page, size, sort);
 
-        Page<Font> fontPage = fontRepository.findAllByMemberId(memberId, pageRequest);
+        Page<Font> fontPage = fontRepository.findAllByMemberIdAndStatus(memberId, pageRequest, FontStatus.DONE);
         log.debug("Service detail: Found {} fonts on page {} for member ID: {}", 
                 fontPage.getNumberOfElements(), page, memberId);
 
@@ -126,6 +128,7 @@ public class FontServiceImpl implements FontService {
     public FontResponse getFont(Long fontId, Long memberId) {
         log.info("Service executing: Fetching font details for font ID: {}", fontId);
         Font targetFont = getOrThrowById(fontId);
+        checkFontStatusIsDone(targetFont);
         Member writer = memberService.getOrThrowById(targetFont.getMemberId());
 
         boolean isBookmarked = false;
@@ -148,6 +151,7 @@ public class FontServiceImpl implements FontService {
         Member member = memberService.getOrThrowById(memberId);
         Font targetFont = getOrThrowById(fontId);
 
+        checkFontStatusIsDone(targetFont);
         checkFontOwnership(member.getId(), targetFont.getMemberId());
 
         fontRepository.deleteById(targetFont.getId());
@@ -172,10 +176,10 @@ public class FontServiceImpl implements FontService {
 
         Page<Font> fontPage;
         if (!StringUtils.hasText(keyword)) {
-            fontPage = fontRepository.findAll(pageRequest);
+            fontPage = fontRepository.findAllByStatus(pageRequest, FontStatus.DONE);
         } else {
             log.debug("Service detail: Searching fonts with keyword: {}", keyword);
-            fontPage = fontRepository.findByNameContaining(keyword, pageRequest);
+            fontPage = fontRepository.findByNameContainingAndStatus(keyword, pageRequest, FontStatus.DONE);
         }
         
         log.debug("Service detail: Found {} fonts on page {}", fontPage.getNumberOfElements(), page);
@@ -204,9 +208,12 @@ public class FontServiceImpl implements FontService {
     public List<FontResponse> getOtherFonts(Long fontId) {
         log.info("Service executing: Fetching other fonts from the same creator for font ID: {}", fontId);
         Font font = getOrThrowById(fontId);
+
+        checkFontStatusIsDone(font);
+
         Member member = memberService.getOrThrowById(font.getMemberId());
 
-        List<Font> fonts = fontRepository.findTop3ByMemberIdAndIdNotOrderByCreatedAtDesc(member.getId(), fontId);
+        List<Font> fonts = fontRepository.findTop3ByMemberIdAndIdNotAndStatusOrderByCreatedAtDesc(member.getId(), fontId, FontStatus.DONE);
         log.debug("Service detail: Found {} other fonts from the same creator", fonts.size());
 
         List<FontResponse> result = fonts.stream()
@@ -227,7 +234,7 @@ public class FontServiceImpl implements FontService {
         log.info("Service executing: Fetching popular fonts for member ID: {}", memberId);
         Member member = memberService.getOrThrowById(memberId);
 
-        List<Font> fonts = fontRepository.findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(memberId);
+        List<Font> fonts = fontRepository.findTop4ByMemberIdAndStatusOrderByDownloadAndBookmarkCountDesc(memberId, FontStatus.DONE);
         log.debug("Service detail: Found {} popular fonts for member ID: {}", fonts.size(), memberId);
 
         List<FontResponse> result = fonts.stream()
@@ -246,7 +253,7 @@ public class FontServiceImpl implements FontService {
     @Transactional(readOnly = true)
     public List<FontResponse> getPopularFonts(Long memberId) {
         log.info("Service executing: Fetching global popular fonts, requesting member ID: {}", memberId);
-        List<Font> fonts = fontRepository.findTop3OrderByDownloadAndBookmarkCountDesc();
+        List<Font> fonts = fontRepository.findTop3ByStatusOrderByDownloadAndBookmarkCountDesc(FontStatus.DONE);
         log.debug("Service detail: Found {} popular fonts globally", fonts.size());
 
         List<FontResponse> result;
@@ -288,6 +295,9 @@ public class FontServiceImpl implements FontService {
     public FontDownloadResponse fontDownload(Long memberId, Long fontId) {
         log.info("Service executing: Download font ID: {}", fontId);
         Font targetFont = getOrThrowById(fontId);
+
+        checkFontStatusIsDone(targetFont);
+
         targetFont.increaseDownloadCount();
 
         fontRepository.save(targetFont);
@@ -312,6 +322,15 @@ public class FontServiceImpl implements FontService {
             log.warn("Service warning: Font ownership mismatch: requestMemberId={}, targetMemberId={}", 
                     requestMemberId, targetMemberId);
             throw new FontOwnerMismatchException();
+        }
+    }
+
+    private void checkFontStatusIsDone(Font targetFont) {
+        log.debug("Service detail: Checking font status is DONE: targetFontId={}", targetFont.getId());
+
+        if (targetFont.getStatus() != FontStatus.DONE) {
+            log.warn("Service warning: Font status is not DONE: targetFontId={}", targetFont.getId());
+            throw new FontInvalidStatusException();
         }
     }
 }
