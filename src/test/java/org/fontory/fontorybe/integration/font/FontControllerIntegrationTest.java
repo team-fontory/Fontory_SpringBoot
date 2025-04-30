@@ -385,9 +385,7 @@ class FontControllerIntegrationTest {
     void downloadFontSuccess() throws Exception {
         mockMvc.perform(get("/fonts/{fontId}/download", 999L)
                         .header("Authorization", validAccessToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(999)))
-                .andExpect(jsonPath("$.downloadCount").isNumber());
+                .andExpect(status().isOk());
     }
 
     @Test
