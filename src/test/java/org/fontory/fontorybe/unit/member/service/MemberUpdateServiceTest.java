@@ -72,7 +72,7 @@ class MemberUpdateServiceTest {
                 () -> assertThat(foundMember.getGender()).isEqualTo(TEST_MEMBER_GENDER),
                 () -> assertThat(foundMember.getProvideId()).isEqualTo(testMemberProvideId),
                 () -> assertThat(foundMember.getTerms()).isEqualTo(TEST_MEMBER_TERMS),
-                () -> assertThat(foundMember.getProfileImageKey()).isEqualTo(TEST_MEMBER_PROFILE_KEY),
+                () -> assertThat(foundMember.getProfileImageKey()).isNotEqualTo(DEFAULT_PROFILE_KEY),
                 () -> assertThat(foundMember.getCreatedAt()).isNotNull(),
                 () -> assertThat(foundMember.getUpdatedAt()).isNotNull(),
                 () -> assertThat(foundMember.getDeletedAt()).isNull()
@@ -114,7 +114,7 @@ class MemberUpdateServiceTest {
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(NEW_MEMBER_PROVIDER, NEW_MEMBER_PROVIDED_ID, NEW_MEMBER_EMAIL);
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
 
-        InitMemberInfoRequest initNewMemberRequestDto = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberRequestDto = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         Member createdMember = testContainer.create(initNewMemberRequestDto, createdProvide);
 
         assertAll(
@@ -124,7 +124,7 @@ class MemberUpdateServiceTest {
                 () -> assertThat(createdMember.getGender()).isEqualTo(NEW_MEMBER_GENDER),
                 () -> assertThat(createdMember.getBirth()).isEqualTo(NEW_MEMBER_BIRTH),
                 () -> assertThat(createdMember.getTerms()).isEqualTo(NEW_MEMBER_TERMS),
-                () -> assertThat(createdMember.getProfileImageKey()).isEqualTo(NEW_MEMBER_PROFILE_KEY),
+                () -> assertThat(createdMember.getProfileImageKey()).isNotEqualTo(DEFAULT_PROFILE_KEY),
                 () -> assertThat(createdMember.getCreatedAt()).isNotNull(),
                 () -> assertThat(createdMember.getUpdatedAt()).isNotNull()
         );
@@ -139,11 +139,11 @@ class MemberUpdateServiceTest {
         Provide createdProvide1 = testContainer.provideService.create(provideCreateDto1);
         Provide createdProvide2 = testContainer.provideService.create(provideCreateDto2);
 
-        InitMemberInfoRequest initNewMemberRequestDto = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberRequestDto = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         testContainer.create(initNewMemberRequestDto, createdProvide1);
 
         // 동일 닉네임으로 또 회원 생성 시 예외 발생
-        InitMemberInfoRequest duplicateInitNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest duplicateInitNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         assertThatThrownBy(
                 () -> testContainer.create(duplicateInitNewMemberInfoRequest, createdProvide2))
                 .isExactlyInstanceOf(MemberDuplicateNameExistsException.class);
@@ -181,8 +181,8 @@ class MemberUpdateServiceTest {
 
         String uniqueNickname1 = UUID.randomUUID().toString();
         String uniqueNickname2 = UUID.randomUUID().toString();
-        InitMemberInfoRequest initNewMemberRequestDto1 = new InitMemberInfoRequest(uniqueNickname1, Gender.MALE, NEW_MEMBER_BIRTH, TEST_MEMBER_TERMS, TEST_MEMBER_PROFILE_KEY);
-        InitMemberInfoRequest initNewMemberRequestDto2 = new InitMemberInfoRequest(uniqueNickname2, Gender.FEMALE, NEW_MEMBER_BIRTH, TEST_MEMBER_TERMS, TEST_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberRequestDto1 = new InitMemberInfoRequest(uniqueNickname1, Gender.MALE, NEW_MEMBER_BIRTH, TEST_MEMBER_TERMS);
+        InitMemberInfoRequest initNewMemberRequestDto2 = new InitMemberInfoRequest(uniqueNickname2, Gender.FEMALE, NEW_MEMBER_BIRTH, TEST_MEMBER_TERMS);
         Member member1 = testContainer.create(initNewMemberRequestDto1, createdProvide1);
         testContainer.create(initNewMemberRequestDto2, createdProvide2);
 
@@ -201,8 +201,8 @@ class MemberUpdateServiceTest {
 
         String uniqueNickname1 = UUID.randomUUID().toString();
         String uniqueNickname2 = UUID.randomUUID().toString();
-        InitMemberInfoRequest initNewMemberRequestDto1 = new InitMemberInfoRequest(uniqueNickname1, Gender.MALE, NEW_MEMBER_BIRTH, TEST_MEMBER_TERMS, TEST_MEMBER_PROFILE_KEY);
-        InitMemberInfoRequest initNewMemberRequestDto2 = new InitMemberInfoRequest(uniqueNickname2, Gender.MALE, NEW_MEMBER_BIRTH, TEST_MEMBER_TERMS, TEST_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberRequestDto1 = new InitMemberInfoRequest(uniqueNickname1, Gender.MALE, NEW_MEMBER_BIRTH, TEST_MEMBER_TERMS);
+        InitMemberInfoRequest initNewMemberRequestDto2 = new InitMemberInfoRequest(uniqueNickname2, Gender.MALE, NEW_MEMBER_BIRTH, TEST_MEMBER_TERMS);
 
         testContainer.create(initNewMemberRequestDto1, createdProvide);
         assertThatThrownBy(
@@ -254,7 +254,7 @@ class MemberUpdateServiceTest {
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(NEW_MEMBER_PROVIDER, NEW_MEMBER_PROVIDED_ID, NEW_MEMBER_EMAIL);
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
 
-        InitMemberInfoRequest initNewMemberRequestDto = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberRequestDto = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         Member member = testContainer.create(initNewMemberRequestDto, createdProvide);
 
         // 회원 비활성화
@@ -272,7 +272,7 @@ class MemberUpdateServiceTest {
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(NEW_MEMBER_PROVIDER, NEW_MEMBER_PROVIDED_ID, NEW_MEMBER_EMAIL);
         Provide createdProvide = testContainer.provideService.create(provideCreateDto);
 
-        InitMemberInfoRequest initNewMemberRequestDto = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberRequestDto = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         Member member = testContainer.create(initNewMemberRequestDto, createdProvide);
 
         // 회원 비활성화

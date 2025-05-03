@@ -8,6 +8,7 @@ import org.fontory.fontorybe.bookmark.domain.Bookmark;
 import org.fontory.fontorybe.bookmark.domain.exception.BookmarkAlreadyException;
 import org.fontory.fontorybe.bookmark.domain.exception.BookmarkNotFoundException;
 import org.fontory.fontorybe.bookmark.service.port.BookmarkRepository;
+import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
@@ -29,6 +30,7 @@ public class BookmarkServiceImpl implements BookmarkService {
     private final FontRepository fontRepository;
     private final MemberLookupService memberLookupService;
     private final FontService fontService;
+    private final CloudStorageService cloudStorageService;
 
     @Override
     @Transactional
@@ -79,7 +81,11 @@ public class BookmarkServiceImpl implements BookmarkService {
 
         List<FontResponse> filtered = fonts.stream()
                 .filter(font -> !StringUtils.hasText(keyword) || font.getName().contains(keyword))
-                .map(font -> FontResponse.from(font, true))
+                .map(font -> {
+                    Member writer = memberLookupService.getOrThrowById(font.getMemberId());
+                    String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
+                    return FontResponse.from(font, true, writer.getNickname(), woff2Url);
+                })
                 .toList();
 
         return new PageImpl<>(filtered, pageRequest, bookmarks.getTotalElements());

@@ -5,9 +5,9 @@ import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileCreate;
 import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
+import org.fontory.fontorybe.file.domain.exception.FileNotFoundException;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.domain.Member;
-import org.fontory.fontorybe.member.controller.port.MemberUpdateService;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,7 +39,6 @@ import static org.mockito.BDDMockito.given;
 @Sql(value = "/sql/deleteFileTestData.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 class FileServiceIntegrationTest {
 
-    @Autowired private MemberUpdateService memberUpdateService;
     @Autowired private MemberLookupService memberLookupService;
     @Autowired private FileService fileService;
     @MockitoBean private S3Client s3Client;
@@ -93,7 +92,10 @@ class FileServiceIntegrationTest {
                             .build();
                 });
         // Stub getting file URL
-        given(cloudStorageService.getFileUrl(any(FileMetadata.class), anyString()))
+        given(cloudStorageService.getProfileImageUrl(anyString()))
+                .willReturn(mockedFileUrl);
+
+        given(cloudStorageService.getFontPaperUrl(anyString()))
                 .willReturn(mockedFileUrl);
     }
 
@@ -111,7 +113,7 @@ class FileServiceIntegrationTest {
     @DisplayName("getOrThrowById - non-existent file throws")
     void getNonExistentFileMetadataTest() {
         assertThatThrownBy(() -> fileService.getOrThrowById(nonExistentId))
-                .isInstanceOf(MemberNotFoundException.class);
+                .isInstanceOf(FileNotFoundException.class);
     }
 
     @Test

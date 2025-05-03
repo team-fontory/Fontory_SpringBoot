@@ -95,7 +95,7 @@ class ProfileControllerIntegrationTest {
         );
 
         MockMultipartHttpServletRequestBuilder builder = multipart("/member/me");
-        builder.with(request -> { request.setMethod("PUT"); return request; });
+        builder.with(request -> { request.setMethod("PATCH"); return request; });
 
         mockMvc.perform(builder
                         .file(jsonPart)

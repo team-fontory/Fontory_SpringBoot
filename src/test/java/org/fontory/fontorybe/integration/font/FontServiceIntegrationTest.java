@@ -10,16 +10,13 @@ import static org.mockito.Mockito.doNothing;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
+
+import org.fontory.fontorybe.file.application.port.FileRepository;
 import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
-import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
-import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
-import org.fontory.fontorybe.font.controller.dto.FontDetailResponse;
-import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
-import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
-import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
-import org.fontory.fontorybe.font.controller.dto.FontResponse;
-import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
+import org.fontory.fontorybe.font.controller.dto.*;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
@@ -60,19 +57,31 @@ class FontServiceIntegrationTest {
     private final String existFontExample = "이것은 테스트용 예제입니다.";
     private final Long existFontDownloadCount = 0L;
     private final Long existFontBookmarkCount = 0L;
-    private final String existFontTtf = "ttf주소";
-    private final String existFontWoff = "woff주소";
+    private final String existFontTemplateName = "fontTemplateImage.jpg";
+    private final Long existFontSize = 12345L;
+    private final String existFontKey = "key";
+    private final String existFontTemplateExtension = "jpg";
 
     private FileUploadResult fileDetails;
+    private final FontProgressUpdateDTO fontProgressUpdateDTO = FontProgressUpdateDTO.builder().status(FontStatus.DONE).build();
 
     @BeforeEach
     void setup() {
         fileDetails = FileUploadResult.builder()
-                .fileName("fontTemplateImage.jpg")
+                .id(existFontId)
+                .fileName(existFontTemplateName)
                 .fileUrl("https://mock-s3.com/fake.jpg")
-                .size(1024L)
+                .size(existFontSize)
                 .build();
+        FileMetadata fileMetadata = FileMetadata.builder()
+                        .id(existFontId)
+                        .fileName(existFontTemplateName)
+                        .key(existFontKey)
+                        .extension(existFontTemplateExtension)
+                        .size(existFontSize)
+                        .build();
 
+        given(fileService.getOrThrowById(any())).willReturn(fileMetadata);
         given(fileService.uploadFontTemplateImage(any(), any())).willReturn(fileDetails);
 
         doNothing().when(fontRequestProducer).sendFontRequest(any());
@@ -99,8 +108,7 @@ class FontServiceIntegrationTest {
                 () -> assertThat(createdFont.getMemberId()).isEqualTo(existMemberId),
                 () -> assertThat(createdFont.getDownloadCount()).isZero(),
                 () -> assertThat(createdFont.getBookmarkCount()).isZero(),
-                () -> assertThat(createdFont.getTtf()).isNull(),
-                () -> assertThat(createdFont.getWoff()).isNull(),
+                () -> assertThat(createdFont.getKey()).isEqualTo(existFontKey),
                 () -> assertThat(createdFont.getCreatedAt()).isNotNull(),
                 () -> assertThat(createdFont.getUpdatedAt()).isNotNull()
         );
@@ -140,7 +148,7 @@ class FontServiceIntegrationTest {
                 .build();
 
         // when
-        Font updated = fontService.update(existMemberId, existFontId, dto);
+        FontUpdateResponse updated = fontService.update(existMemberId, existFontId, dto);
 
         // then
         assertAll(
@@ -185,8 +193,7 @@ class FontServiceIntegrationTest {
                 () -> assertThat(foundFont.getExample()).isEqualTo(existFontExample),
                 () -> assertThat(foundFont.getDownloadCount()).isEqualTo(existFontDownloadCount),
                 () -> assertThat(foundFont.getBookmarkCount()).isEqualTo(existFontBookmarkCount),
-                () -> assertThat(foundFont.getTtf()).isEqualTo(existFontTtf),
-                () -> assertThat(foundFont.getWoff()).isEqualTo(existFontWoff),
+                () -> assertThat(foundFont.getKey()).isNotNull(),
                 () -> assertThat(foundFont.getMemberId()).isEqualTo(existMemberId),
                 () -> assertThat(foundFont.getCreatedAt()).isNotNull(),
                 () -> assertThat(foundFont.getUpdatedAt()).isNotNull()
@@ -206,7 +213,7 @@ class FontServiceIntegrationTest {
     void getFontsSuccess() {
         // given
         for (int i = 1; i <= 7; i++) {
-            fontService.create(
+            Font font = fontService.create(
                     existMemberId,
                     FontCreateDTO.builder()
                             .name("폰트" + i)
@@ -214,6 +221,7 @@ class FontServiceIntegrationTest {
                             .build(),
                     fileDetails
             );
+            fontService.updateProgress(font.getId(), fontProgressUpdateDTO);
         }
 
         int page = 0;
@@ -226,10 +234,6 @@ class FontServiceIntegrationTest {
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSizeLessThanOrEqualTo(size);
         assertThat(result.getTotalElements()).isGreaterThanOrEqualTo(7);
-
-        result.getContent().forEach(font ->
-                assertThat(font.getMemberId()).isEqualTo(existMemberId)
-        );
 
         List<Long> ids = result.getContent().stream()
                 .map(FontResponse::getId)
@@ -245,7 +249,7 @@ class FontServiceIntegrationTest {
     @DisplayName("font - getFont detail success test")
     void getFontDetailSuccess() {
         // when
-        FontDetailResponse detail = fontService.getFont(existFontId);
+        FontResponse detail = fontService.getFont(existFontId, null);
 
         // then
         assertAll(
@@ -280,6 +284,7 @@ class FontServiceIntegrationTest {
                 .build();
 
         Font elseFont = fontService.create(createdMemberId, createDTO, fileDetails);
+        fontService.updateProgress(elseFont.getId(), fontProgressUpdateDTO);
 
         // when & then
         assertThatThrownBy(() -> fontService.delete(existMemberId, elseFont.getId()))
@@ -316,6 +321,10 @@ class FontServiceIntegrationTest {
                         .build(),
                 fileDetails
         );
+
+        fontService.updateProgress(font1.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font2.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font3.getId(), fontProgressUpdateDTO);
 
         for (int i = 0; i < 10; i++) {
             fontService.fontDownload(existMemberId, font1.getId());
@@ -358,7 +367,6 @@ class FontServiceIntegrationTest {
 
         result.forEach(font -> {
             assertThat(font.getId()).isNotEqualTo(existFontId);
-            assertThat(font.getMemberId()).isEqualTo(existMemberId);
         });
     }
 
@@ -393,6 +401,10 @@ class FontServiceIntegrationTest {
                 fileDetails
                 );
 
+        fontService.updateProgress(font1.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font2.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font3.getId(), fontProgressUpdateDTO);
+
         for (int i = 0; i < 5; i++) {
             fontService.fontDownload(existMemberId, font1.getId());
         }
@@ -418,7 +430,6 @@ class FontServiceIntegrationTest {
 
         assertThat(scores).isEqualTo(sorted);
 
-        result.forEach(font -> assertThat(font.getMemberId()).isEqualTo(existMemberId));
     }
 
     @Test
@@ -451,6 +462,10 @@ class FontServiceIntegrationTest {
                         .build(),
                 fileDetails
         );
+
+        fontService.updateProgress(font1.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font2.getId(), fontProgressUpdateDTO);
+        fontService.updateProgress(font3.getId(), fontProgressUpdateDTO);
 
         for (int i = 0; i < 5; i++) {
             fontService.fontDownload(existMemberId, font1.getId());
@@ -498,9 +513,9 @@ class FontServiceIntegrationTest {
                 .build();
 
         // when
-        Font updatedFont = fontService.updateProgress(createdFont.getId(), progressDto);
+        FontUpdateResponse fontUpdateResponse = fontService.updateProgress(createdFont.getId(), progressDto);
 
         // then
-        assertThat(updatedFont.getStatus()).isEqualTo(FontStatus.DONE);
+        assertThat(fontUpdateResponse.getStatus()).isEqualTo(FontStatus.DONE);
     }
 }

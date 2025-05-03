@@ -4,9 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.fontory.fontorybe.TestConstants.*;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 
 import java.util.UUID;
 
+import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileMetadata;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.member.controller.dto.InitMemberInfoRequest;
 import org.fontory.fontorybe.member.controller.port.MemberCreationService;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
@@ -21,10 +26,13 @@ import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
 import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.Sql.ExecutionPhase;
 
@@ -39,10 +47,33 @@ class MemberUpdateServiceIntegrationTest {
     @Autowired private MemberCreationService memberCreationService;
     @Autowired private ProvideService provideService;
 
+    @MockitoBean private FileService fileService;
+
     /**
      * 기존 테스트에서 사용한 값
      */
     private final Long nonExistentId = -1L;
+
+    @BeforeEach
+    void setUp() {
+        FileUploadResult profileImageFileUploadResult = FileUploadResult.builder()
+                .id(TEST_FILE_ID)
+                .size(TEST_FILE_SIZE)
+                .fileUrl(TEST_FILE_URL)
+                .fileName(TEST_FILE_NAME)
+                .fileUploadTime(TEST_FILE_UPLOAD_TIME)
+                .build();
+        FileMetadata profileImageFileMetadata = FileMetadata.builder()
+                .id(TEST_FILE_ID)
+                .fileName(TEST_FILE_NAME)
+                .key(NEW_MEMBER_PROFILE_KEY)
+                .extension(TEST_FILE_EXTENSION)
+                .size(TEST_FILE_SIZE)
+                .build();
+
+        given(fileService.getOrThrowById(any())).willReturn(profileImageFileMetadata);
+        given(fileService.uploadProfileImage(any(), any())).willReturn(profileImageFileUploadResult);
+    }
 
     @Test
     @DisplayName("member - getOrThrowById success test")
@@ -73,7 +104,7 @@ class MemberUpdateServiceIntegrationTest {
     @Test
     @DisplayName("member - create success test")
     void createTest() {
-        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         ProvideCreateDto newProvideCreateDto = new ProvideCreateDto(NEW_MEMBER_PROVIDER, NEW_MEMBER_PROVIDED_ID, NEW_MEMBER_EMAIL);
         Provide createdProvide = provideService.create(newProvideCreateDto);
         Member createdMember = create(initNewMemberRequest, createdProvide);
@@ -99,11 +130,11 @@ class MemberUpdateServiceIntegrationTest {
         Provide createdProvide1 = provideService.create(provideCreateDto1);
         Provide createdProvide2 = provideService.create(provideCreateDto2);
         // 첫 번째 회원 생성
-        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         create(initNewMemberRequest, createdProvide1);
 
         // 동일 닉네임으로 또 회원 생성 시 예외 발생
-        InitMemberInfoRequest duplicateInitNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest duplicateInitNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         assertThatThrownBy(
                 () -> create(duplicateInitNewMemberInfoRequest, createdProvide2))
                 .isExactlyInstanceOf(MemberDuplicateNameExistsException.class);
@@ -142,8 +173,8 @@ class MemberUpdateServiceIntegrationTest {
         // 두 회원을 각각 생성
         String uniqueNickname1 = UUID.randomUUID().toString();
         String uniqueNickname2 = UUID.randomUUID().toString();
-        InitMemberInfoRequest initNewMemberInfoRequestDto1 = new InitMemberInfoRequest(uniqueNickname1, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
-        InitMemberInfoRequest initNewMemberInfoRequestDto2 = new InitMemberInfoRequest(uniqueNickname2, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberInfoRequestDto1 = new InitMemberInfoRequest(uniqueNickname1, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+        InitMemberInfoRequest initNewMemberInfoRequestDto2 = new InitMemberInfoRequest(uniqueNickname2, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         Member member1 = create(initNewMemberInfoRequestDto1, createdProvide1);
         create(initNewMemberInfoRequestDto2, createdProvide2);
 
@@ -172,7 +203,7 @@ class MemberUpdateServiceIntegrationTest {
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(Provider.GOOGLE, UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Provide createdProvide = provideService.create(provideCreateDto);
 
-        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         Member member = create(initNewMemberRequest, createdProvide);
 
         // 회원 비활성화 요청 (단일 ID)
@@ -187,7 +218,7 @@ class MemberUpdateServiceIntegrationTest {
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(Provider.GOOGLE, UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Provide createdProvide = provideService.create(provideCreateDto);
 
-        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         Member member = create(initNewMemberRequest, createdProvide);
 
         // 최초 비활성화 처리
@@ -202,6 +233,14 @@ class MemberUpdateServiceIntegrationTest {
 
     private Member create(InitMemberInfoRequest initNewMemberInfoRequest, Provide provide) {
         Member defaultMember = memberCreationService.createDefaultMember(provide);
-        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), initNewMemberInfoRequest);
+        MockMultipartFile file = new MockMultipartFile(
+                TEST_FILE_NAME,              // RequestPart 이름
+                TEST_FILE_NAME,          // 원본 파일명
+                "image/png",         // Content-Type
+                "dummy-image-data".getBytes()  // 파일 내용
+        );
+        FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, defaultMember.getId());
+        System.out.println("fileUploadResult = " + fileUploadResult);
+        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), initNewMemberInfoRequest, fileUploadResult);
     }
 }

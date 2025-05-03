@@ -40,13 +40,10 @@ public class FontEntity extends BaseEntity {
 
     private Long bookmarkCount;
 
-    private String ttf;
-
-    private String woff;
+    @Column(name = "file_key")
+    private String key;
 
     private Long memberId;
-
-    private String templateURL;
 
     public Font toModel() {
         return Font.builder()
@@ -56,10 +53,8 @@ public class FontEntity extends BaseEntity {
                 .example(example)
                 .downloadCount(downloadCount)
                 .bookmarkCount(bookmarkCount)
-                .ttf(ttf)
-                .woff(woff)
+                .key(key)
                 .memberId(memberId)
-                .templateURL(templateURL)
                 .createdAt(getCreatedAt())
                 .updatedAt(getUpdatedAt())
                 .build();
@@ -73,10 +68,8 @@ public class FontEntity extends BaseEntity {
                 .example(font.getExample())
                 .downloadCount(font.getDownloadCount())
                 .bookmarkCount(font.getBookmarkCount())
-                .ttf(font.getTtf())
-                .woff(font.getWoff())
+                .key(font.getKey())
                 .memberId(font.getMemberId())
-                .templateURL(font.getTemplateURL())
                 .createdAt(font.getCreatedAt())
                 .updatedAt(font.getUpdatedAt())
                 .build();

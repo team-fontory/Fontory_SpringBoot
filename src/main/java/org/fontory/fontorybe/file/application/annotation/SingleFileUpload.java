@@ -1,4 +1,4 @@
-package org.fontory.fontorybe.member.controller.annotation;
+package org.fontory.fontorybe.file.application.annotation;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

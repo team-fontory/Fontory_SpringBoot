@@ -11,11 +11,11 @@ import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileCreate;
 import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
+import org.fontory.fontorybe.file.domain.exception.FileNotFoundException;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.controller.port.MemberUpdateService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.MemberDefaults;
-import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +43,7 @@ public class FileServiceImpl implements FileService {
     public FileMetadata getOrThrowById(Long id) {
         return Optional.ofNullable(id)
                 .flatMap(fileRepository::findById)
-                .orElseThrow(MemberNotFoundException::new);
+                .orElseThrow(() -> new FileNotFoundException(id));
     }
 
     @Override
@@ -69,7 +69,7 @@ public class FileServiceImpl implements FileService {
         log.info("Updating member profile image key: memberId={}, memberProfileImageKey={}", updated.getId(), updated.getProfileImageKey());
         log.info("Publishing image update event: tempKey={}, fixedKey={}", tempKey, fixedKey);
         eventPublisher.publishEvent(new ProfileImageUpdatedEvent(tempKey, fixedKey));
-        String fileUrl = cloudStorageService.getFileUrl(savedMetaData, fixedKey);
+        String fileUrl = cloudStorageService.getProfileImageUrl(fixedKey);
         FileUploadResult result = FileUploadResult.from(savedMetaData, fileUrl);
         log.info("Profile image upload completed successfully: memberId={}, fileUrl={}", memberId, fileUrl);
         return result;
@@ -84,8 +84,8 @@ public class FileServiceImpl implements FileService {
         log.info("Uploading font template image to cloud storage: memberId={}", memberId);
         FileMetadata fileMetadata = cloudStorageService.uploadFontTemplateImage(fontTemplateImageFileCreate);
         FileMetadata savedMetaData = fileRepository.save(fileMetadata);
-        String fileUrl = cloudStorageService.getFileUrl(savedMetaData, savedMetaData.getKey());
-        FileUploadResult result = FileUploadResult.from(fileMetadata, fileUrl);
+        String fileUrl = cloudStorageService.getFontPaperUrl(savedMetaData.getKey());
+        FileUploadResult result = FileUploadResult.from(savedMetaData, fileUrl);
         log.info("Font template image upload completed successfully: memberId={}, fileUrl={}", memberId, fileUrl);
         return result;
     }

@@ -24,15 +24,20 @@ public class S3Config {
             @Value("${url.cdn}") String cdnUrl,
             @Value("${spring.cloud.aws.s3.bucket.profile-image}") String profileImageBucket,
             @Value("${spring.cloud.aws.s3.bucket.font-paper}") String fontPaperBucket,
+            @Value("${spring.cloud.aws.s3.bucket.font}") String fontBucket,
             @Value("${spring.cloud.aws.s3.bucket.profile-image.prefix}") String profileImageBucketPrefix,
-            @Value("${spring.cloud.aws.s3.bucket.font-paper.prefix}") String fontPaperBucketPrefix
+            @Value("${spring.cloud.aws.s3.bucket.font-paper.prefix}") String fontPaperBucketPrefix,
+            @Value("${spring.cloud.aws.s3.bucket.font.prefix}") String fontBucketPrefix
     ) {
         this.region = region;
         this.cdnUrl = cdnUrl;
         this.bucketMap.put(FileType.PROFILE_IMAGE, profileImageBucket);
         this.bucketMap.put(FileType.FONT_PAPER, fontPaperBucket);
+        this.bucketMap.put(FileType.FONT, fontBucket);
         this.prefixMap.put(FileType.PROFILE_IMAGE, profileImageBucketPrefix);
         this.prefixMap.put(FileType.FONT_PAPER, fontPaperBucketPrefix);
+        this.prefixMap.put(FileType.FONT, fontBucketPrefix);
+
     }
 
     public String getBucketName(FileType fileType) {

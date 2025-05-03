@@ -4,6 +4,7 @@ import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileType;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
+import org.fontory.fontorybe.file.domain.exception.FileNotFoundException;
 import org.fontory.fontorybe.member.controller.dto.InitMemberInfoRequest;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.domain.Member;
@@ -71,8 +72,7 @@ class FileServiceTest {
                 nickname,
                 Gender.MALE,
                 LocalDate.of(2025, 1, 26),
-                true,
-                "testUrl"
+                true
         );
     }
 
@@ -114,7 +114,7 @@ class FileServiceTest {
         // when & then
         assertThatThrownBy(
                 () -> fileService.getOrThrowById(nonExistentFileId)
-        ).isExactlyInstanceOf(MemberNotFoundException.class);
+        ).isExactlyInstanceOf(FileNotFoundException.class);
     }
 
     @Test
@@ -226,7 +226,7 @@ class FileServiceTest {
         assertAll(
                 () -> assertThat(profileResult.getFileName()).contains("jpg"),
                 () -> assertThat(templateResult.getFileName()).contains("png"),
-                () -> assertThat(((FakeFileRepository)testContainer.fileRepository).findAll()).hasSize(2)
+                () -> assertThat(((FakeFileRepository)testContainer.fileRepository).findAll()).hasSize(3)
         );
 
         // Member should have profile image updated

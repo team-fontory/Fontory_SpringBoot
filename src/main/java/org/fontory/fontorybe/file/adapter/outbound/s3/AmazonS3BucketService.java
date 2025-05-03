@@ -56,10 +56,6 @@ public class AmazonS3BucketService implements CloudStorageService {
         return uploadFile(amazonS3PutRequest).toModel();
     }
 
-    private String getFileUrl(FileType fileType, String key) {
-        return String.format("%s/%s/%s", s3Config.getCdnUrl(), s3Config.getPrefix(fileType), key);
-    }
-
     @Override
     public String getProfileImageUrl(String key) {
         return getFileUrl(FileType.PROFILE_IMAGE, key);
@@ -71,12 +67,19 @@ public class AmazonS3BucketService implements CloudStorageService {
     }
 
     @Override
-    public String getFileUrl(FileMetadata fileMetadata, String key) {
-        String bucketName = s3Config.getBucketName(fileMetadata.getFileType());
-        String prefix = s3Config.getPrefix(fileMetadata.getFileType());
-        log.debug("Generating file URL: fileType={}, fileKey={}, bucket={}",
-                fileMetadata.getFileType(), key, bucketName);
+    public String getWoff2Url(String key) {
+        return getFileUrl(FileType.FONT, key + ".woff2");
+    }
 
+    @Override
+    public String getTtfUrl(String key) {
+        return getFileUrl(FileType.FONT, key + ".ttf");
+    }
+
+    private String getFileUrl(FileType fileType, String key) {
+        String bucketName = s3Config.getBucketName(fileType);
+        String prefix = s3Config.getPrefix(fileType);
+        log.debug("Generating file URL: fileType={}, fileKey={}, bucket={}", fileType, key, bucketName);
         return s3Config.getCdnUrl() + "/" + prefix + "/" + key;
     }
 

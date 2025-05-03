@@ -9,8 +9,11 @@ import org.fontory.fontorybe.bookmark.domain.exception.BookmarkNotFoundException
 import org.fontory.fontorybe.common.domain.BaseErrorResponse;
 import org.fontory.fontorybe.file.adapter.inbound.exception.FileUploadException;
 import org.fontory.fontorybe.file.adapter.inbound.exception.UnsupportedFileTypeException;
+import org.fontory.fontorybe.file.domain.exception.FileNotFoundException;
 import org.fontory.fontorybe.file.domain.exception.InvalidMultipartRequestException;
 import org.fontory.fontorybe.file.domain.exception.SingleFileRequiredException;
+import org.fontory.fontorybe.font.domain.exception.FontDuplicateNameExistsException;
+import org.fontory.fontorybe.font.domain.exception.FontInvalidStatusException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
 import org.fontory.fontorybe.font.domain.exception.FontSQSProduceExcepetion;
@@ -35,8 +38,8 @@ public class GlobalExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    @ExceptionHandler(MemberDuplicateNameExistsException.class)
-    public BaseErrorResponse memberDuplicateNameExists(MemberDuplicateNameExistsException e) {
+    @ExceptionHandler({MemberDuplicateNameExistsException.class, FontDuplicateNameExistsException.class})
+    public BaseErrorResponse duplicateNameExists(Exception e) {
         return new BaseErrorResponse(e.getMessage());
     }
 
@@ -139,6 +142,18 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MemberAlreadyJoinedException.class)
     public BaseErrorResponse memberAlreadyJoined(MemberAlreadyJoinedException e) {
+        return new BaseErrorResponse(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(FontInvalidStatusException.class)
+    public BaseErrorResponse fontInvalidStatusException(FontInvalidStatusException e) {
+        return new BaseErrorResponse(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ExceptionHandler(FileNotFoundException.class)
+    public BaseErrorResponse fileNotFoundException(FileNotFoundException e) {
         return new BaseErrorResponse(e.getMessage());
     }
 }

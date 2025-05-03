@@ -9,8 +9,7 @@ INSERT INTO `font` (
     `example`,
     `download_count`,
     `bookmark_count`,
-    `ttf`,
-    `woff`,
+    `file_key`,
     `member_id`,
     `created_at`,
     `updated_at`
@@ -21,8 +20,7 @@ INSERT INTO `font` (
     '이것은 테스트용 예제입니다.',
     0,
     0,
-    'ttf주소',
-    'woff주소',
+    'key',
     999,
     '2025-04-08 10:00:00',
     '2025-04-08 10:00:00'

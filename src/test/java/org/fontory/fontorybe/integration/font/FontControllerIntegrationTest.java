@@ -18,12 +18,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 import jakarta.servlet.http.Cookie;
 import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.common.application.DevTokenInitializer;
+import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
@@ -58,6 +61,9 @@ class FontControllerIntegrationTest {
     @Autowired
     private DevTokenInitializer devTokenInitializer;
 
+    @Autowired
+    private CloudStorageService cloudStorageService;
+
     @MockitoBean
     private FileService fileService;
     @MockitoBean
@@ -72,8 +78,10 @@ class FontControllerIntegrationTest {
     private final String existFontExample = "이것은 테스트용 예제입니다.";
     private final Long existFontDownloadCount = 0L;
     private final Long existFontBookmarkCount = 0L;
-    private final String existFontTtf = "ttf주소";
-    private final String existFontWoff = "woff주소";
+    private final String existFontTemplateName = "fontTemplateImage.jpg";
+    private final Long existFontSize = 12345L;
+    private final String existFontKey = "key";
+    private final String existFontTemplateExtension = "jpg";
 
     private final String newFontName = "newFontName";
     private final String newFontExample = "newFontExample";
@@ -97,6 +105,16 @@ class FontControllerIntegrationTest {
                 .fileUrl("https://mock-s3.com/fake.jpg")
                 .size(1024L)
                 .build();
+
+        FileMetadata fileMetadata = FileMetadata.builder()
+                .id(existFontId)
+                .fileName(existFontTemplateName)
+                .key(existFontKey)
+                .extension(existFontTemplateExtension)
+                .size(existFontSize)
+                .build();
+
+        given(fileService.getOrThrowById(any())).willReturn(fileMetadata);
 
         given(fileService.uploadFontTemplateImage(any(), any())).willReturn(fileDetails);
 
@@ -138,7 +156,6 @@ class FontControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name", is(newFontName)))
                 .andExpect(jsonPath("$.status", is("PROGRESS")))
-                .andExpect(jsonPath("$.memberId", is(existMemberId.intValue())))
                 .andExpect(jsonPath("$.createdAt").isNotEmpty());
     }
 
@@ -247,7 +264,6 @@ class FontControllerIntegrationTest {
                 .andExpect(jsonPath("$.content[0].downloadCount").isNumber())
                 .andExpect(jsonPath("$.content[0].bookmarkCount").isNumber())
                 .andExpect(jsonPath("$.content[0].bookmarked").isBoolean())
-                .andExpect(jsonPath("$.content[0].memberId").isNotEmpty())
                 .andExpect(jsonPath("$.totalElements").isNumber())
                 .andExpect(jsonPath("$.totalPages").isNumber())
                 .andExpect(jsonPath("$.size").value(5))
@@ -277,8 +293,7 @@ class FontControllerIntegrationTest {
                 .andExpect(jsonPath("$.example", is(existFontExample)))
                 .andExpect(jsonPath("$.writerName", is(existMemberName)))
                 .andExpect(jsonPath("$.downloadCount", is(existFontDownloadCount.intValue())))
-                .andExpect(jsonPath("$.bookmarkCount", is(existFontBookmarkCount.intValue())))
-                .andExpect(jsonPath("$.memberId", is(existMemberId.intValue())));
+                .andExpect(jsonPath("$.bookmarkCount", is(existFontBookmarkCount.intValue())));
     }
 
     @Test
@@ -320,7 +335,6 @@ class FontControllerIntegrationTest {
                 .andExpect(jsonPath("$.content[0].downloadCount").isNumber())
                 .andExpect(jsonPath("$.content[0].bookmarkCount").isNumber())
                 .andExpect(jsonPath("$.content[0].bookmarked").isBoolean())
-                .andExpect(jsonPath("$.content[0].memberId").isNotEmpty())
                 .andExpect(jsonPath("$.totalPages").isNumber())
                 .andExpect(jsonPath("$.totalElements").isNumber())
                 .andExpect(jsonPath("$.size").value(5))
@@ -391,7 +405,8 @@ class FontControllerIntegrationTest {
                     .cookie(new Cookie("accessToken", validAccessToken)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(999)))
-                .andExpect(jsonPath("$.downloadCount").isNumber());
+                .andExpect(jsonPath("$.name", is(existFontName)))
+                .andExpect(jsonPath("$.ttf", is(cloudStorageService.getTtfUrl(existFontKey))));
     }
 
     @Test

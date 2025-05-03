@@ -4,6 +4,7 @@ import jakarta.servlet.http.Cookie;
 import org.fontory.fontorybe.TestConstants;
 import org.fontory.fontorybe.authentication.application.AuthConstants;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.member.controller.ProfileController;
 import org.fontory.fontorybe.member.controller.dto.MemberDisableResponse;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
@@ -40,12 +41,14 @@ class ProfileControllerTest {
     ProfileController profileController;
     UserPrincipal testMemberUserPrincipal;
     List<MultipartFile> mockFiles;
+    CloudStorageService cloudStorageService;
 
     @BeforeEach
     void init() {
         testContainer = new TestContainer();
         memberRepository = testContainer.memberRepository;
         profileController = testContainer.profileController;
+        cloudStorageService = testContainer.cloudStorageService;
         testMember = testContainer.createTestMember();
         testMemberUserPrincipal = UserPrincipal.from(testMember);
         MockMultipartFile file = new MockMultipartFile(
@@ -122,7 +125,7 @@ class ProfileControllerTest {
                 () -> assertThat(body).isNotNull(),
                 () -> assertThat(body.getNickname()).isEqualTo(UPDATE_MEMBER_NICKNAME),
                 () -> assertThat(body.getTerms()).isEqualTo(UPDATE_MEMBER_TERMS),
-                () -> assertThat(body.getProfileImageUrl()).isEqualTo(testMember.getProfileImageKey())
+                () -> assertThat(body.getProfileImageUrl()).isEqualTo(cloudStorageService.getProfileImageUrl(testMember.getProfileImageKey()))
         );
     }
 

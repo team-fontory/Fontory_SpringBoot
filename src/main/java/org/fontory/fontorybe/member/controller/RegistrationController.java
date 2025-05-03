@@ -9,7 +9,7 @@ import org.fontory.fontorybe.authentication.adapter.inbound.annotation.Login;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
-import org.fontory.fontorybe.member.controller.annotation.SingleFileUpload;
+import org.fontory.fontorybe.file.application.annotation.SingleFileUpload;
 import org.fontory.fontorybe.member.controller.dto.InitMemberInfoRequest;
 import org.fontory.fontorybe.member.controller.dto.MemberCreateResponse;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
@@ -69,7 +69,7 @@ public class RegistrationController {
         logFileDetails(file, "Member profile image upload");
 
         FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
-        Member updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, req);
+        Member updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, req, fileUploadResult);
 
         log.info("Response sent: Member ID: {} Created successfully with nickname: {}",
                 updatedMember.getId(), updatedMember.getNickname());

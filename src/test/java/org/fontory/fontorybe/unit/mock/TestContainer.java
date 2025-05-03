@@ -14,6 +14,7 @@ import org.fontory.fontorybe.file.application.FileServiceImpl;
 import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileRepository;
 import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.member.controller.MemberController;
 import org.fontory.fontorybe.member.controller.ProfileController;
 import org.fontory.fontorybe.member.controller.RegistrationController;
@@ -35,6 +36,8 @@ import org.fontory.fontorybe.provide.service.ProvideServiceImpl;
 import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -107,8 +110,10 @@ public class TestContainer {
                 TEST_CDN_URL,
                 TEST_PROFILE_BUCKET_NAME,
                 TEST_TEMPLATE_BUCKET_NAME,
+                TEST_FONT_BUCKET_NAME,
                 TEST_PROFILE_PREFIX,
-                TEST_TEMPLATE_PREFIX);
+                TEST_TEMPLATE_PREFIX,
+                TEST_FONT_PREFIX);
 
         cloudStorageService = new FakeCloudStorageService(s3Config);
 
@@ -130,7 +135,7 @@ public class TestContainer {
         memberDefaults = new MemberDefaults(
                 LocalDate.of(1999, 12, 31),
                 false,
-                "testUrl");
+                DEFAULT_PROFILE_KEY);
 
         fileService = FileServiceImpl.builder()
                 .memberLookupService(memberLookupService)
@@ -157,6 +162,7 @@ public class TestContainer {
 
         memberOnboardService = MemberOnboardServiceImpl
                 .builder()
+                .fileService(fileService)
                 .memberRepository(memberRepository)
                 .memberLookupService(memberLookupService)
                 .memberCreationService(memberCreationService)
@@ -204,14 +210,21 @@ public class TestContainer {
 
     public Member create(InitMemberInfoRequest initNewMemberInfoRequest, Provide provide) {
         Member defaultMember = memberCreationService.createDefaultMember(provide);
-        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), initNewMemberInfoRequest);
+        MockMultipartFile file = new MockMultipartFile(
+                TEST_FILE_NAME,              // RequestPart 이름
+                TEST_FILE_NAME,          // 원본 파일명
+                "image/png",         // Content-Type
+                "dummy-image-data".getBytes()  // 파일 내용
+        );
+        FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, defaultMember.getId());
+        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), initNewMemberInfoRequest, fileUploadResult);
     }
 
     public final ProvideCreateDto testMemberProvideCreateDto = new ProvideCreateDto(TEST_MEMBER_PROVIDER, TEST_MEMBER_PROVIDED_ID, TEST_MEMBER_EMAIL);
     public Provide testMemberProvide;
     public Provide newMemberProvide;
 
-    public final InitMemberInfoRequest newInitMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+    public final InitMemberInfoRequest newInitMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
     public final ProvideCreateDto newMemberProvideCreateDto = new ProvideCreateDto(NEW_MEMBER_PROVIDER, NEW_MEMBER_PROVIDED_ID, NEW_MEMBER_EMAIL);
 
     public Member createNotInitedMember() {
@@ -221,13 +234,13 @@ public class TestContainer {
 
     public Member createTestMember() {
         testMemberProvide = provideService.create(testMemberProvideCreateDto);
-        InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(TEST_MEMBER_NICKNAME, TEST_MEMBER_GENDER, TEST_MEMBER_BIRTH, TEST_MEMBER_TERMS, TEST_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(TEST_MEMBER_NICKNAME, TEST_MEMBER_GENDER, TEST_MEMBER_BIRTH, TEST_MEMBER_TERMS);
         return create(initMemberInfoRequest, testMemberProvide);
     }
 
     public Member createNewMember() {
         newMemberProvide = provideService.create(newMemberProvideCreateDto);
-        InitMemberInfoRequest initNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         return create(initNewMemberInfoRequest, newMemberProvide);
     }
 }

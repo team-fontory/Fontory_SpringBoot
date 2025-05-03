@@ -12,7 +12,7 @@ import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
-import org.fontory.fontorybe.member.controller.annotation.SingleFileUpload;
+import org.fontory.fontorybe.file.application.annotation.SingleFileUpload;
 import org.fontory.fontorybe.member.controller.dto.MemberDisableResponse;
 import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 import org.fontory.fontorybe.member.controller.dto.MyProfileResponse;
@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 import static org.fontory.fontorybe.file.adapter.inbound.validator.MultipartFileValidator.extractSingleMultipartFile;
+import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
 @Slf4j
 @Builder
@@ -67,7 +68,7 @@ public class ProfileController {
     @Operation(
             summary = "내정보 수정"
     )
-    @PutMapping
+    @PatchMapping(consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MyProfileResponse> updateMember(
             @Login UserPrincipal userPrincipal,
             @RequestPart MemberUpdateRequest req,

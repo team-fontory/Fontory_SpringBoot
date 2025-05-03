@@ -5,6 +5,7 @@ import jakarta.servlet.http.Cookie;
 import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.member.controller.dto.InitMemberInfoRequest;
 import org.fontory.fontorybe.member.controller.port.MemberOnboardService;
@@ -63,6 +64,13 @@ class RegistrationControllerIntegrationTest {
                 .fileUploadTime(TEST_FILE_UPLOAD_TIME)
                 .size(TEST_FILE_SIZE)
                 .build();
+        FileMetadata fileMetadata = FileMetadata.builder()
+                .id(TEST_FILE_ID)
+                .fileName(TEST_FILE_NAME)
+                .key(TEST_FILE_KEY)
+                .extension(TEST_FILE_EXTENSION)
+                .size(TEST_FILE_SIZE)
+                .build();
 
         ProvideCreateDto newMemberProvideCreateDto = new ProvideCreateDto(NEW_MEMBER_PROVIDER, NEW_MEMBER_PROVIDED_ID, NEW_MEMBER_EMAIL);
         Provide newProvide = provideService.create(newMemberProvideCreateDto);
@@ -70,6 +78,7 @@ class RegistrationControllerIntegrationTest {
 
         notInitializedAccessToken = jwtTokenProvider.generateAccessToken(UserPrincipal.from(notInitedMember));
 
+        given(fileService.getOrThrowById(any())).willReturn(fileMetadata);
         given(fileService.uploadProfileImage(any(), any())).willReturn(mockFileUploadResult);
     }
 
@@ -96,7 +105,7 @@ class RegistrationControllerIntegrationTest {
     @Test
     @DisplayName("POST /register - add member success with valid Authorization header")
     void addMemberSuccessTest() throws Exception {
-        InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS, NEW_MEMBER_PROFILE_KEY);
+        InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
         String jsonRequest = objectMapper.writeValueAsString(initMemberInfoRequest);
         MockMultipartFile jsonPart = new MockMultipartFile(
                 "req",

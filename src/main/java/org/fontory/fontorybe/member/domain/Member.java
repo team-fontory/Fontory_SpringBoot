@@ -49,14 +49,14 @@ public class Member {
                 .build();
     }
 
-    public Member initNewMemberInfo(InitMemberInfoRequest initNewMemberInfo) {
+    public Member initNewMemberInfo(InitMemberInfoRequest initNewMemberInfo, String profileImageKey) {
         return Member.builder()
                 .id(this.id)
                 .nickname(initNewMemberInfo.getNickname())
                 .gender(initNewMemberInfo.getGender())
                 .birth(initNewMemberInfo.getBirth())
                 .terms(initNewMemberInfo.getTerms())
-                .profileImageKey(initNewMemberInfo.getProfileImageKey())
+                .profileImageKey(profileImageKey)
                 .createdAt(this.createdAt)
                 .provideId(this.provideId)
                 .deletedAt(this.deletedAt)

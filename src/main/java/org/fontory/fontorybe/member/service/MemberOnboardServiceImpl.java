@@ -2,6 +2,9 @@ package org.fontory.fontorybe.member.service;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileMetadata;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.member.controller.dto.InitMemberInfoRequest;
 import org.fontory.fontorybe.member.controller.port.MemberCreationService;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
@@ -22,6 +25,7 @@ public class MemberOnboardServiceImpl implements MemberOnboardService {
     private final MemberRepository memberRepository;
     private final MemberLookupService memberLookupService;
     private final MemberCreationService memberCreationService;
+    private final FileService fileService;
 
     @Override
     @Transactional
@@ -35,14 +39,17 @@ public class MemberOnboardServiceImpl implements MemberOnboardService {
 
     @Override
     @Transactional
-    public Member initNewMemberInfo(Long requestMemberId, InitMemberInfoRequest initNewMemberInfoRequest) {
+    public Member initNewMemberInfo(Long requestMemberId,
+                                    InitMemberInfoRequest initNewMemberInfoRequest,
+                                    FileUploadResult fileUploadResult) {
         Member targetMember = memberLookupService.getOrThrowById(requestMemberId);
-        if (memberLookupService.existsByNickname(initNewMemberInfoRequest.getNickname())) {
-            throw new MemberDuplicateNameExistsException();
-        } else if (targetMember.getStatus() == MemberStatus.ACTIVATE) {
+        FileMetadata fileMetadata = fileService.getOrThrowById(fileUploadResult.getId());
+        if (targetMember.getStatus() == MemberStatus.ACTIVATE) {
             throw new MemberAlreadyJoinedException();
+        } else if (memberLookupService.existsByNickname(initNewMemberInfoRequest.getNickname())) {
+            throw new MemberDuplicateNameExistsException();
         }
 
-        return memberRepository.save(targetMember.initNewMemberInfo(initNewMemberInfoRequest));
+        return memberRepository.save(targetMember.initNewMemberInfo(initNewMemberInfoRequest, fileMetadata.getKey()));
     }
 }

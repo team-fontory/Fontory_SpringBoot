@@ -47,6 +47,7 @@ class FileRequestMapperTest {
 
         existMember = testContainer.create(createMemberRequest("testUser") ,testContainer.provideService.create(provideCreateDto));
         existMemberId = existMember.getId();
+        System.out.println("existMemberId = " + existMemberId);
     }
 
     private static MockMultipartFile createValidImageFile(String filename, String contentType) {
@@ -108,8 +109,7 @@ class FileRequestMapperTest {
                 nickname,
                 Gender.MALE,
                 LocalDate.of(2025, 1, 26),
-                true,
-                "default-profile-image"
+                true
         );
     }
 
@@ -120,6 +120,7 @@ class FileRequestMapperTest {
         MockMultipartFile mockFile = createValidImageFile("profile.jpg", "image/jpeg");
 
         // when
+        System.out.println("existMemberId = " + existMemberId);
         FileCreate fileCreate = fileRequestMapper.toProfileImageFileCreate(mockFile, existMember);
 
         // then

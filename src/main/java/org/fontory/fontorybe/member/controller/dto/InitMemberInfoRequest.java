@@ -17,5 +17,4 @@ public class InitMemberInfoRequest {
     private Gender gender;
     private LocalDate birth;
     private Boolean terms;
-    private String profileImageKey;
 }

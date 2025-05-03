@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.font.domain.Font;
 import org.fontory.fontorybe.font.infrastructure.entity.FontEntity;
+import org.fontory.fontorybe.font.infrastructure.entity.FontStatus;
 import org.fontory.fontorybe.font.service.port.FontRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,8 +45,8 @@ public class FontRepositoryImpl implements FontRepository {
     }
 
     @Override
-    public Page<Font> findAllByMemberId(Long memberId, PageRequest pageRequest) {
-        Page<FontEntity> fontEntityPage = fontJpaRepository.findAllByMemberId(memberId, pageRequest);
+    public Page<Font> findAllByMemberIdAndStatus(Long memberId, PageRequest pageRequest, FontStatus status) {
+        Page<FontEntity> fontEntityPage = fontJpaRepository.findAllByMemberIdAndStatus(memberId, pageRequest, status);
 
         return fontEntityPage.map(FontEntity::toModel);
     }
@@ -56,22 +57,22 @@ public class FontRepositoryImpl implements FontRepository {
     }
 
     @Override
-    public Page<Font> findAll(PageRequest pageRequest) {
-        Page<FontEntity> fontEntityPage = fontJpaRepository.findAll(pageRequest);
+    public Page<Font> findAllByStatus(PageRequest pageRequest, FontStatus status) {
+        Page<FontEntity> fontEntityPage = fontJpaRepository.findAllByStatus(pageRequest, status);
 
         return fontEntityPage.map(FontEntity::toModel);
     }
 
     @Override
-    public Page<Font> findByNameContaining(String keyword, PageRequest pageRequest) {
-        Page<FontEntity> fontEntityPage = fontJpaRepository.findByNameContaining(keyword, pageRequest);
+    public Page<Font> findByNameContainingAndStatus(String keyword, PageRequest pageRequest, FontStatus status) {
+        Page<FontEntity> fontEntityPage = fontJpaRepository.findByNameContainingAndStatus(keyword, pageRequest, status);
 
         return fontEntityPage.map(FontEntity::toModel);
     }
 
     @Override
-    public List<Font> findTop3ByMemberIdAndIdNotOrderByCreatedAtDesc(Long memberId, Long fontId) {
-        List<FontEntity> fontEntities = fontJpaRepository.findTop3ByMemberIdAndIdNotOrderByCreatedAtDesc(memberId, fontId);
+    public List<Font> findTop3ByMemberIdAndIdNotAndStatusOrderByCreatedAtDesc(Long memberId, Long fontId, FontStatus status) {
+        List<FontEntity> fontEntities = fontJpaRepository.findTop3ByMemberIdAndIdNotAndStatusOrderByCreatedAtDesc(memberId, fontId, status);
 
         return fontEntities.stream()
                 .map(FontEntity::toModel)
@@ -88,9 +89,9 @@ public class FontRepositoryImpl implements FontRepository {
     }
 
     @Override
-    public List<Font> findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(Long memberId) {
+    public List<Font> findTop4ByMemberIdAndStatusOrderByDownloadAndBookmarkCountDesc(Long memberId, FontStatus status) {
         Pageable topFour = PageRequest.of(0, 4);
-        List<FontEntity> entities = fontJpaRepository.findTop4ByMemberIdOrderByDownloadAndBookmarkCountDesc(memberId, topFour);
+        List<FontEntity> entities = fontJpaRepository.findTopByMemberIdAndStatusOrderByPopularityDesc(memberId, status, topFour);
 
         return entities.stream()
                 .map(FontEntity::toModel)
@@ -98,12 +99,17 @@ public class FontRepositoryImpl implements FontRepository {
     }
 
     @Override
-    public List<Font> findTop3OrderByDownloadAndBookmarkCountDesc() {
+    public List<Font> findTop3ByStatusOrderByDownloadAndBookmarkCountDesc(FontStatus status) {
         Pageable topThree = PageRequest.of(0, 3);
-        List<FontEntity> entities = fontJpaRepository.findTop3OrderByDownloadAndBookmarkCountDesc(topThree);
+        List<FontEntity> entities = fontJpaRepository.findTop3ByStatusOrderByDownloadAndBookmarkCountDesc(status, topThree);
 
         return entities.stream()
                 .map(FontEntity::toModel)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean existsByName(String fontName) {
+        return fontJpaRepository.existsByName(fontName);
     }
 }

@@ -30,11 +30,6 @@ public class FakeCloudStorageService implements CloudStorageService {
     }
 
     @Override
-    public String getFileUrl(FileMetadata fileMetadata, String key) {
-        return key;
-    }
-
-    @Override
     public FileMetadata uploadFontTemplateImage(FileCreate request) {
         String key = UUID.randomUUID().toString();
         AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(
@@ -58,6 +53,16 @@ public class FakeCloudStorageService implements CloudStorageService {
     @Override
     public String getFontPaperUrl(String key) {
         return getFileUrl(FileType.FONT_PAPER, key);
+    }
+
+    @Override
+    public String getWoff2Url(String key) {
+        return getFileUrl(FileType.FONT, key + ".woff2");
+    }
+
+    @Override
+    public String getTtfUrl(String key) {
+        return getFileUrl(FileType.FONT, key + ".ttf");
     }
 
     private AmazonS3ObjectMetadata uploadFile(AmazonS3PutRequest amazonS3PutRequest) {

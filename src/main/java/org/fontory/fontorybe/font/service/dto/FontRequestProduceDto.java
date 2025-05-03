@@ -1,6 +1,5 @@
 package org.fontory.fontorybe.font.service.dto;
 
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -14,17 +13,19 @@ import org.slf4j.MDC;
 public class FontRequestProduceDto {
     private Long memberId;
     private Long fontId;
+    private String fileKey;
     private String fontName;
     private String templateURL;
     private String author;
     private String requestUUID;
 
-    public static FontRequestProduceDto from(Font font, Member member) {
+    public static FontRequestProduceDto from(Font font, Member member, String templateUrl) {
         return FontRequestProduceDto.builder()
                 .memberId(member.getId())
+                .fileKey(font.getKey())
                 .fontId(font.getId())
                 .fontName(font.getName())
-                .templateURL(font.getTemplateURL())
+                .templateURL(templateUrl)
                 .author(member.getNickname())
                 .requestUUID(MDC.get("requestId"))
                 .build();

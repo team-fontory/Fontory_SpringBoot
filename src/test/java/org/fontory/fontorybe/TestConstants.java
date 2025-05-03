@@ -20,6 +20,7 @@ public final class TestConstants {
     public static final String NEW_MEMBER_PROVIDED_ID   = "newMemberProvidedId";
     public static final String NEW_MEMBER_EMAIL         = "newMemberEmail";
 
+    public static final String DEFAULT_PROFILE_KEY      = "defaultProfileImage";
     // Created in SQL
     public static final Gender TEST_MEMBER_GENDER       = Gender.MALE;
     public static final boolean TEST_MEMBER_TERMS        = true;
@@ -40,7 +41,10 @@ public final class TestConstants {
     public static final String UPDATE_MEMBER_PROFILE_KEY= "updateMemberProfileImage";
 
     // -- FileService mock 결과 --
-    public static final String TEST_FILE_NAME           = "testFileName";
+    public static final Long TEST_FILE_ID              = 999L;
+    public static final String TEST_FILE_NAME           = "testFileName.jpg";
+    public static final String TEST_FILE_KEY            = "testFileKey";
+    public static final String TEST_FILE_EXTENSION      = "jpg";
     public static final String TEST_FILE_URL            = "testFileUrl";
     public static final LocalDateTime TEST_FILE_UPLOAD_TIME = LocalDateTime.of(2025, 1, 22, 3, 25);
     public static final long TEST_FILE_SIZE             = 15_232L;
@@ -55,6 +59,8 @@ public final class TestConstants {
     public static final String TEST_CDN_URL             = "https://testcdnurl.com";
     public static final String TEST_PROFILE_BUCKET_NAME   = "testProfileBucketName";
     public static final String TEST_TEMPLATE_BUCKET_NAME  = "testTemplateBucketName";
+    public static final String TEST_FONT_BUCKET_NAME       = "testFontBucketName";
     public static final String TEST_PROFILE_PREFIX        = "testProfilePrefix";
     public static final String TEST_TEMPLATE_PREFIX       = "testTemplatePrefix";
+    public static final String TEST_FONT_PREFIX       = "testFontPrefix";
 }
