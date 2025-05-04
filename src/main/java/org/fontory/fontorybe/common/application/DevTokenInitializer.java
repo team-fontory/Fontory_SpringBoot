@@ -80,35 +80,40 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
         SecretKey fontCreateSecretKey = getSigningKey(props.getFontCreateServerSecretKey());
 
         // 테스트용 Provide와 Member 생성
-        Provide provide = Provide.builder()
-                .providedId(UUID.randomUUID().toString())
-                .email(UUID.randomUUID().toString())
-                .provider(Provider.GOOGLE)
-                .build();
+        Provide provide = provideRepository.findById(1L).orElseGet(
+                () -> {
+                    Provide p = Provide.builder()
+                            .providedId(UUID.randomUUID().toString())
+                            .email(UUID.randomUUID().toString())
+                            .provider(Provider.GOOGLE)
+                            .build();
+                    return provideRepository.save(p);
+                });
 
-        Provide savedProvide = provideRepository.save(provide);
+        Member member = memberRepository.findById(1L).orElseGet(
+                () -> {
+                    Member m = Member.builder()
+                            .gender(Gender.MALE)
+                            .provideId(provide.getId())
+                            .terms(true)
+                            .birth(LocalDate.now())
+                            .nickname("Tester")
+                            .profileImageKey(memberDefaults.getProfileImageKey())
+                            .build();
+                    return memberRepository.save(m);
+                });
 
-        Member member = Member.builder()
-                .gender(Gender.MALE)
-                .provideId(savedProvide.getId())
-                .terms(true)
-                .birth(LocalDate.now())
-                .nickname("Tester")
-                .profileImageKey(memberDefaults.getProfileImageKey())
-                .build();
-
-        Member savedMember = memberRepository.save(member);
-        testMember = savedMember;
+        testMember = member;
 
         fixedTokenForProvide = Jwts.builder()
-                .setSubject(String.valueOf(savedProvide.getId()))
+                .setSubject(String.valueOf(provide.getId()))
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
                 .signWith(provideSecretKey)
                 .compact();
 
         fixedTokenForAuthentication = Jwts.builder()
-                .setSubject(String.valueOf(savedMember.getId()))
+                .setSubject(String.valueOf(member.getId()))
                 .setIssuedAt(issuedAt)
                 .setExpiration(expiration)
                 .signWith(accessSecretKey)
