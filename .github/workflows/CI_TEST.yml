@@ -5,6 +5,7 @@ on:
     branches-ignore:
       - main
       - develop
+      - test
 
 jobs:
   CI:
