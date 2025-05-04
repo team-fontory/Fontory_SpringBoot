@@ -69,6 +69,9 @@ jobs:
           echo "spring.cloud.aws.s3.bucket.font.prefix=${{ secrets.AWS_BUCKET_NAME_FONT_PREFIX }}" >> ./src/main/resources/application-infrastructure.properties
           echo "spring.cloud.aws.sqs.queue-name=${{ secrets.AWS_FONT_CREATE_QUEUE_NAME }}" >> ./src/main/resources/application-infrastructure.properties
           
+          echo "spring.security.user.name=${{ secrets.SPRING_SECURITY_USER_NAME }}" >> ./src/main/resources/application-prod.properties
+          echo "spring.security.user.password=${{ secrets.SPRING_SECURITY_USER_PASSWORD }}" >> ./src/main/resources/application-prod.properties
+          
           echo "discord.webhook.error-url=${{ secrets.DISCORD_WEBHOOK_ERROR_URL }}" >> ./src/main/resources/application-infrastructure.properties
           echo "url.base=https://fontory.co.kr" >> ./src/main/resources/application-infrastructure.properties
 

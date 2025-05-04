@@ -73,7 +73,7 @@ jobs:
 
       - name: Generate application.properties
         run: |
-          echo "api.server.url=${{ secrets.API_URL }}" >> ./src/main/resources/application-prod.properties
+          echo "api.server.url=${{ secrets.TEST_SERVER_API_URL }}" >> ./src/main/resources/application-prod.properties
           echo "commit.hash=${{ steps.slug.outputs.sha7 }}" >> ./src/main/resources/application-prod.properties
           echo "spring.datasource.url=jdbc:mariadb://${{ secrets.DATASOURCE_DB_URL }}:3306/FONTORY?characterEncoding=UTF-8&serverTimezone=Asia/Seoul" >> ./src/main/resources/application-prod.properties
           echo "spring.datasource.username=${{ secrets.DATASOURCE_DB_USERNAME }}" >> ./src/main/resources/application-prod.properties
@@ -104,6 +104,9 @@ jobs:
           echo "spring.cloud.aws.s3.bucket.font.prefix=${{ secrets.AWS_BUCKET_NAME_FONT_PREFIX }}" >> ./src/main/resources/application-infrastructure.properties
           echo "spring.cloud.aws.sqs.queue-name=${{ secrets.AWS_FONT_CREATE_QUEUE_NAME }}" >> ./src/main/resources/application-infrastructure.properties
 
+          echo "spring.security.user.name=${{ secrets.SPRING_SECURITY_USER_NAME }}" >> ./src/main/resources/application-prod.properties
+          echo "spring.security.user.password=${{ secrets.SPRING_SECURITY_USER_PASSWORD }}" >> ./src/main/resources/application-prod.properties
+          
           echo "discord.webhook.error-url=${{ secrets.TEST_SERVER_DISCORD_WEBHOOK_ERROR_URL }}" >> ./src/main/resources/application-infrastructure.properties
           echo "url.base=https://fontory.co.kr" >> ./src/main/resources/application-infrastructure.properties
 
@@ -176,7 +179,7 @@ jobs:
         run: echo "sha7=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_OUTPUT
 
       - name: Executing remote ssh commands
-        uses: appleboy/ssh-action@v0.1.6
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.TEST_SERVER_REMOTE_IP }}
           username: ${{ secrets.TEST_SERVER_REMOTE_USER }}
