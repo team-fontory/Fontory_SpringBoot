@@ -1,5 +1,6 @@
 package org.fontory.fontorybe.member.service;
 
+import com.vane.badwordfiltering.BadWordFiltering;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.file.application.port.FileService;
@@ -11,6 +12,7 @@ import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.controller.port.MemberOnboardService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyJoinedException;
+import org.fontory.fontorybe.member.domain.exception.MemberContainsBadWordException;
 import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
 import org.fontory.fontorybe.member.infrastructure.entity.MemberStatus;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
@@ -26,6 +28,7 @@ public class MemberOnboardServiceImpl implements MemberOnboardService {
     private final MemberLookupService memberLookupService;
     private final MemberCreationService memberCreationService;
     private final FileService fileService;
+    private final BadWordFiltering badWordFiltering;
 
     @Override
     @Transactional
@@ -50,6 +53,14 @@ public class MemberOnboardServiceImpl implements MemberOnboardService {
             throw new MemberDuplicateNameExistsException();
         }
 
+        checkContainsBadWord(initNewMemberInfoRequest.getNickname());
+
         return memberRepository.save(targetMember.initNewMemberInfo(initNewMemberInfoRequest, fileMetadata.getKey()));
+    }
+
+    private void checkContainsBadWord(String nickname) {
+        if (badWordFiltering.blankCheck(nickname)) {
+            throw new MemberContainsBadWordException();
+        }
     }
 }

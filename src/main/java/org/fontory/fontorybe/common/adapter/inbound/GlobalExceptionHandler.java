@@ -23,6 +23,7 @@ import org.fontory.fontorybe.font.domain.exception.FontSQSProduceExcepetion;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyExistException;
 import org.fontory.fontorybe.member.domain.exception.MemberAlreadyJoinedException;
+import org.fontory.fontorybe.member.domain.exception.MemberContainsBadWordException;
 import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.domain.exception.MemberOwnerMismatchException;
@@ -164,7 +165,7 @@ public class GlobalExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(FontContainsBadWordException.class)
+    @ExceptionHandler({FontContainsBadWordException.class, MemberContainsBadWordException.class})
     public BaseErrorResponse containsBadWordException(Exception e) {
         return new BaseErrorResponse(e.getMessage());
     }
