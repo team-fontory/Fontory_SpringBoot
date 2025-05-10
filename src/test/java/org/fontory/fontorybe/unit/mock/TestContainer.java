@@ -1,5 +1,6 @@
 package org.fontory.fontorybe.unit.mock;
 
+import com.vane.badwordfiltering.BadWordFiltering;
 import org.fontory.fontorybe.authentication.adapter.outbound.CookieUtilsImpl;
 import org.fontory.fontorybe.config.S3Config;
 import org.fontory.fontorybe.config.jwt.JwtProperties;
@@ -82,6 +83,7 @@ public class TestContainer {
     public final MemberDefaults memberDefaults;
     public final CookieUtils cookieUtils;
     public final S3Config s3Config;
+    public final BadWordFiltering badWordFiltering;
 
     public TestContainer() {
         props = new JwtProperties(
@@ -104,6 +106,8 @@ public class TestContainer {
         fileRepository = new FakeFileRepository();
 
         tokenStorage = new RedisTokenStorage(fakeRedisTemplate, props);
+
+        badWordFiltering = new BadWordFiltering();
 
         s3Config = new S3Config(
                 TEST_AWS_REGION,
@@ -130,6 +134,7 @@ public class TestContainer {
                 .memberRepository(memberRepository)
                 .provideService(provideService)
                 .jwtTokenProvider(jwtTokenProvider)
+                .badWordFiltering(badWordFiltering)
                 .build();
 
         memberDefaults = new MemberDefaults(
@@ -166,6 +171,7 @@ public class TestContainer {
                 .memberRepository(memberRepository)
                 .memberLookupService(memberLookupService)
                 .memberCreationService(memberCreationService)
+                .badWordFiltering(badWordFiltering)
                 .build();
 
         memberController = MemberController.builder()

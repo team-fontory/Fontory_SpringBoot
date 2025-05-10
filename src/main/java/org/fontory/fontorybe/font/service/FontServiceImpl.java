@@ -1,5 +1,6 @@
 package org.fontory.fontorybe.font.service;
 
+import com.vane.badwordfiltering.BadWordFiltering;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -9,9 +10,18 @@ import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
-import org.fontory.fontorybe.font.controller.dto.*;
+import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
+import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
+import org.fontory.fontorybe.font.controller.dto.FontDownloadResponse;
+import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
+import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
+import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
+import org.fontory.fontorybe.font.controller.dto.FontResponse;
+import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
+import org.fontory.fontorybe.font.controller.dto.FontUpdateResponse;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
+import org.fontory.fontorybe.font.domain.exception.FontContainsBadWordException;
 import org.fontory.fontorybe.font.domain.exception.FontDuplicateNameExistsException;
 import org.fontory.fontorybe.font.domain.exception.FontInvalidStatusException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
@@ -39,6 +49,7 @@ public class FontServiceImpl implements FontService {
     private final MemberLookupService memberLookupService;
     private final FontRequestProducer fontRequestProducer;
     private final CloudStorageService cloudStorageService;
+    private final BadWordFiltering badWordFiltering;
 
     @Override
     @Transactional
@@ -49,6 +60,9 @@ public class FontServiceImpl implements FontService {
         if (isDuplicateNameExists(memberId, fontCreateDTO.getName())) {
             throw new FontDuplicateNameExistsException();
         }
+
+        checkContainsBadWord(fontCreateDTO.getName(), fontCreateDTO.getExample());
+
         FileMetadata fileMetadata = fileService.getOrThrowById(fileDetails.getId());
 
         Font savedFont = fontRepository.save(Font.from(fontCreateDTO, member.getId(), fileMetadata.getKey()));
@@ -82,6 +96,7 @@ public class FontServiceImpl implements FontService {
         Font targetFont = getOrThrowById(fontId);
 
         checkFontOwnership(member.getId(), targetFont.getMemberId());
+        checkContainsBadWord(fontUpdateDTO.getName(), fontUpdateDTO.getExample());
         
         Font updatedFont = fontRepository.save(targetFont.update(fontUpdateDTO));
         String woff2Url = cloudStorageService.getWoff2Url(updatedFont.getKey());
@@ -338,6 +353,15 @@ public class FontServiceImpl implements FontService {
         if (targetFont.getStatus() != FontStatus.DONE) {
             log.warn("Service warning: Font status is not DONE: targetFontId={}", targetFont.getId());
             throw new FontInvalidStatusException();
+        }
+    }
+
+    private void checkContainsBadWord(String name, String example) {
+        log.debug("Service detail: Checking bad word: name={}, example={}", name, example);
+
+        if (badWordFiltering.blankCheck(name) || badWordFiltering.blankCheck(example)) {
+            log.warn("Service warning: Font contains bad word: name={}, example={}", name, example);
+            throw new FontContainsBadWordException();
         }
     }
 }
