@@ -4,6 +4,8 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
+import org.fontory.fontorybe.authentication.domain.exception.InvalidRefreshTokenException;
+import org.fontory.fontorybe.authentication.domain.exception.TokenNotFoundException;
 import org.fontory.fontorybe.bookmark.domain.exception.BookmarkAlreadyException;
 import org.fontory.fontorybe.bookmark.domain.exception.BookmarkNotFoundException;
 import org.fontory.fontorybe.common.domain.BaseErrorResponse;
@@ -12,14 +14,18 @@ import org.fontory.fontorybe.file.adapter.inbound.exception.UnsupportedFileTypeE
 import org.fontory.fontorybe.file.domain.exception.FileNotFoundException;
 import org.fontory.fontorybe.file.domain.exception.InvalidMultipartRequestException;
 import org.fontory.fontorybe.file.domain.exception.SingleFileRequiredException;
+import org.fontory.fontorybe.font.domain.exception.FontContainsBadWordException;
 import org.fontory.fontorybe.font.domain.exception.FontDuplicateNameExistsException;
 import org.fontory.fontorybe.font.domain.exception.FontInvalidStatusException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
 import org.fontory.fontorybe.font.domain.exception.FontOwnerMismatchException;
 import org.fontory.fontorybe.font.domain.exception.FontSQSProduceExcepetion;
-import org.fontory.fontorybe.member.domain.exception.*;
-import org.fontory.fontorybe.authentication.domain.exception.InvalidRefreshTokenException;
-import org.fontory.fontorybe.authentication.domain.exception.TokenNotFoundException;
+import org.fontory.fontorybe.member.domain.exception.MemberAlreadyDisabledException;
+import org.fontory.fontorybe.member.domain.exception.MemberAlreadyExistException;
+import org.fontory.fontorybe.member.domain.exception.MemberAlreadyJoinedException;
+import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsException;
+import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
+import org.fontory.fontorybe.member.domain.exception.MemberOwnerMismatchException;
 import org.fontory.fontorybe.provide.domain.exception.ProvideNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -154,6 +160,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(FileNotFoundException.class)
     public BaseErrorResponse fileNotFoundException(FileNotFoundException e) {
+        return new BaseErrorResponse(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(FontContainsBadWordException.class)
+    public BaseErrorResponse containsBadWordException(Exception e) {
         return new BaseErrorResponse(e.getMessage());
     }
 }
