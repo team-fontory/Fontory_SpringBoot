@@ -298,13 +298,13 @@ public class FontController {
     @PostMapping("/verify-name")
     public ResponseEntity<?> verifyFontName(
             @Login UserPrincipal userPrincipal,
-            @RequestBody FontCreateDTO fontCreateDTO
+            @RequestParam String fontName
     ) {
         Long memberId = userPrincipal.getId();
-        log.info("Request received: Check if font name is duplicate: {}", fontCreateDTO.getName());
+        log.info("Request received: Check if font name is duplicate: {}", fontName);
 
-        Boolean duplicateNameExist = fontService.isDuplicateNameExists(memberId, fontCreateDTO.getName());
-        log.info("Response sent: Font name {} is {}", fontCreateDTO.getName(), duplicateNameExist ? "duplicate" : "available");
+        Boolean duplicateNameExist = fontService.isDuplicateNameExists(memberId, fontName);
+        log.info("Response sent: Font name {} is {}", fontName, duplicateNameExist ? "duplicate" : "available");
 
         return ResponseEntity
                 .status(HttpStatus.OK)
