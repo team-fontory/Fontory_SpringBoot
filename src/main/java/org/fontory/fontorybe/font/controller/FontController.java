@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -73,7 +74,7 @@ public class FontController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> addFont(
             @Login UserPrincipal userPrincipal,
-            @RequestPart("fontCreateDTO") FontCreateDTO fontCreateDTO,
+            @RequestPart("fontCreateDTO") @Valid FontCreateDTO fontCreateDTO,
             @SingleFileUpload @RequestPart("file") List<MultipartFile> files
     ) {
         Long memberId = userPrincipal.getId();

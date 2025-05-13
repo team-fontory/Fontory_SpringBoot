@@ -32,6 +32,8 @@ import org.fontory.fontorybe.font.service.port.FontRepository;
 import org.fontory.fontorybe.font.service.port.FontRequestProducer;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.sms.application.port.PhoneNumberStorage;
+import org.fontory.fontorybe.sms.application.port.SmsService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -50,6 +52,8 @@ public class FontServiceImpl implements FontService {
     private final FontRequestProducer fontRequestProducer;
     private final CloudStorageService cloudStorageService;
     private final BadWordFiltering badWordFiltering;
+    private final SmsService smsService;
+    private final PhoneNumberStorage phoneNumberStorage;
 
     @Override
     @Transactional
@@ -68,6 +72,11 @@ public class FontServiceImpl implements FontService {
         Font savedFont = fontRepository.save(Font.from(fontCreateDTO, member.getId(), fileMetadata.getKey()));
         String fontPaperUrl = cloudStorageService.getFontPaperUrl(savedFont.getKey());
         fontRequestProducer.sendFontRequest(FontRequestProduceDto.from(savedFont, member, fontPaperUrl));
+
+        if (fontCreateDTO.getPhoneNumber() != null && !fontCreateDTO.getPhoneNumber().isBlank()) {
+            phoneNumberStorage.savePhoneNumber(savedFont, fontCreateDTO.getPhoneNumber());
+            smsService.sendFontCreationNotification(fontCreateDTO.getPhoneNumber(), fontCreateDTO.getName());
+        }
 
         log.info("Service completed: Font created with ID: {} and Font template image uploaded successfully", savedFont.getId());
         return savedFont;
@@ -309,6 +318,16 @@ public class FontServiceImpl implements FontService {
 
         Font updatedFont = fontRepository.save(targetFont.updateProgress(fontProgressUpdateDTO, fontId));
         String woff2Url = cloudStorageService.getWoff2Url(updatedFont.getKey());
+
+        if (fontProgressUpdateDTO.getStatus() == FontStatus.DONE) {
+            String phoneNumber = phoneNumberStorage.getPhoneNumber(targetFont);
+
+            if (phoneNumber != null && !phoneNumber.isBlank()) {
+                smsService.sendFontProgressNotification(phoneNumber, updatedFont.getName());
+                phoneNumberStorage.removePhoneNumber(targetFont);
+            }
+        }
+
         log.info("Service completed: Font ID: {} updated successfully", fontId);
         return FontUpdateResponse.from(updatedFont, woff2Url);
     }
