@@ -109,6 +109,11 @@ jobs:
           
           echo "discord.webhook.error-url=${{ secrets.TEST_SERVER_DISCORD_WEBHOOK_ERROR_URL }}" >> ./src/main/resources/application-infrastructure.properties
           echo "url.base=https://fontory.co.kr" >> ./src/main/resources/application-infrastructure.properties
+          
+          echo "coolsms.api-key=${{ secrets.COOLSMS_API_KEY }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "coolsms.api-secret=${{ secrets.COOLSMS_API_SECRET }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "coolsms.phone-number=${{ secrets.COOLSMS_PHONE_NUMBER }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "coolsms.base-url=${{ secrets.COOLSMS_BASE_URL }}" >> ./src/main/resources/application-infrastructure.properties
 
       - name: Build with Gradle Wrapper
 #        run: ./gradlew test -i
