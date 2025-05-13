@@ -19,17 +19,17 @@ public class SmsServiceImpl implements SmsService {
 
     private final DefaultMessageService messageService;
 
-    private static final String FONT_CREATION_MESSAGE = "[Fontory]\n폰트가 제작중입니다.";
-    private static final String FONT_PROGRESS_MESSAGE = "[Fontory]\n폰트 제작이 완료되었습니다.";
+    private static final String FONT_CREATION_MESSAGE_FORMAT = "[Fontory]\n\"%s\" 폰트가 제작중입니다.";
+    private static final String FONT_PROGRESS_MESSAGE_FORMAT = "[Fontory]\n\"%s\" 폰트 제작이 완료되었습니다.";
 
     @Override
-    public void sendFontCreationNotification(String to) {
-        sendSms(to, FONT_CREATION_MESSAGE);
+    public void sendFontCreationNotification(String to, String fontName) {
+        sendSms(to, String.format(FONT_CREATION_MESSAGE_FORMAT, fontName));
     }
 
     @Override
-    public void sendFontProgressNotification(String to) {
-        sendSms(to, FONT_PROGRESS_MESSAGE);
+    public void sendFontProgressNotification(String to, String fontName) {
+        sendSms(to, String.format(FONT_PROGRESS_MESSAGE_FORMAT, fontName));
     }
 
     private void sendSms(String to, String text) {

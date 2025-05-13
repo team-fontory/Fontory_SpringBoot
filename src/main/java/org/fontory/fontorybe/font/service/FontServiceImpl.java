@@ -75,7 +75,7 @@ public class FontServiceImpl implements FontService {
 
         if (fontCreateDTO.getPhoneNumber() != null && !fontCreateDTO.getPhoneNumber().isBlank()) {
             phoneNumberStorage.savePhoneNumber(savedFont, fontCreateDTO.getPhoneNumber());
-            smsService.sendFontCreationNotification(fontCreateDTO.getPhoneNumber());
+            smsService.sendFontCreationNotification(fontCreateDTO.getPhoneNumber(), fontCreateDTO.getName());
         }
 
         log.info("Service completed: Font created with ID: {} and Font template image uploaded successfully", savedFont.getId());
@@ -323,7 +323,7 @@ public class FontServiceImpl implements FontService {
             String phoneNumber = phoneNumberStorage.getPhoneNumber(targetFont);
 
             if (phoneNumber != null && !phoneNumber.isBlank()) {
-                smsService.sendFontProgressNotification(phoneNumber);
+                smsService.sendFontProgressNotification(phoneNumber, updatedFont.getName());
                 phoneNumberStorage.removePhoneNumber(targetFont);
             }
         }
