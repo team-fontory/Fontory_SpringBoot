@@ -4,6 +4,7 @@ import static org.fontory.fontorybe.authentication.application.AuthConstants.ACC
 import static org.fontory.fontorybe.authentication.application.AuthConstants.REFRESH_TOKEN_COOKIE_NAME;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import lombok.NonNull;
 import org.fontory.fontorybe.authentication.adapter.outbound.exception.JwtAuthenticationException;
@@ -40,12 +41,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         log.info("JwtAuthenticationFilter: {} {}", req.getMethod(), req.getRequestURI());
 
-        String accessToken  = cookieUtils
+        String accessToken = cookieUtils
                 .extractTokenFromCookieInRequest(req, ACCESS_TOKEN_COOKIE_NAME)
+                .or(() -> Optional.ofNullable(req.getHeader("Authorization"))
+                        .map(h -> h.replaceFirst("^Bearer\\s+", "")))
                 .orElse(null);
         String refreshToken = cookieUtils
                 .extractTokenFromCookieInRequest(req, REFRESH_TOKEN_COOKIE_NAME)
                 .orElse(null);
+        log.info("Access token: {}, Refresh token: {}", accessToken, refreshToken);
 
         if (accessToken != null) {
             log.debug("Access token found - attempting authentication");
