@@ -11,11 +11,11 @@ public class FontDownloadResponse {
     private String name;
     private String ttf;
 
-    public static FontDownloadResponse from(Font font) {
+    public static FontDownloadResponse from(Font font, String url) {
         return FontDownloadResponse.builder()
                 .id(font.getId())
                 .name(font.getName())
-                .ttf(font.getTtf())
+                .ttf(url)
                 .build();
     }
 }

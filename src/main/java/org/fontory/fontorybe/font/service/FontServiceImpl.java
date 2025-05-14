@@ -1,11 +1,15 @@
 package org.fontory.fontorybe.font.service;
 
+import com.vane.badwordfiltering.BadWordFiltering;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.bookmark.service.port.BookmarkRepository;
-import org.fontory.fontorybe.file.domain.FileDetails;
+import org.fontory.fontorybe.file.application.port.CloudStorageService;
+import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileMetadata;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDownloadResponse;
@@ -14,8 +18,10 @@ import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
+import org.fontory.fontorybe.font.controller.dto.FontUpdateResponse;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
+import org.fontory.fontorybe.font.domain.exception.FontContainsBadWordException;
 import org.fontory.fontorybe.font.domain.exception.FontDuplicateNameExistsException;
 import org.fontory.fontorybe.font.domain.exception.FontInvalidStatusException;
 import org.fontory.fontorybe.font.domain.exception.FontNotFoundException;
@@ -24,8 +30,10 @@ import org.fontory.fontorybe.font.infrastructure.entity.FontStatus;
 import org.fontory.fontorybe.font.service.dto.FontRequestProduceDto;
 import org.fontory.fontorybe.font.service.port.FontRepository;
 import org.fontory.fontorybe.font.service.port.FontRequestProducer;
-import org.fontory.fontorybe.member.controller.port.MemberService;
+import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.sms.application.port.PhoneNumberStorage;
+import org.fontory.fontorybe.sms.application.port.SmsService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -37,25 +45,38 @@ import org.springframework.util.StringUtils;
 @Service
 @RequiredArgsConstructor
 public class FontServiceImpl implements FontService {
+    private final FileService fileService;
     private final FontRepository fontRepository;
     private final BookmarkRepository bookmarkRepository;
-
-    private final MemberService memberService;
-
+    private final MemberLookupService memberLookupService;
     private final FontRequestProducer fontRequestProducer;
+    private final CloudStorageService cloudStorageService;
+    private final BadWordFiltering badWordFiltering;
+    private final SmsService smsService;
+    private final PhoneNumberStorage phoneNumberStorage;
 
     @Override
     @Transactional
-    public Font create(Long memberId, FontCreateDTO fontCreateDTO, FileDetails fileDetails) {
+    public Font create(Long memberId, FontCreateDTO fontCreateDTO, FileUploadResult fileDetails) {
         log.info("Service executing: Creating font for member ID: {}, font name: {}", memberId, fontCreateDTO.getName());
-        Member member = memberService.getOrThrowById(memberId);
+        Member member = memberLookupService.getOrThrowById(memberId);
 
         if (isDuplicateNameExists(memberId, fontCreateDTO.getName())) {
             throw new FontDuplicateNameExistsException();
         }
 
-        Font savedFont = fontRepository.save(Font.from(fontCreateDTO, member.getId(), fileDetails));
-        fontRequestProducer.sendFontRequest(FontRequestProduceDto.from(savedFont, member));
+        checkContainsBadWord(fontCreateDTO.getName(), fontCreateDTO.getExample());
+
+        FileMetadata fileMetadata = fileService.getOrThrowById(fileDetails.getId());
+
+        Font savedFont = fontRepository.save(Font.from(fontCreateDTO, member.getId(), fileMetadata.getKey()));
+        String fontPaperUrl = cloudStorageService.getFontPaperUrl(savedFont.getKey());
+        fontRequestProducer.sendFontRequest(FontRequestProduceDto.from(savedFont, member, fontPaperUrl));
+
+        if (fontCreateDTO.getPhoneNumber() != null && !fontCreateDTO.getPhoneNumber().isBlank()) {
+            phoneNumberStorage.savePhoneNumber(savedFont, fontCreateDTO.getPhoneNumber());
+            smsService.sendFontCreationNotification(fontCreateDTO.getPhoneNumber(), fontCreateDTO.getName());
+        }
 
         log.info("Service completed: Font created with ID: {} and Font template image uploaded successfully", savedFont.getId());
         return savedFont;
@@ -78,16 +99,19 @@ public class FontServiceImpl implements FontService {
 
     @Override
     @Transactional
-    public Font update(Long memberId, Long fontId, FontUpdateDTO fontUpdateDTO) {
+    public FontUpdateResponse update(Long memberId, Long fontId, FontUpdateDTO fontUpdateDTO) {
         log.info("Service executing: Updating font ID: {} for member ID: {}", fontId, memberId);
-        Member member = memberService.getOrThrowById(memberId);
+        Member member = memberLookupService.getOrThrowById(memberId);
         Font targetFont = getOrThrowById(fontId);
 
         checkFontOwnership(member.getId(), targetFont.getMemberId());
+        checkContainsBadWord(fontUpdateDTO.getName(), fontUpdateDTO.getExample());
         
         Font updatedFont = fontRepository.save(targetFont.update(fontUpdateDTO));
+        String woff2Url = cloudStorageService.getWoff2Url(updatedFont.getKey());
+
         log.info("Service completed: Font ID: {} updated successfully", fontId);
-        return updatedFont;
+        return FontUpdateResponse.from(updatedFont, woff2Url);
     }
 
     @Override
@@ -113,8 +137,9 @@ public class FontServiceImpl implements FontService {
 
         Page<FontResponse> result = fontPage.map(font -> {
             boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, font.getId());
-            Member writer = memberService.getOrThrowById(font.getMemberId());
-            return FontResponse.from(font, bookmarked, writer.getNickname());
+            Member writer = memberLookupService.getOrThrowById(font.getMemberId());
+            String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
+            return FontResponse.from(font, bookmarked, writer.getNickname(), woff2Url);
         });
 
         
@@ -129,14 +154,14 @@ public class FontServiceImpl implements FontService {
         log.info("Service executing: Fetching font details for font ID: {}", fontId);
         Font targetFont = getOrThrowById(fontId);
         checkFontStatusIsDone(targetFont);
-        Member writer = memberService.getOrThrowById(targetFont.getMemberId());
+        Member writer = memberLookupService.getOrThrowById(targetFont.getMemberId());
 
         boolean isBookmarked = false;
         if (memberId != null) {
             isBookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, fontId);
         }
-
-        FontResponse fontResponse = FontResponse.from(targetFont, isBookmarked, writer.getNickname());
+        String woff2Url = cloudStorageService.getWoff2Url(targetFont.getKey());
+        FontResponse fontResponse = FontResponse.from(targetFont, isBookmarked, writer.getNickname(), woff2Url);
 
         log.info("Service completed: Retrieved font details for font ID: {} with name: {}", 
                 fontId, targetFont.getName());
@@ -148,7 +173,7 @@ public class FontServiceImpl implements FontService {
     @Transactional
     public FontDeleteResponse delete(Long memberId, Long fontId) {
         log.info("Service executing: Deleting font ID: {} for member ID: {}", fontId, memberId);
-        Member member = memberService.getOrThrowById(memberId);
+        Member member = memberLookupService.getOrThrowById(memberId);
         Font targetFont = getOrThrowById(fontId);
 
         checkFontStatusIsDone(targetFont);
@@ -187,14 +212,16 @@ public class FontServiceImpl implements FontService {
         Page<FontPageResponse> result;
         if (memberId == null) {
             result = fontPage.map(font -> {
-                Member member = memberService.getOrThrowById(font.getMemberId());
-                return FontPageResponse.from(font, member.getNickname(), false);
+                Member member = memberLookupService.getOrThrowById(font.getMemberId());
+                String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
+                return FontPageResponse.from(font, member.getNickname(), false, woff2Url);
             });
         } else {
             result = fontPage.map(font -> {
-                Member member = memberService.getOrThrowById(font.getMemberId());
+                Member member = memberLookupService.getOrThrowById(font.getMemberId());
                 boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, font.getId());
-                return FontPageResponse.from(font, member.getNickname(), bookmarked);
+                String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
+                return FontPageResponse.from(font, member.getNickname(), bookmarked, woff2Url);
             });
         }
         
@@ -211,7 +238,7 @@ public class FontServiceImpl implements FontService {
 
         checkFontStatusIsDone(font);
 
-        Member member = memberService.getOrThrowById(font.getMemberId());
+        Member member = memberLookupService.getOrThrowById(font.getMemberId());
 
         List<Font> fonts = fontRepository.findTop3ByMemberIdAndIdNotAndStatusOrderByCreatedAtDesc(member.getId(), fontId, FontStatus.DONE);
         log.debug("Service detail: Found {} other fonts from the same creator", fonts.size());
@@ -219,8 +246,9 @@ public class FontServiceImpl implements FontService {
         List<FontResponse> result = fonts.stream()
                 .map(f -> {
                     boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), f.getId());
-                    Member writer = memberService.getOrThrowById(f.getMemberId());
-                    return FontResponse.from(f, bookmarked, writer.getNickname());
+                    Member writer = memberLookupService.getOrThrowById(f.getMemberId());
+                    String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
+                    return FontResponse.from(f, bookmarked, writer.getNickname(), woff2Url);
                 })
                 .collect(Collectors.toList());
                 
@@ -232,16 +260,17 @@ public class FontServiceImpl implements FontService {
     @Transactional(readOnly = true)
     public List<FontResponse> getMyPopularFonts(Long memberId) {
         log.info("Service executing: Fetching popular fonts for member ID: {}", memberId);
-        Member member = memberService.getOrThrowById(memberId);
+        Member member = memberLookupService.getOrThrowById(memberId);
 
         List<Font> fonts = fontRepository.findTop4ByMemberIdAndStatusOrderByDownloadAndBookmarkCountDesc(memberId, FontStatus.DONE);
         log.debug("Service detail: Found {} popular fonts for member ID: {}", fonts.size(), memberId);
 
         List<FontResponse> result = fonts.stream()
-                .map(f -> {
-                    boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), f.getId());
-                    Member writer = memberService.getOrThrowById(f.getMemberId());
-                    return FontResponse.from(f, bookmarked, writer.getNickname());
+                .map(font -> {
+                    boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), font.getId());
+                    Member writer = memberLookupService.getOrThrowById(font.getMemberId());
+                    String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
+                    return FontResponse.from(font, bookmarked, writer.getNickname(), woff2Url);
                 })
                 .collect(Collectors.toList());
                 
@@ -260,17 +289,19 @@ public class FontServiceImpl implements FontService {
         if (memberId == null) {
             result = fonts.stream()
                     .map(font -> {
-                        Member writer = memberService.getOrThrowById(font.getMemberId());
-                        return FontResponse.from(font, false, writer.getNickname());
+                        Member writer = memberLookupService.getOrThrowById(font.getMemberId());
+                        String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
+                        return FontResponse.from(font, false, writer.getNickname(), woff2Url);
                     })
                     .collect(Collectors.toList());
         } else {
-            Member member = memberService.getOrThrowById(memberId);
+            Member member = memberLookupService.getOrThrowById(memberId);
             result = fonts.stream()
                     .map(font -> {
                         boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), font.getId());
-                        Member writer = memberService.getOrThrowById(font.getMemberId());
-                        return FontResponse.from(font, bookmarked, writer.getNickname());
+                        Member writer = memberLookupService.getOrThrowById(font.getMemberId());
+                        String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
+                        return FontResponse.from(font, bookmarked, writer.getNickname(), woff2Url);
                     })
                     .collect(Collectors.toList());
         }
@@ -281,13 +312,24 @@ public class FontServiceImpl implements FontService {
 
     @Override
     @Transactional
-    public Font updateProgress(Long fontId, FontProgressUpdateDTO fontProgressUpdateDTO) {
+    public FontUpdateResponse updateProgress(Long fontId, FontProgressUpdateDTO fontProgressUpdateDTO) {
         log.info("Service executing: Updating font ID: {}", fontId);
         Font targetFont = getOrThrowById(fontId);
 
         Font updatedFont = fontRepository.save(targetFont.updateProgress(fontProgressUpdateDTO, fontId));
+        String woff2Url = cloudStorageService.getWoff2Url(updatedFont.getKey());
+
+        if (fontProgressUpdateDTO.getStatus() == FontStatus.DONE) {
+            String phoneNumber = phoneNumberStorage.getPhoneNumber(targetFont);
+
+            if (phoneNumber != null && !phoneNumber.isBlank()) {
+                smsService.sendFontProgressNotification(phoneNumber, updatedFont.getName());
+                phoneNumberStorage.removePhoneNumber(targetFont);
+            }
+        }
+
         log.info("Service completed: Font ID: {} updated successfully", fontId);
-        return updatedFont;
+        return FontUpdateResponse.from(updatedFont, woff2Url);
     }
 
     @Override
@@ -299,18 +341,17 @@ public class FontServiceImpl implements FontService {
         checkFontStatusIsDone(targetFont);
 
         targetFont.increaseDownloadCount();
-
+        String ttfUrl = cloudStorageService.getTtfUrl(targetFont.getKey());
         fontRepository.save(targetFont);
 
         log.info("Service completed: Font ID: {} download successfully", fontId);
 
-        return FontDownloadResponse.from(targetFont);
+        return FontDownloadResponse.from(targetFont, ttfUrl);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Boolean isDuplicateNameExists(Long memberId, String fontName) {
-        Member member = memberService.getOrThrowById(memberId);
         return fontRepository.existsByName(fontName);
     }
 
@@ -331,6 +372,15 @@ public class FontServiceImpl implements FontService {
         if (targetFont.getStatus() != FontStatus.DONE) {
             log.warn("Service warning: Font status is not DONE: targetFontId={}", targetFont.getId());
             throw new FontInvalidStatusException();
+        }
+    }
+
+    private void checkContainsBadWord(String name, String example) {
+        log.debug("Service detail: Checking bad word: name={}, example={}", name, example);
+
+        if (badWordFiltering.blankCheck(name) || badWordFiltering.blankCheck(example)) {
+            log.warn("Service warning: Font contains bad word: name={}, example={}", name, example);
+            throw new FontContainsBadWordException();
         }
     }
 }

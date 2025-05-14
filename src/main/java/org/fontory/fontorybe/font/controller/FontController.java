@@ -1,28 +1,22 @@
 package org.fontory.fontorybe.font.controller;
 
-import static org.fontory.fontorybe.file.validator.MultipartFileValidator.extractSingleMultipartFile;
+import static org.fontory.fontorybe.file.adapter.inbound.validator.MultipartFileValidator.extractSingleMultipartFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.fontory.fontorybe.authentication.adapter.inbound.Login;
+import org.fontory.fontorybe.authentication.adapter.inbound.annotation.Login;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
-import org.fontory.fontorybe.file.adapter.inbound.FileRequestMapper;
 import org.fontory.fontorybe.file.adapter.inbound.dto.FileUploadResponse;
-import org.fontory.fontorybe.file.application.FileService;
-import org.fontory.fontorybe.file.domain.FileCreate;
-import org.fontory.fontorybe.file.domain.FileDetails;
+import org.fontory.fontorybe.file.application.annotation.SingleFileUpload;
+import org.fontory.fontorybe.file.application.port.FileService;
+import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontCreateResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
@@ -62,8 +56,7 @@ public class FontController {
     private final FontService fontService;
     private final FileService fileService;
     private final ObjectMapper objectMapper;
-    private final FileRequestMapper fileRequestMapper;
-    
+
     /**
      * Convert an object to JSON string for logging
      * If conversion fails, falls back to toString()
@@ -81,22 +74,10 @@ public class FontController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> addFont(
             @Login UserPrincipal userPrincipal,
-            @RequestPart("fontCreateDTO") FontCreateDTO fontCreateDTO,
-                @Parameter(
-                        description = "업로드할 파일. 정확히 1개의 파일만 제공되어야 합니다.",
-                        required = true,
-                        content = @Content(
-                                mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-                                array = @ArraySchema(
-                                        schema = @Schema(type = "string", format = "binary"),
-                                        maxItems = 1
-                                )
-                        )
-                )
-            @RequestPart("file") List<MultipartFile> files
+            @RequestPart("fontCreateDTO") @Valid FontCreateDTO fontCreateDTO,
+            @SingleFileUpload @RequestPart("file") List<MultipartFile> files
     ) {
         Long memberId = userPrincipal.getId();
-
         MultipartFile file = extractSingleMultipartFile(files);
 
         log.info("Request received: Create font and Upload font template image for member ID: {}, request: {}",
@@ -104,15 +85,13 @@ public class FontController {
 
         logFileDetails(file, "Font template image upload");
 
-        FileCreate fileCreate = fileRequestMapper.toFontTemplateImageFileCreate(file, memberId);
-        FileDetails fileDetails = fileService.uploadFontTemplateImage(fileCreate);
-        FileUploadResponse fileUploadResponse = FileUploadResponse.from(fileDetails);
-
+        FileUploadResult fileDetails = fileService.uploadFontTemplateImage(file, memberId);
         Font createdFont = fontService.create(memberId, fontCreateDTO, fileDetails);
 
         log.info("Response sent: Font created with ID: {}, name: {} and Font template image uploaded successfully, url: {}, fileName: {}, size: {} bytes",
                 createdFont.getId(), createdFont.getName(), fileDetails.getFileUrl(), fileDetails.getFileName(), fileDetails.getSize());
 
+        FileUploadResponse fileUploadResponse = FileUploadResponse.from(fileDetails);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(FontCreateResponse.from(createdFont, fileUploadResponse));
@@ -153,13 +132,13 @@ public class FontController {
         log.info("Request received: Update font ID: {} by member ID: {}, request: {}", 
                 fontId, memberId, toJson(fontUpdateDTO));
 
-        Font updatedFont = fontService.update(memberId, fontId, fontUpdateDTO);
-        log.info("Response sent: Font ID: {} updated successfully, name: {}", 
-                updatedFont.getId(), updatedFont.getName());
+        FontUpdateResponse fontUpdateResponse = fontService.update(memberId, fontId, fontUpdateDTO);
+        log.info("Response sent: Font ID: {} updated successfully, name: {}",
+                fontUpdateResponse.getId(), fontUpdateResponse.getName());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(FontUpdateResponse.from(updatedFont));
+                .body(fontUpdateResponse);
     }
 
     @Operation(summary = "내가 제작한 폰트")
@@ -287,13 +266,13 @@ public class FontController {
         log.info("Request received: Update font progress ID: {}, request: {}",
                 fontId, toJson(fontProgressUpdateDTO));
 
-        Font updatedFont = fontService.updateProgress(fontId, fontProgressUpdateDTO);
+        FontUpdateResponse fontUpdateResponse = fontService.updateProgress(fontId, fontProgressUpdateDTO);
         log.info("Response sent: Font ID: {} updated successfully, name: {}",
-                updatedFont.getId(), updatedFont.getName());
+                fontUpdateResponse.getId(), fontUpdateResponse.getName());
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(FontUpdateResponse.from(updatedFont));
+                .body(fontUpdateResponse);
     }
 
     @Operation(summary = "폰트 다운로드")
@@ -320,13 +299,13 @@ public class FontController {
     @PostMapping("/verify-name")
     public ResponseEntity<?> verifyFontName(
             @Login UserPrincipal userPrincipal,
-            @RequestBody FontCreateDTO fontCreateDTO
+            @RequestParam String fontName
     ) {
         Long memberId = userPrincipal.getId();
-        log.info("Request received: Check if font name is duplicate: {}", fontCreateDTO.getName());
+        log.info("Request received: Check if font name is duplicate: {}", fontName);
 
-        Boolean duplicateNameExist = fontService.isDuplicateNameExists(memberId, fontCreateDTO.getName());
-        log.info("Response sent: Font name {} is {}", fontCreateDTO.getName(), duplicateNameExist ? "duplicate" : "available");
+        Boolean duplicateNameExist = fontService.isDuplicateNameExists(memberId, fontName);
+        log.info("Response sent: Font name {} is {}", fontName, duplicateNameExist ? "duplicate" : "available");
 
         return ResponseEntity
                 .status(HttpStatus.OK)

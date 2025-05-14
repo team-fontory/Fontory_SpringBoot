@@ -10,4 +10,6 @@ public class FileCreate {
     private final String fileName;
     private final FileType fileType;
     private final MultipartFile file;
+    private final String extension;
+    private final Long uploaderId;
 }

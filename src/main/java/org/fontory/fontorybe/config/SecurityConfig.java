@@ -4,22 +4,29 @@ import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2FailureHandler;
 import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2SuccessHandler;
 import org.fontory.fontorybe.authentication.adapter.inbound.CustomOauth2UserService;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtAuthenticationFilter;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtFontCreateServerFilter;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtOnlyOAuth2RequireFilter;
-import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProvider;
+import org.fontory.fontorybe.authentication.adapter.inbound.security.JwtAuthenticationFilter;
+import org.fontory.fontorybe.authentication.adapter.inbound.security.JwtFontCreateServerFilter;
+import org.fontory.fontorybe.authentication.application.AuthService;
+import org.fontory.fontorybe.authentication.application.port.CookieUtils;
+import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
+import org.fontory.fontorybe.config.jwt.JwtProperties;
+import org.fontory.fontorybe.config.security.RestAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.CsrfConfigurer;
 import org.springframework.security.config.annotation.web.configurers.FormLoginConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HttpBasicConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
@@ -33,18 +40,45 @@ public class SecurityConfig {
     private final CustomOauth2UserService oauth2UserService;
     private final CustomOauth2SuccessHandler oauth2SuccessHandler;
     private final CustomOauth2FailureHandler oauth2FailureHandler;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final CorsConfigurationSource corsConfigurationSource;
-    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
-    // 1. Chain for OAUTH2
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final CorsConfigurationSource corsConfigurationSource;
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProperties jwtProperties;
+    private final AuthService authService;
+    private final CookieUtils cookieUtils;
+
+    /**
+     * 0. Chain for Swagger Oauth2
+     */
+    @Bean
+    @Order(0)
+    public SecurityFilterChain swaggerSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher(new OrRequestMatcher(
+                        new AntPathRequestMatcher("/swagger-ui/**"),
+                        new AntPathRequestMatcher("/swagger-ui.html"),
+                        new AntPathRequestMatcher("/v3/api-docs/**"),
+                        new AntPathRequestMatcher("/swagger-resources/**"),
+                        new AntPathRequestMatcher("/webjars/**")
+                ))
+                .csrf(CsrfConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth.anyRequest().authenticated())
+                .httpBasic(Customizer.withDefaults());
+        return http.build();
+    }
+
+    /**
+     * 1. Chain for OAUTH2
+     */
     @Bean
     @Order(1)
     public SecurityFilterChain oauth2SecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .securityMatcher( new OrRequestMatcher(
-                                new AntPathRequestMatcher("/oauth2/**"),
-                                new AntPathRequestMatcher("/login/oauth2/**")
+                .securityMatcher(new OrRequestMatcher(
+                        new AntPathRequestMatcher("/oauth2/**"),
+                        new AntPathRequestMatcher("/login/oauth2/**")
                 ))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(CsrfConfigurer::disable)
@@ -65,63 +99,41 @@ public class SecurityConfig {
      */
     @Bean
     @Order(2)
-    public SecurityFilterChain FontCreateServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain fontCreateServerSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher(new OrRequestMatcher(
                         new AntPathRequestMatcher("/fonts/progress/{fontId:[\\d]+}", HttpMethod.PATCH.name())
                 ))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .sessionManagement(AbstractHttpConfigurer::disable)
                 .csrf(CsrfConfigurer::disable)
                 .httpBasic(HttpBasicConfigurer::disable)
                 .formLogin(FormLoginConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .addFilterBefore(new JwtFontCreateServerFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtFontCreateServerFilter(jwtTokenProvider, jwtProperties), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
     /**
-     * 3. jwtOnlySecurityFilterChain
-     * 회원가입전 OAUTH2를 발급한 임시 토큰을 검증하기 위한 JwtOnlyProvideRequireFilter만 적용되는 컨트롤러
-     * 회원가입전 사진업로드(POST, "/files/profile-image"), 회원가입(POST, "/member")
-     */
-    @Bean
-    @Order(3)
-    public SecurityFilterChain jwtOnlySecurityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .securityMatcher(new OrRequestMatcher(
-                        new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
-                        new AntPathRequestMatcher("/member", HttpMethod.POST.name())
-                ))
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
-                .csrf(CsrfConfigurer::disable)
-                .httpBasic(HttpBasicConfigurer::disable)
-                .formLogin(FormLoginConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
-                .addFilterBefore(new JwtOnlyOAuth2RequireFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
-                .build();
-    }
-
-    // 3. 기본 체인: 그 외의 모든 요청에 대해 JWT 인증 필터 적용
-
-    /**
-     * 4. defaultSecurityFilterChain
+     * 3. defaultSecurityFilterChain
      * 그 외의 모든 요청에 대해 JWT 인증 필터 적용
      */
     @Bean
-    @Order(4)
+    @Order(3)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .securityMatcher(new NegatedRequestMatcher(
+                .securityMatcher(
                         new OrRequestMatcher(
-                                new AntPathRequestMatcher("/files/profile-image", HttpMethod.POST.name()),
-                                new AntPathRequestMatcher("/member", HttpMethod.POST.name())
-                        )
+                                new NegatedRequestMatcher(new AntPathRequestMatcher("/debug/**")),
+                                new AntPathRequestMatcher("/debug/auth/me", HttpMethod.GET.name())
                 ))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .sessionManagement(AbstractHttpConfigurer::disable)
                 .csrf(CsrfConfigurer::disable)
                 .httpBasic(HttpBasicConfigurer::disable)
                 .formLogin(FormLoginConfigurer::disable)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(restAuthenticationEntryPoint))
+                .addFilterAfter(new JwtAuthenticationFilter(jwtTokenProvider, authService, cookieUtils), ExceptionTranslationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         // 인증이 없어도 되는 (@Login(required= false) 가능) 요청 엔드포인트
                         .requestMatchers(HttpMethod.GET, "/fonts/{fontId:[\\d]+}").permitAll()
@@ -131,7 +143,6 @@ public class SecurityConfig {
                         // 그 외엔 인증 필요
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
@@ -139,15 +150,8 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring()
                 .requestMatchers(
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/v3/api-docs/**",
-                        "/swagger-resources/**",
-                        "/webjars/**",
                         "/health-check",
-                        "/auth/token/**",
-                        "/actuator/prometheus",
-                        "/sqs-test"
+                        "/actuator/prometheus"
                 );
     }
 }

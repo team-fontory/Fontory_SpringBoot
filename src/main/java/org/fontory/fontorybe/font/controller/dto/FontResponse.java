@@ -16,7 +16,7 @@ public class FontResponse {
     private String writerName;
     private String woff;
 
-    public static FontResponse from(Font font, boolean isBookmarked, String writerName) {
+    public static FontResponse from(Font font, boolean isBookmarked, String writerName, String url) {
         return FontResponse.builder()
                 .id(font.getId())
                 .name(font.getName())
@@ -25,7 +25,7 @@ public class FontResponse {
                 .bookmarkCount(font.getBookmarkCount())
                 .isBookmarked(isBookmarked)
                 .writerName(writerName)
-                .woff(font.getWoff())
+                .woff(url)
                 .build();
     }
 }

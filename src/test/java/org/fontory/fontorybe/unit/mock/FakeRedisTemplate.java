@@ -24,7 +24,15 @@ public class FakeRedisTemplate extends RedisTemplate<String, String> {
     public ValueOperations<String, String> opsForValue() {
         return fakeValueOperations;
     }
+    @Override
+    public Boolean hasKey(String key) {
+        return store.containsKey(key);
+    }
 
+    @Override
+    public Boolean delete(String key) {
+        return store.remove(key) != null ? Boolean.TRUE : Boolean.FALSE;
+    }
 }
 
 class FakeValueOperations implements ValueOperations<String, String> {
@@ -178,4 +186,6 @@ class FakeValueOperations implements ValueOperations<String, String> {
     public RedisOperations<String, String> getOperations() {
         return null;
     }
+
+
 }

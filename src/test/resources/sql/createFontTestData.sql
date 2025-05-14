@@ -9,8 +9,7 @@ INSERT INTO `font` (
     `example`,
     `download_count`,
     `bookmark_count`,
-    `ttf`,
-    `woff`,
+    `file_key`,
     `member_id`,
     `created_at`,
     `updated_at`
@@ -21,18 +20,17 @@ INSERT INTO `font` (
     '이것은 테스트용 예제입니다.',
     0,
     0,
-    'ttf주소',
-    'woff주소',
+    'key',
     999,
     '2025-04-08 10:00:00',
     '2025-04-08 10:00:00'
 );
 
-insert into `member` (`member_id`, `nickname`, `gender`, `birth`, `terms`, `profile_image`, `provide_id`, `created_at`, `updated_at`)
-values (999, 'existMemberNickName', 'MALE', '2025-01-26', 1, 'existMemberProfileImage', 999, '1922-09-18 19:11:00.000000', '1922-09-18 19:11:00.000000');
+insert into `member` (`member_id`, `nickname`, `gender`, `birth`, `terms`, `profile_image_key`, `provide_id`, `status`, `created_at`, `updated_at`)
+values (999, 'existMemberNickName', 'MALE', '2025-01-26', 1, 'existMemberProfileImage', 999, 'ACTIVATE','1922-09-18 19:11:00.000000', '1922-09-18 19:11:00.000000');
 
-insert into `member` (`member_id`, `nickname`, `gender`, `birth`, `terms`, `profile_image`, `provide_id`, `created_at`, `updated_at`)
-values (1, 'createdMemberNickName', 'MALE', '2025-01-26', 1, 'existMemberProfileImage', 1, '1922-09-18 19:11:00.000000', '1922-09-18 19:11:00.000000');
+insert into `member` (`member_id`, `nickname`, `gender`, `birth`, `terms`, `profile_image_key`, `provide_id`, `status`, `created_at`, `updated_at`)
+values (1, 'createdMemberNickName', 'MALE', '2025-01-26', 1, 'existMemberProfileImage', 1, 'ACTIVATE','1922-09-18 19:11:00.000000', '1922-09-18 19:11:00.000000');
 
 insert into `provide` (`provide_id`, `provider`, `provided_id`, `email`, `member_id`)
 values (999, 'GOOGLE', 'test_provided_id', 'test_email', 999);

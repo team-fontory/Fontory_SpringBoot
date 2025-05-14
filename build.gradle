@@ -72,6 +72,15 @@ dependencies {
     implementation 'com.github.loki4j:loki-logback-appender:1.4.1'
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     runtimeOnly "io.micrometer:micrometer-registry-prometheus"
+
+    // Bad Word Filtering
+    implementation 'io.github.vaneproject:badwordfiltering:1.0.0'
+
+    // Mail
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // CoolSMS
+    implementation 'net.nurigo:sdk:4.3.2'
 }
 
 tasks.named('test') {

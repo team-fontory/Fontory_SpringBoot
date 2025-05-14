@@ -2,8 +2,7 @@ package org.fontory.fontorybe.config;
 
 import java.util.List;
 
-import org.fontory.fontorybe.authentication.adapter.inbound.LoginMemberArgumentResolver;
-import org.fontory.fontorybe.authentication.adapter.inbound.OAuth2InfoArgumentResolver;
+import org.fontory.fontorybe.authentication.adapter.inbound.resolver.LoginMemberArgumentResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -20,13 +19,11 @@ import lombok.RequiredArgsConstructor;
 public class WebConfig implements WebMvcConfigurer {
 
     private final LoginMemberArgumentResolver loginMemberArgumentResolver;
-    private final OAuth2InfoArgumentResolver oAuth2InfoArgumentResolver;
     private final PerformanceInterceptor performanceInterceptor;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
         argumentResolvers.add(loginMemberArgumentResolver);
-        argumentResolvers.add(oAuth2InfoArgumentResolver);
     }
     
     @Override
@@ -47,7 +44,8 @@ public class WebConfig implements WebMvcConfigurer {
                 "https://www.fontory.co.kr",
                 "https://fontory.co.kr",
                 "https://fontory.vercel.app",
-                "https://api.fontory.co.kr"
+                "https://api.fontory.co.kr",
+                "https://test.api.fontory.co.kr"
         ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

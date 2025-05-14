@@ -38,9 +38,12 @@ public class MemberEntity extends BaseEntity {
 
     private Boolean terms;
 
-    private String profileImage;
+    private String profileImageKey;
 
     private Long provideId;
+
+    @Enumerated(EnumType.STRING)
+    private MemberStatus status;
 
     private LocalDateTime deletedAt;
 
@@ -51,8 +54,9 @@ public class MemberEntity extends BaseEntity {
                 .gender(gender)
                 .birth(birth)
                 .terms(terms)
-                .profileImage(profileImage)
+                .profileImageKey(profileImageKey)
                 .provideId(provideId)
+                .status(status)
                 .createdAt(getCreatedAt())
                 .updatedAt(getUpdatedAt())
                 .deletedAt(getDeletedAt())
@@ -66,8 +70,9 @@ public class MemberEntity extends BaseEntity {
                 .gender(member.getGender())
                 .birth(member.getBirth())
                 .terms(member.getTerms())
-                .profileImage(member.getProfileImage())
+                .profileImageKey(member.getProfileImageKey())
                 .provideId(member.getProvideId())
+                .status(member.getStatus())
                 .createdAt(member.getCreatedAt())
                 .updatedAt(member.getUpdatedAt())
                 .deletedAt(member.getDeletedAt())

@@ -17,7 +17,7 @@ public class FontUpdateResponse {
     private LocalDateTime createdAt;
     private String woff;
 
-    public static FontUpdateResponse from(Font font) {
+    public static FontUpdateResponse from(Font font, String url) {
         return FontUpdateResponse.builder()
                 .id(font.getId())
                 .name(font.getName())
@@ -25,7 +25,7 @@ public class FontUpdateResponse {
                 .example(font.getExample())
                 .memberId(font.getMemberId())
                 .createdAt(font.getCreatedAt())
-                .woff(font.getWoff())
+                .woff(url)
                 .build();
     }
 }
