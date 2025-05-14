@@ -1,9 +1,9 @@
-name: CI/CD FOR DEVELOP
+name: CI/CD FOR PROD_SERVER
 
 on:
   push:
     branches:
-      - develop
+      - main
 
 env:
   DOCKERHUB_REPOSITORY: fontory-server

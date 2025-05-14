@@ -3,7 +3,7 @@ name: CI/CD FOR TEST_SERVER
 on:
   push:
     branches:
-      - test
+      - develop
 
 env:
   DOCKERHUB_REPOSITORY: fontory-test-server
