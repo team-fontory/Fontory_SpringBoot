@@ -1,0 +1,84 @@
+name: CI TEST
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - develop
+
+jobs:
+  CI:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup MySQL
+        uses: mirromutth/mysql-action@v1.1
+        with:
+          host port: 3308
+          mysql database: 'TESTDB'
+          mysql user: 'fontory'
+          mysql password: 'fontoryPW'
+
+      - name: Setup Redis
+        uses: supercharge/redis-github-action@1.7.0
+        with:
+          redis-version: 6
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 # v3.1.0
+
+      - name: Get short SHA
+        id: slug
+        run: echo "sha7=$(echo ${GITHUB_SHA} | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Generate application.properties
+        run: |
+          echo "jwt.access-secret-key=${{ secrets.JWT_SECRETKEY }}" >> ./src/main/resources/application.properties
+          echo "jwt.refresh-secret-key=${{ secrets.JWT_REFESH_SECRETKEY }}" >> ./src/main/resources/application.properties
+          echo "jwt.provide-secret-key=${{ secrets.JWT_PROVIDE_SECRETKEY }}" >> ./src/main/resources/application.properties
+          echo "jwt.font-create-server-secret-key=${{ secrets.JWT_FONT_CREATE_SERVER_SECRETKEY }}" >> ./src/main/resources/application.properties
+
+          echo "spring.security.oauth2.client.registration.google.client-id=${{ secrets.OAUTH2_GOOGLE_CLIENT_ID }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.security.oauth2.client.registration.google.client-secret=${{ secrets.OAUTH2_GOOGLE_CLIENT_SECRET }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.security.oauth2.client.registration.google.scope=${{ secrets.OAUTH2_GOOGLE_SCOPE }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.security.oauth2.client.registration.google.redirect-uri=${{ secrets.OAUTH2_GOOGLE_REDIRECT_URI }}" >> ./src/main/resources/application-infrastructure.properties
+          
+          printf "%s\n" "${{ secrets.OAUTH2_NAVER_PROPERTIES }}" >> ./src/main/resources/application-infrastructure.properties
+          
+          echo "spring.cloud.aws.region.static=${{ secrets.AWS_REGION }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.credentials.access-key=${{ secrets.AWS_ACCESS_KEY }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.credentials.SECRET-key=${{ secrets.AWS_SECRET_KEY }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.s3.bucket.profile-image=${{ secrets.AWS_BUCKET_NAME_PROFILE_IMAGE }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.s3.bucket.profile-image.prefix=${{ secrets.AWS_BUCKET_NAME_PROFILE_IMAGE_PREFIX }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.s3.bucket.font-paper=${{ secrets.AWS_BUCKET_NAME_FONT_PAPER }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.s3.bucket.font-paper.prefix=${{ secrets.AWS_BUCKET_NAME_FONT_PAPER_PREFIX }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.s3.bucket.font=${{ secrets.AWS_BUCKET_NAME_FONT }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.s3.bucket.font.prefix=${{ secrets.AWS_BUCKET_NAME_FONT_PREFIX }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "spring.cloud.aws.sqs.queue-name=${{ secrets.AWS_FONT_CREATE_QUEUE_NAME }}" >> ./src/main/resources/application-infrastructure.properties
+          
+          echo "spring.security.user.name=${{ secrets.SPRING_SECURITY_USER_NAME }}" >> ./src/main/resources/application-prod.properties
+          echo "spring.security.user.password=${{ secrets.SPRING_SECURITY_USER_PASSWORD }}" >> ./src/main/resources/application-prod.properties
+          
+          echo "discord.webhook.error-url=${{ secrets.DISCORD_WEBHOOK_ERROR_URL }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "url.base=https://fontory.co.kr" >> ./src/main/resources/application-infrastructure.properties
+          
+          echo "coolsms.api-key=${{ secrets.COOLSMS_API_KEY }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "coolsms.api-secret=${{ secrets.COOLSMS_API_SECRET }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "coolsms.phone-number=${{ secrets.COOLSMS_PHONE_NUMBER }}" >> ./src/main/resources/application-infrastructure.properties
+          echo "coolsms.base-url=${{ secrets.COOLSMS_BASE_URL }}" >> ./src/main/resources/application-infrastructure.properties
+
+      - name: Build with Gradle Wrapper
+        run: ./gradlew clean test --stacktrace --info
+

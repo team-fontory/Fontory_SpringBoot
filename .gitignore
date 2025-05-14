@@ -41,3 +41,4 @@ out/
 
 ### yml ###
 application-dev.properties
+application-infrastructure.properties
