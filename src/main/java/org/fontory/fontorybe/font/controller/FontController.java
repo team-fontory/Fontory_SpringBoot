@@ -30,7 +30,6 @@ import org.fontory.fontorybe.font.controller.dto.FontUpdateResponse;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -124,7 +123,7 @@ public class FontController {
     @Parameter(name = "fontId", description = "수정할 폰트 ID")
     @PutMapping("/{fontId}")
     public ResponseEntity<?> updateFont(
-            @RequestBody FontUpdateDTO fontUpdateDTO,
+            @RequestBody @Valid FontUpdateDTO fontUpdateDTO,
             @PathVariable Long fontId,
             @Login UserPrincipal userPrincipal
     ) {
@@ -260,7 +259,7 @@ public class FontController {
     @Parameter(name = "fontId", description = "수정할 폰트 ID")
     @PatchMapping("/progress/{fontId}")
     public ResponseEntity<?> updateFontProgress(
-            @RequestBody FontProgressUpdateDTO fontProgressUpdateDTO,
+            @RequestBody @Valid FontProgressUpdateDTO fontProgressUpdateDTO,
             @PathVariable Long fontId
     ) {
         log.info("Request received: Update font progress ID: {}, request: {}",

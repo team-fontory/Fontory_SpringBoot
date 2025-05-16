@@ -2,6 +2,7 @@ package org.fontory.fontorybe.member.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +59,7 @@ public class RegistrationController {
     @PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MemberCreateResponse> register(
             @Login UserPrincipal user,
-            @RequestPart InitMemberInfoRequest req,
+            @RequestPart @Valid InitMemberInfoRequest req,
             @SingleFileUpload @RequestPart("file") List<MultipartFile> files
     ) {
         Long requestMemberId = user.getId();
