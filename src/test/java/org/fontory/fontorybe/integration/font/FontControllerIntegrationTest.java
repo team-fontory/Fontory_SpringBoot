@@ -18,7 +18,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 
 import jakarta.servlet.http.Cookie;
 import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
@@ -30,7 +29,6 @@ import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
-import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.infrastructure.entity.FontStatus;
 import org.fontory.fontorybe.font.service.port.FontRequestProducer;
 import org.junit.jupiter.api.BeforeEach;
@@ -198,51 +196,6 @@ class FontControllerIntegrationTest {
         // when & then
         mockMvc.perform(get("/fonts/progress")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType("application/json;charset=UTF-8"))
-                .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));
-    }
-
-    @Test
-    @DisplayName("PUT /fonts/{fontId} - update font success with valid Authorization header")
-    void updateFontSuccess() throws Exception {
-        // given
-        FontUpdateDTO updateDTO = FontUpdateDTO.builder()
-                .name(updateFontName)
-                .example(updateFontExample)
-                .build();
-
-        String jsonRequest = objectMapper.writeValueAsString(updateDTO);
-
-        // when & then
-        mockMvc.perform(put("/fonts/{fontId}", existFontId)
-                        .cookie(new Cookie("accessToken", validAccessToken))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonRequest))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(existFontId.intValue())))
-                .andExpect(jsonPath("$.name", is(updateFontName)))
-                .andExpect(jsonPath("$.status").isNotEmpty())
-                .andExpect(jsonPath("$.example", is(updateFontExample)))
-                .andExpect(jsonPath("$.memberId").isNotEmpty())
-                .andExpect(jsonPath("$.createdAt").isNotEmpty());
-    }
-
-    @Test
-    @DisplayName("PUT /fonts/{fontId} - update font without Authorization header returns 401")
-    void updateFontWithoutAuthHeader() throws Exception {
-        // given
-        FontUpdateDTO updateDTO = FontUpdateDTO.builder()
-                .name(updateFontName)
-                .example(updateFontExample)
-                .build();
-
-        String jsonRequest = objectMapper.writeValueAsString(updateDTO);
-
-        // when & then
-        mockMvc.perform(put("/fonts/{fontId}", existFontId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonRequest))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType("application/json;charset=UTF-8"))
                 .andExpect(jsonPath("$.errorMessage").value("Authentication Required."));

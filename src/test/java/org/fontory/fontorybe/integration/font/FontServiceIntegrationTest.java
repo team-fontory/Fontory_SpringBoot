@@ -139,47 +139,6 @@ class FontServiceIntegrationTest {
     }
 
     @Test
-    @DisplayName("font - update success test")
-    void updateFontSuccess() {
-        // given
-        FontUpdateDTO dto = FontUpdateDTO.builder()
-                .name("수정폰트")
-                .example("수정 폰트 예시입니다.")
-                .build();
-
-        // when
-        FontUpdateResponse updated = fontService.update(existMemberId, existFontId, dto);
-
-        // then
-        assertAll(
-                () -> assertThat(updated.getId()).isEqualTo(existFontId),
-                () -> assertThat(updated.getName()).isEqualTo("수정폰트"),
-                () -> assertThat(updated.getExample()).isEqualTo("수정 폰트 예시입니다.")
-        );
-    }
-
-    @Test
-    @DisplayName("font - update fail test caused by access denied")
-    void updateFontAccessDeniedFail() {
-        // given
-        FontCreateDTO createDTO = FontCreateDTO.builder()
-                .name("다른사람폰트")
-                .example("다른예제")
-                .build();
-
-        Font elseFont = fontService.create(createdMemberId, createDTO, fileDetails);
-
-        FontUpdateDTO updateDTO = FontUpdateDTO.builder()
-                .name("수정시도")
-                .example("예제수정")
-                .build();
-
-        // when & then
-        assertThatThrownBy(() -> fontService.update(existMemberId, elseFont.getId(), updateDTO))
-                .isExactlyInstanceOf(FontOwnerMismatchException.class);
-    }
-
-    @Test
     @DisplayName("font - getOrThrowById success test")
     void getOrThrowByIdSuccess() {
         // when

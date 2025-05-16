@@ -9,7 +9,6 @@ import org.springframework.data.domain.Page;
 public interface FontService {
     Font create(Long memberId, FontCreateDTO fontCreateDTO, FileUploadResult fileDetails);
     List<FontProgressResponse> getFontProgress(Long memberId);
-    FontUpdateResponse update(Long memberId, Long fontId, FontUpdateDTO fontUpdateDTO);
     Font getOrThrowById(Long id);
     Page<FontResponse> getFonts(Long memberId, int page, int size);
     FontResponse getFont(Long fondId, Long memberId);

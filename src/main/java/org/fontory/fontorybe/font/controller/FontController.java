@@ -25,7 +25,6 @@ import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
-import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateResponse;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
@@ -117,27 +116,6 @@ public class FontController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(fontsProgress);
-    }
-
-    @Operation(summary = "폰트 정보 수정")
-    @Parameter(name = "fontId", description = "수정할 폰트 ID")
-    @PutMapping("/{fontId}")
-    public ResponseEntity<?> updateFont(
-            @RequestBody @Valid FontUpdateDTO fontUpdateDTO,
-            @PathVariable Long fontId,
-            @Login UserPrincipal userPrincipal
-    ) {
-        Long memberId = userPrincipal.getId();
-        log.info("Request received: Update font ID: {} by member ID: {}, request: {}", 
-                fontId, memberId, toJson(fontUpdateDTO));
-
-        FontUpdateResponse fontUpdateResponse = fontService.update(memberId, fontId, fontUpdateDTO);
-        log.info("Response sent: Font ID: {} updated successfully, name: {}",
-                fontUpdateResponse.getId(), fontUpdateResponse.getName());
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(fontUpdateResponse);
     }
 
     @Operation(summary = "내가 제작한 폰트")
