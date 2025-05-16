@@ -3,6 +3,7 @@ package org.fontory.fontorybe.common.adapter.inbound;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.fontory.fontorybe.authentication.domain.exception.InvalidRefreshTokenException;
 import org.fontory.fontorybe.authentication.domain.exception.TokenNotFoundException;
@@ -28,7 +29,9 @@ import org.fontory.fontorybe.member.domain.exception.MemberDuplicateNameExistsEx
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 import org.fontory.fontorybe.member.domain.exception.MemberOwnerMismatchException;
 import org.fontory.fontorybe.provide.domain.exception.ProvideNotFoundException;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -37,6 +40,16 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public BaseErrorResponse validationException(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                .collect(Collectors.joining(", "));
+        return new BaseErrorResponse(message);
+    }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler({MemberNotFoundException.class, FontNotFoundException.class, BookmarkNotFoundException.class})
