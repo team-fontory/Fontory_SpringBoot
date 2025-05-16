@@ -81,7 +81,8 @@ class FontControllerIntegrationTest {
     private final String existFontKey = "key";
     private final String existFontTemplateExtension = "jpg";
 
-    private final String newFontName = "newFontName";
+    private final String newFontName = "제작한글폰트1";
+    private final String newFontEngName = "newFontEngName";
     private final String newFontExample = "newFontExample";
 
     private final String updateFontName = "updateFontName";
@@ -125,6 +126,7 @@ class FontControllerIntegrationTest {
         // given
         FontCreateDTO createDTO = FontCreateDTO.builder()
                 .name(newFontName)
+                .engName(newFontEngName)
                 .example(newFontExample)
                 .build();
 

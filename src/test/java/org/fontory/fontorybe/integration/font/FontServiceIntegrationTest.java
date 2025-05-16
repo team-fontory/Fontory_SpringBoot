@@ -93,6 +93,7 @@ class FontServiceIntegrationTest {
         // given
         FontCreateDTO dto = FontCreateDTO.builder()
                 .name("생성폰트")
+                .engName("ENG1")
                 .example("생성 폰트 예제입니다.")
                 .build();
 
@@ -122,6 +123,7 @@ class FontServiceIntegrationTest {
                     existMemberId,
                     FontCreateDTO.builder()
                             .name("진행중폰트" + i)
+                            .engName("ENG" + i)
                             .example("예제" + i)
                             .build(),
                     fileDetails
@@ -176,6 +178,7 @@ class FontServiceIntegrationTest {
                     existMemberId,
                     FontCreateDTO.builder()
                             .name("폰트" + i)
+                            .engName("ENG" + i)
                             .example("예제" + i)
                             .build(),
                     fileDetails
@@ -239,6 +242,7 @@ class FontServiceIntegrationTest {
         // given
         FontCreateDTO createDTO = FontCreateDTO.builder()
                 .name("다른사람폰트")
+                .engName("ENG1")
                 .example("다른예제")
                 .build();
 
@@ -258,6 +262,7 @@ class FontServiceIntegrationTest {
                 existMemberId,
                 FontCreateDTO.builder()
                         .name("페이지폰트1")
+                        .engName("ENG1")
                         .example("예제1")
                         .build(),
                 fileDetails
@@ -267,6 +272,7 @@ class FontServiceIntegrationTest {
                 existMemberId,
                 FontCreateDTO.builder()
                         .name("페이지폰트2")
+                        .engName("ENG2")
                         .example("예제2")
                         .build(),
                 fileDetails
@@ -276,6 +282,7 @@ class FontServiceIntegrationTest {
                 existMemberId,
                 FontCreateDTO.builder()
                         .name("페이지폰트")
+                        .engName("ENG3")
                         .example("예제3")
                         .build(),
                 fileDetails
@@ -337,6 +344,7 @@ class FontServiceIntegrationTest {
                 existMemberId,
                 FontCreateDTO.builder()
                         .name("폰트1")
+                        .engName("ENG1")
                         .example("예1")
                         .build(),
                 fileDetails
@@ -346,6 +354,7 @@ class FontServiceIntegrationTest {
                 existMemberId,
                 FontCreateDTO.builder()
                         .name("폰트2")
+                        .engName("ENG2")
                         .example("예2")
                         .build(),
                 fileDetails
@@ -355,6 +364,7 @@ class FontServiceIntegrationTest {
                 existMemberId,
                 FontCreateDTO.builder()
                         .name("폰트3")
+                        .engName("ENG3")
                         .example("예3")
                         .build(),
                 fileDetails
@@ -399,6 +409,7 @@ class FontServiceIntegrationTest {
                 existMemberId,
                 FontCreateDTO.builder()
                         .name("폰트1")
+                        .engName("ENG1")
                         .example("예1")
                         .build(),
                 fileDetails
@@ -408,6 +419,7 @@ class FontServiceIntegrationTest {
                 existMemberId,
                 FontCreateDTO.builder()
                         .name("폰트2")
+                        .engName("ENG2")
                         .example("예2")
                         .build(),
                 fileDetails
@@ -417,6 +429,7 @@ class FontServiceIntegrationTest {
                 existMemberId,
                 FontCreateDTO.builder()
                         .name("폰트3")
+                        .engName("ENG3")
                         .example("예3")
                         .build(),
                 fileDetails
@@ -462,6 +475,7 @@ class FontServiceIntegrationTest {
         // given
         FontCreateDTO dto = FontCreateDTO.builder()
                 .name("진행중폰트")
+                .engName("ENG1")
                 .example("예제입니다")
                 .build();
 
