@@ -64,7 +64,7 @@ public class FontServiceImpl implements FontService {
             throw new FontDuplicateNameExistsException();
         }
 
-        checkContainsBadWord(fontCreateDTO.getName(), fontCreateDTO.getExample());
+        checkFontNameAndExampleContainsBadWord(fontCreateDTO.getName(), fontCreateDTO.getEngName(), fontCreateDTO.getExample());
 
         FileMetadata fileMetadata = fileService.getOrThrowById(fileDetails.getId());
 
@@ -357,20 +357,11 @@ public class FontServiceImpl implements FontService {
         }
     }
 
-    private void checkContainsBadWord(String name, String example) {
-        log.debug("Service detail: Checking bad word: name={}, example={}", name, example);
+    private void checkFontNameAndExampleContainsBadWord(String name, String engName, String example) {
+        log.debug("Service detail: Checking bad word: name={}, engName={} example={}", name, engName, example);
 
-        if (badWordFiltering.blankCheck(name) || badWordFiltering.blankCheck(example)) {
-            log.warn("Service warning: Font contains bad word: name={}, example={}", name, example);
-            throw new FontContainsBadWordException();
-        }
-    }
-
-    private void checkContainsBadWord(String example) {
-        log.debug("Service detail: Checking bad word: example={}", example);
-
-        if (badWordFiltering.blankCheck(example)) {
-            log.warn("Service warning: Font contains bad word: example={}", example);
+        if (badWordFiltering.blankCheck(name) || badWordFiltering.blankCheck(engName) || badWordFiltering.blankCheck(example)) {
+            log.warn("Service warning: Font contains bad word: name={}, engName={}, example={}", name, engName, example);
             throw new FontContainsBadWordException();
         }
     }
