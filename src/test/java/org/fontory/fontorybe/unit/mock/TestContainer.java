@@ -191,6 +191,7 @@ public class TestContainer {
         registrationController = RegistrationController.builder()
                 .memberLookupService(memberLookupService)
                 .memberOnboardService(memberOnboardService)
+                .cloudStorageService(cloudStorageService)
                 .fileService(fileService)
                 .build();
     }

@@ -58,6 +58,22 @@ public class MemberOnboardServiceImpl implements MemberOnboardService {
         return memberRepository.save(targetMember.initNewMemberInfo(initNewMemberInfoRequest, fileMetadata.getKey()));
     }
 
+    @Override
+    @Transactional
+    public Member initNewMemberInfo(Long requestMemberId,
+                                    InitMemberInfoRequest initNewMemberInfoRequest) {
+        Member targetMember = memberLookupService.getOrThrowById(requestMemberId);
+        if (targetMember.getStatus() == MemberStatus.ACTIVATE) {
+            throw new MemberAlreadyJoinedException();
+        } else if (memberLookupService.existsByNickname(initNewMemberInfoRequest.getNickname())) {
+            throw new MemberDuplicateNameExistsException();
+        }
+
+        checkContainsBadWord(initNewMemberInfoRequest.getNickname());
+
+        return memberRepository.save(targetMember.initNewMemberInfo(initNewMemberInfoRequest));
+    }
+
     private void checkContainsBadWord(String nickname) {
         if (badWordFiltering.blankCheck(nickname)) {
             throw new MemberContainsBadWordException();
