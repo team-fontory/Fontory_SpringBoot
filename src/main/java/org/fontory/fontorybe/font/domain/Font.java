@@ -22,6 +22,8 @@ public class Font {
 
     private String name;
 
+    private String engName;
+
     private FontStatus status;
 
     private String example;
@@ -53,6 +55,7 @@ public class Font {
     public static Font from(FontCreateDTO fontCreateDTO, Long memberId, String key) {
         return Font.builder()
                 .name(fontCreateDTO.getName())
+                .engName(fontCreateDTO.getEngName())
                 .status(FontStatus.PROGRESS)
                 .example(fontCreateDTO.getExample())
                 .key(key)
@@ -64,7 +67,8 @@ public class Font {
 
     public Font update(FontUpdateDTO fontUpdateDTO) {
         return Font.builder()
-                .name(fontUpdateDTO.getName())
+                .name(this.name)
+                .engName(this.engName)
                 .example(fontUpdateDTO.getExample())
                 .id(this.id)
                 .status(this.status)
@@ -77,34 +81,19 @@ public class Font {
                 .build();
     }
 
-    public Font updateProgress(FontProgressUpdateDTO fontProgressUpdateDTO, Long fontId) {
-
-        if (fontProgressUpdateDTO.getStatus() == FontStatus.DONE) {
-            return Font.builder()
-                    .name(this.name)
-                    .example(this.example)
-                    .id(this.id)
-                    .status(fontProgressUpdateDTO.getStatus())
-                    .downloadCount(this.downloadCount)
-                    .bookmarkCount(this.bookmarkCount)
-                    .key(this.key)
-                    .memberId(this.memberId)
-                    .createdAt(this.createdAt)
-                    .updatedAt(this.updatedAt)
-                    .build();
-        } else {
-            return Font.builder()
-                    .name(this.name)
-                    .example(this.example)
-                    .id(this.id)
-                    .status(fontProgressUpdateDTO.getStatus())
-                    .downloadCount(this.downloadCount)
-                    .bookmarkCount(this.bookmarkCount)
-                    .key(this.key)
-                    .memberId(this.memberId)
-                    .createdAt(this.createdAt)
-                    .updatedAt(this.updatedAt)
-                    .build();
-        }
+    public Font updateProgress(FontProgressUpdateDTO fontProgressUpdateDTO) {
+        return Font.builder()
+                .name(this.name)
+                .engName(this.engName)
+                .example(this.example)
+                .id(this.id)
+                .status(fontProgressUpdateDTO.getStatus())
+                .downloadCount(this.downloadCount)
+                .bookmarkCount(this.bookmarkCount)
+                .key(this.key)
+                .memberId(this.memberId)
+                .createdAt(this.createdAt)
+                .updatedAt(this.updatedAt)
+                .build();
     }
 }

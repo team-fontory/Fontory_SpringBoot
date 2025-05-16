@@ -105,8 +105,8 @@ public class FontServiceImpl implements FontService {
         Font targetFont = getOrThrowById(fontId);
 
         checkFontOwnership(member.getId(), targetFont.getMemberId());
-        checkContainsBadWord(fontUpdateDTO.getName(), fontUpdateDTO.getExample());
-        
+        checkContainsBadWord(fontUpdateDTO.getExample());
+
         Font updatedFont = fontRepository.save(targetFont.update(fontUpdateDTO));
         String woff2Url = cloudStorageService.getWoff2Url(updatedFont.getKey());
 
@@ -316,7 +316,7 @@ public class FontServiceImpl implements FontService {
         log.info("Service executing: Updating font ID: {}", fontId);
         Font targetFont = getOrThrowById(fontId);
 
-        Font updatedFont = fontRepository.save(targetFont.updateProgress(fontProgressUpdateDTO, fontId));
+        Font updatedFont = fontRepository.save(targetFont.updateProgress(fontProgressUpdateDTO));
         String woff2Url = cloudStorageService.getWoff2Url(updatedFont.getKey());
 
         if (fontProgressUpdateDTO.getStatus() == FontStatus.DONE) {
@@ -380,6 +380,15 @@ public class FontServiceImpl implements FontService {
 
         if (badWordFiltering.blankCheck(name) || badWordFiltering.blankCheck(example)) {
             log.warn("Service warning: Font contains bad word: name={}, example={}", name, example);
+            throw new FontContainsBadWordException();
+        }
+    }
+
+    private void checkContainsBadWord(String example) {
+        log.debug("Service detail: Checking bad word: example={}", example);
+
+        if (badWordFiltering.blankCheck(example)) {
+            log.warn("Service warning: Font contains bad word: example={}", example);
             throw new FontContainsBadWordException();
         }
     }
