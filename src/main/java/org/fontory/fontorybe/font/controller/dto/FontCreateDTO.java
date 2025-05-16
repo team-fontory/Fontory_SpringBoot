@@ -14,10 +14,12 @@ public class FontCreateDTO {
 
     @NotBlank(message = "폰트 이름은 필수 입력 값입니다.")
     @Size(min = 2, max = 30, message = "폰트 이름은 2자 이상 30자 이하로 입력해주세요.")
+    @Pattern(regexp = "^[가-힣]{2,30}$", message = "한글만 입력할 수 있습니다. (예: 가나다체)")
     private String name;
 
     @NotBlank(message = "폰트 영어 이름은 필수 입력 값입니다.")
     @Size(min = 2, max = 30, message = "폰트 이름은 2자 이상 30자 이하로 입력해주세요.")
+    @Pattern(regexp = "^[a-zA-Z]{2,30}$", message = "폰트 영어 이름은 영문 대소문자만 입력할 수 있습니다. (예: ABCD)")
     private String engName;
 
     @NotBlank(message = "폰트 예시는 필수 입력 값입니다.")
