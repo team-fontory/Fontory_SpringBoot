@@ -3,6 +3,7 @@ package org.fontory.fontorybe.member.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -71,7 +72,7 @@ public class ProfileController {
     @PatchMapping(consumes = MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MyProfileResponse> updateMember(
             @Login UserPrincipal userPrincipal,
-            @RequestPart MemberUpdateRequest req,
+            @RequestPart @Valid MemberUpdateRequest req,
             @SingleFileUpload @RequestPart(value = "file", required = false) List<MultipartFile> files
     ) {
         Long requestMemberId = userPrincipal.getId();
