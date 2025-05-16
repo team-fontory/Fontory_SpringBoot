@@ -4,6 +4,7 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
+import org.fontory.fontorybe.authentication.domain.exception.AuthenticationRequiredException;
 import org.fontory.fontorybe.authentication.domain.exception.InvalidRefreshTokenException;
 import org.fontory.fontorybe.authentication.domain.exception.TokenNotFoundException;
 import org.fontory.fontorybe.bookmark.domain.exception.BookmarkAlreadyException;
@@ -167,6 +168,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({FontContainsBadWordException.class, MemberContainsBadWordException.class})
     public BaseErrorResponse containsBadWordException(Exception e) {
+        return new BaseErrorResponse(e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(AuthenticationRequiredException.class)
+    public BaseErrorResponse authenticationRequiredException(AuthenticationRequiredException e) {
         return new BaseErrorResponse(e.getMessage());
     }
 }
