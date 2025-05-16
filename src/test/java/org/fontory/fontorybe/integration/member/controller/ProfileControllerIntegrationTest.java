@@ -27,6 +27,7 @@ import java.util.UUID;
 
 import static org.fontory.fontorybe.TestConstants.*;
 import static org.fontory.fontorybe.TestConstants.UPDATE_MEMBER_TERMS;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -106,7 +107,7 @@ class ProfileControllerIntegrationTest {
                 .andExpect(jsonPath("$.memberId", is(TEST_MEMBER_ID.intValue())))
                 .andExpect(jsonPath("$.nickname", is(UPDATE_MEMBER_NICKNAME)))
                 .andExpect(jsonPath("$.terms", is(UPDATE_MEMBER_TERMS)))
-                .andExpect(jsonPath("$.profileImageUrl", is(testMember.getProfileImageKey())))
+                .andExpect(jsonPath("$.profileImageUrl", containsString(testMember.getProfileImageKey())))
                 .andExpect(jsonPath("$.gender", is(testMember.getGender().name())))
                 .andExpect(jsonPath("$.birth", is(testMember.getBirth().toString())));
     }

@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.authentication.adapter.inbound.annotation.Login;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.file.application.annotation.SingleFileUpload;
@@ -17,6 +18,7 @@ import org.fontory.fontorybe.member.controller.port.MemberOnboardService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.parameters.P;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +34,7 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 @RequestMapping("/register")
 @Tag(name = "사용자 - 신규", description = "회원가입/온보딩")
 public class RegistrationController {
+    private final CloudStorageService cloudStorageService;
     private final MemberLookupService memberLookupService;
     private final MemberOnboardService memberOnboardService;
     private final FileService fileService;
@@ -59,24 +62,29 @@ public class RegistrationController {
     public ResponseEntity<MemberCreateResponse> register(
             @Login UserPrincipal user,
             @RequestPart InitMemberInfoRequest req,
-            @SingleFileUpload @RequestPart("file") List<MultipartFile> files
+            @SingleFileUpload @RequestPart(value = "file", required = false) List<MultipartFile> files
     ) {
         Long requestMemberId = user.getId();
-        MultipartFile file = extractSingleMultipartFile(files);
-
         log.info("Request received: Create member ID: {} with request: {}",
                 requestMemberId, req);
-        logFileDetails(file, "Member profile image upload");
 
-        FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
-        Member updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, req, fileUploadResult);
+        Member updatedMember;
+        if (files != null && !files.isEmpty()) {
+            MultipartFile file = extractSingleMultipartFile(files);
+            logFileDetails(file, "Member profile image upload");
+            FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
+            updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, req, fileUploadResult);
+        } else {
+            log.info("No profile image upload found");
+            updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, req);
+        }
 
         log.info("Response sent: Member ID: {} Created successfully with nickname: {}",
                 updatedMember.getId(), updatedMember.getNickname());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(MemberCreateResponse.from(updatedMember, fileUploadResult.getFileUrl()));
+                .body(MemberCreateResponse.from(updatedMember, cloudStorageService.getProfileImageUrl(updatedMember.getProfileImageKey())));
     }
 
     private void logFileDetails(MultipartFile file, String context) {

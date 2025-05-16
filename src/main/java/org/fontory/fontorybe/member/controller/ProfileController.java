@@ -72,21 +72,26 @@ public class ProfileController {
     public ResponseEntity<MyProfileResponse> updateMember(
             @Login UserPrincipal userPrincipal,
             @RequestPart MemberUpdateRequest req,
-            @SingleFileUpload @RequestPart("file") List<MultipartFile> files
+            @SingleFileUpload @RequestPart(value = "file", required = false) List<MultipartFile> files
     ) {
         Long requestMemberId = userPrincipal.getId();
-        MultipartFile file = extractSingleMultipartFile(files);
-
         log.info("Request received: update member ID: {} with request: {}",
                 requestMemberId, req);
-        logFileDetails(file, "Member profile image upload");
 
-        FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
+        if (files != null && !files.isEmpty()) {
+            MultipartFile file = extractSingleMultipartFile(files);
+            logFileDetails(file, "Member profile image upload");
+            FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
+            log.info("fileUploadResult: {}", fileUploadResult);
+        } else {
+            log.info("No profile image upload found");
+        }
+
         Member updatedMember = memberUpdateService.update(requestMemberId, req);
         log.info("Updated : Member ID: {} Updated successfully with nickname: {}, terms : {}",
                 updatedMember.getId(), updatedMember.getNickname(), updatedMember.getTerms());
 
-        MyProfileResponse myProfileResponse = MyProfileResponse.from(updatedMember, fileUploadResult.getFileUrl());
+        MyProfileResponse myProfileResponse = MyProfileResponse.from(updatedMember, cloudStorageService.getProfileImageUrl(updatedMember.getProfileImageKey()));
         log.info("Response sent: MyProfileDto : {}", myProfileResponse);
 
         return ResponseEntity
