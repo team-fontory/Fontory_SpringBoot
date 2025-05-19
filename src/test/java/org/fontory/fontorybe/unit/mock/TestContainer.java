@@ -139,7 +139,6 @@ public class TestContainer {
 
         memberDefaults = new MemberDefaults(
                 LocalDate.of(1999, 12, 31),
-                false,
                 DEFAULT_PROFILE_KEY);
 
         fileService = FileServiceImpl.builder()
@@ -231,7 +230,7 @@ public class TestContainer {
     public Provide testMemberProvide;
     public Provide newMemberProvide;
 
-    public final InitMemberInfoRequest newInitMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+    public final InitMemberInfoRequest newInitMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
     public final ProvideCreateDto newMemberProvideCreateDto = new ProvideCreateDto(NEW_MEMBER_PROVIDER, NEW_MEMBER_PROVIDED_ID, NEW_MEMBER_EMAIL);
 
     public Member createNotInitedMember() {
@@ -241,13 +240,13 @@ public class TestContainer {
 
     public Member createTestMember() {
         testMemberProvide = provideService.create(testMemberProvideCreateDto);
-        InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(TEST_MEMBER_NICKNAME, TEST_MEMBER_GENDER, TEST_MEMBER_BIRTH, TEST_MEMBER_TERMS);
+        InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(TEST_MEMBER_NICKNAME, TEST_MEMBER_GENDER, TEST_MEMBER_BIRTH);
         return create(initMemberInfoRequest, testMemberProvide);
     }
 
     public Member createNewMember() {
         newMemberProvide = provideService.create(newMemberProvideCreateDto);
-        InitMemberInfoRequest initNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+        InitMemberInfoRequest initNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
         return create(initNewMemberInfoRequest, newMemberProvide);
     }
 }

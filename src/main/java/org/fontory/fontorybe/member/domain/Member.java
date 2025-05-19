@@ -23,8 +23,6 @@ public class Member {
 
     private LocalDate birth;
 
-    private boolean terms;
-
     private String profileImageKey;
 
     private LocalDateTime createdAt;
@@ -42,7 +40,6 @@ public class Member {
                 .nickname(nickname)
                 .gender(memberDefaults.getGender())
                 .birth(memberDefaults.getBirth())
-                .terms(memberDefaults.getTerms())
                 .profileImageKey(memberDefaults.getProfileImageKey())
                 .provideId(provide.getId())
                 .status(MemberStatus.ONBOARDING)
@@ -55,7 +52,6 @@ public class Member {
                 .nickname(initNewMemberInfo.getNickname())
                 .gender(initNewMemberInfo.getGender())
                 .birth(initNewMemberInfo.getBirth())
-                .terms(initNewMemberInfo.getTerms())
                 .profileImageKey(profileImageKey)
                 .createdAt(this.createdAt)
                 .provideId(this.provideId)
@@ -71,7 +67,6 @@ public class Member {
                 .nickname(initNewMemberInfo.getNickname())
                 .gender(initNewMemberInfo.getGender())
                 .birth(initNewMemberInfo.getBirth())
-                .terms(initNewMemberInfo.getTerms())
                 .profileImageKey(this.profileImageKey)
                 .createdAt(this.createdAt)
                 .provideId(this.provideId)
@@ -85,7 +80,6 @@ public class Member {
         return Member.builder()
                 //tobe update
                 .nickname(memberUpdateRequest.getNickname())
-                .terms(memberUpdateRequest.getTerms())
 
                 //not to be update
                 .id(this.id)
@@ -104,10 +98,6 @@ public class Member {
         this.deletedAt = LocalDateTime.now();
     }
 
-    public boolean getTerms() {
-        return this.terms;
-    }
-
     public Member setProfileImageKey(String profileImageKey) {
         return Member.builder()
                 .profileImageKey(profileImageKey)
@@ -119,7 +109,6 @@ public class Member {
                 .createdAt(this.createdAt)
                 .provideId(this.provideId)
                 .deletedAt(this.deletedAt)
-                .terms(this.terms)
                 .provideId(this.provideId)
                 .status(this.status)
                 .build();

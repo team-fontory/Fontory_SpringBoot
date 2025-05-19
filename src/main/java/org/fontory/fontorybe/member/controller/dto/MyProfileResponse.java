@@ -16,7 +16,6 @@ public class MyProfileResponse {
     private String nickname;
     private Gender gender;
     private LocalDate birth;
-    private boolean terms;
     private String profileImageUrl;
 
     public static MyProfileResponse from(Member member, String url) {
@@ -25,12 +24,7 @@ public class MyProfileResponse {
                 .nickname(member.getNickname())
                 .birth(member.getBirth())
                 .gender(member.getGender())
-                .terms(member.getTerms())
                 .profileImageUrl(url)
                 .build();
-    }
-
-    public boolean getTerms() {
-        return this.terms;
     }
 }

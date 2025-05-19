@@ -95,7 +95,6 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
                     Member m = Member.builder()
                             .gender(Gender.MALE)
                             .provideId(provide.getId())
-                            .terms(true)
                             .birth(LocalDate.now())
                             .nickname("Tester")
                             .profileImageKey(memberDefaults.getProfileImageKey())

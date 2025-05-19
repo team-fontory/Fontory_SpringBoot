@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import static org.fontory.fontorybe.TestConstants.*;
-import static org.fontory.fontorybe.TestConstants.UPDATE_MEMBER_TERMS;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -80,7 +79,7 @@ class ProfileControllerIntegrationTest {
     @Test
     @DisplayName("PUT /member - update member success with valid Authorization JWT Cookie")
     void updateMemberSuccessTest() throws Exception {
-        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME, UPDATE_MEMBER_TERMS);
+        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME);
         String jsonRequest = objectMapper.writeValueAsString(memberUpdateRequest);
         MockMultipartFile jsonPart = new MockMultipartFile(
                 "req",
@@ -106,7 +105,6 @@ class ProfileControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.memberId", is(TEST_MEMBER_ID.intValue())))
                 .andExpect(jsonPath("$.nickname", is(UPDATE_MEMBER_NICKNAME)))
-                .andExpect(jsonPath("$.terms", is(UPDATE_MEMBER_TERMS)))
                 .andExpect(jsonPath("$.profileImageUrl", containsString(testMember.getProfileImageKey())))
                 .andExpect(jsonPath("$.gender", is(testMember.getGender().name())))
                 .andExpect(jsonPath("$.birth", is(testMember.getBirth().toString())));
@@ -115,7 +113,7 @@ class ProfileControllerIntegrationTest {
     @Test
     @DisplayName("PUT /member without Authorization JWT Cookie returns 401")
     void putMemberWithoutAuthHeader() throws Exception {
-        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME, UPDATE_MEMBER_TERMS);
+        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME);
         String jsonRequest = objectMapper.writeValueAsString(memberUpdateRequest);
 
         mockMvc.perform(put("/member/me")

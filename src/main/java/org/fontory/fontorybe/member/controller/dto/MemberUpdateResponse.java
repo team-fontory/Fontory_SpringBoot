@@ -11,14 +11,12 @@ import java.time.LocalDateTime;
 public class MemberUpdateResponse {
     private String nickname;
     private String profileImage;
-    private Boolean terms;
     private LocalDateTime updatedAt;
 
     public static MemberUpdateResponse from(Member member) {
         return MemberUpdateResponse.builder()
                 .nickname(member.getNickname())
                 .profileImage(member.getProfileImageKey())
-                .terms(member.getTerms())
                 .updatedAt(member.getUpdatedAt())
                 .build();
     }

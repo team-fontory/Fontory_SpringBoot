@@ -3,8 +3,8 @@ truncate table `member`;
 truncate table `provide`;
 
 -- Test member data
-insert into `member` (`member_id`, `nickname`, `gender`, `birth`, `terms`, `profile_image_key`, `provide_id`, `status`,`created_at`, `updated_at`)
-values (999, 'existMemberNickName', 'MALE', '2025-01-26', 1, 'existMemberProfileImage', 999, 'ACTIVATE', NOW(), NOW());
+insert into `member` (`member_id`, `nickname`, `gender`, `birth`, `profile_image_key`, `provide_id`, `status`,`created_at`, `updated_at`)
+values (999, 'existMemberNickName', 'MALE', '2025-01-26', 'existMemberProfileImage', 999, 'ACTIVATE', NOW(), NOW());
 
 -- Test provide data
 insert into `provide` (`provide_id`, `provider`, `provided_id`, `email`, `member_id`)

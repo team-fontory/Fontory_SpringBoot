@@ -85,7 +85,6 @@ class MemberUpdateServiceIntegrationTest {
                 () -> assertThat(foundMember.getNickname()).isEqualTo(TEST_MEMBER_NICKNAME),
                 () -> assertThat(foundMember.getGender()).isEqualTo(TEST_MEMBER_GENDER),
                 () -> assertThat(foundMember.getProvideId()).isEqualTo(TEST_PROVIDE_ID),
-                () -> assertThat(foundMember.getTerms()).isEqualTo(TEST_MEMBER_TERMS),
                 () -> assertThat(foundMember.getProfileImageKey()).isEqualTo(TEST_MEMBER_PROFILE_KEY),
                 () -> assertThat(foundMember.getCreatedAt()).isNotNull(),
                 () -> assertThat(foundMember.getUpdatedAt()).isNotNull(),
@@ -104,7 +103,7 @@ class MemberUpdateServiceIntegrationTest {
     @Test
     @DisplayName("member - create success test")
     void createTest() {
-        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
         ProvideCreateDto newProvideCreateDto = new ProvideCreateDto(NEW_MEMBER_PROVIDER, NEW_MEMBER_PROVIDED_ID, NEW_MEMBER_EMAIL);
         Provide createdProvide = provideService.create(newProvideCreateDto);
         Member createdMember = create(initNewMemberRequest, createdProvide);
@@ -115,7 +114,6 @@ class MemberUpdateServiceIntegrationTest {
                 () -> assertThat(createdMember.getNickname()).isEqualTo(NEW_MEMBER_NICKNAME),
                 () -> assertThat(createdMember.getGender()).isEqualTo(NEW_MEMBER_GENDER),
                 () -> assertThat(createdMember.getBirth()).isEqualTo(NEW_MEMBER_BIRTH),
-                () -> assertThat(createdMember.getTerms()).isEqualTo(NEW_MEMBER_TERMS),
                 () -> assertThat(createdMember.getProfileImageKey()).isEqualTo(NEW_MEMBER_PROFILE_KEY),
                 () -> assertThat(createdMember.getCreatedAt()).isNotNull(),
                 () -> assertThat(createdMember.getUpdatedAt()).isNotNull()
@@ -130,11 +128,11 @@ class MemberUpdateServiceIntegrationTest {
         Provide createdProvide1 = provideService.create(provideCreateDto1);
         Provide createdProvide2 = provideService.create(provideCreateDto2);
         // 첫 번째 회원 생성
-        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
         create(initNewMemberRequest, createdProvide1);
 
         // 동일 닉네임으로 또 회원 생성 시 예외 발생
-        InitMemberInfoRequest duplicateInitNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+        InitMemberInfoRequest duplicateInitNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
         assertThatThrownBy(
                 () -> create(duplicateInitNewMemberInfoRequest, createdProvide2))
                 .isExactlyInstanceOf(MemberDuplicateNameExistsException.class);
@@ -145,7 +143,7 @@ class MemberUpdateServiceIntegrationTest {
     void updateTest() {
         // 기존에 존재하는 회원(TEST_MEMBER_ID) 조회
         Member member = memberLookupService.getOrThrowById(TEST_MEMBER_ID);
-        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME, UPDATE_MEMBER_TERMS);
+        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME);
 
         // 업데이트 요청: 단일 회원 ID만 전달
         Member updatedMember = memberUpdateService.update(TEST_MEMBER_ID, memberUpdateRequest);
@@ -157,7 +155,6 @@ class MemberUpdateServiceIntegrationTest {
                 () -> assertThat(updatedMember.getProvideId()).isEqualTo(member.getProvideId()),
                 () -> assertThat(updatedMember.getNickname()).isEqualTo(UPDATE_MEMBER_NICKNAME),
                 () -> assertThat(updatedMember.getProfileImageKey()).isEqualTo(member.getProfileImageKey()),
-                () -> assertThat(updatedMember.getTerms()).isEqualTo(UPDATE_MEMBER_TERMS),
                 () -> assertThat(updatedMember.getUpdatedAt()).isAfter(member.getUpdatedAt())
         );
     }
@@ -173,13 +170,13 @@ class MemberUpdateServiceIntegrationTest {
         // 두 회원을 각각 생성
         String uniqueNickname1 = UUID.randomUUID().toString();
         String uniqueNickname2 = UUID.randomUUID().toString();
-        InitMemberInfoRequest initNewMemberInfoRequestDto1 = new InitMemberInfoRequest(uniqueNickname1, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
-        InitMemberInfoRequest initNewMemberInfoRequestDto2 = new InitMemberInfoRequest(uniqueNickname2, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+        InitMemberInfoRequest initNewMemberInfoRequestDto1 = new InitMemberInfoRequest(uniqueNickname1, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
+        InitMemberInfoRequest initNewMemberInfoRequestDto2 = new InitMemberInfoRequest(uniqueNickname2, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
         Member member1 = create(initNewMemberInfoRequestDto1, createdProvide1);
         create(initNewMemberInfoRequestDto2, createdProvide2);
 
         // member1의 닉네임을 이미 존재하는 이름(uniqueNickname2)으로 업데이트 시도하면 예외 발생
-        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(uniqueNickname2, UPDATE_MEMBER_TERMS);
+        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(uniqueNickname2);
         Long member1Id = member1.getId();
 
         assertThatThrownBy(
@@ -190,7 +187,7 @@ class MemberUpdateServiceIntegrationTest {
     @Test
     @DisplayName("member - update fail test caused by member not found")
     void updateNonExistentMemberTest() {
-        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME, UPDATE_MEMBER_TERMS);
+        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME);
         assertThatThrownBy(
                 () -> memberUpdateService.update(nonExistentId, memberUpdateRequest))
                 .isExactlyInstanceOf(MemberNotFoundException.class);
@@ -203,7 +200,7 @@ class MemberUpdateServiceIntegrationTest {
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(Provider.GOOGLE, UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Provide createdProvide = provideService.create(provideCreateDto);
 
-        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
         Member member = create(initNewMemberRequest, createdProvide);
 
         // 회원 비활성화 요청 (단일 ID)
@@ -218,7 +215,7 @@ class MemberUpdateServiceIntegrationTest {
         ProvideCreateDto provideCreateDto = new ProvideCreateDto(Provider.GOOGLE, UUID.randomUUID().toString(), UUID.randomUUID().toString());
         Provide createdProvide = provideService.create(provideCreateDto);
 
-        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+        InitMemberInfoRequest initNewMemberRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
         Member member = create(initNewMemberRequest, createdProvide);
 
         // 최초 비활성화 처리
