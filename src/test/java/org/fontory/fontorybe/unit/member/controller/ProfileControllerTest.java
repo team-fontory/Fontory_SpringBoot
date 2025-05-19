@@ -31,7 +31,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.fontory.fontorybe.TestConstants.*;
-import static org.fontory.fontorybe.TestConstants.UPDATE_MEMBER_TERMS;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 class ProfileControllerTest {
@@ -111,8 +110,7 @@ class ProfileControllerTest {
     void testUpdateMember() {
         //given
         MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(
-                UPDATE_MEMBER_NICKNAME,
-                UPDATE_MEMBER_TERMS
+                UPDATE_MEMBER_NICKNAME
         );
 
         //when
@@ -124,7 +122,6 @@ class ProfileControllerTest {
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
                 () -> assertThat(body).isNotNull(),
                 () -> assertThat(body.getNickname()).isEqualTo(UPDATE_MEMBER_NICKNAME),
-                () -> assertThat(body.getTerms()).isEqualTo(UPDATE_MEMBER_TERMS),
                 () -> assertThat(body.getProfileImageUrl()).isEqualTo(cloudStorageService.getProfileImageUrl(testMember.getProfileImageKey()))
         );
     }
@@ -134,7 +131,7 @@ class ProfileControllerTest {
     void updateMemberNonExistentTest() {
         // given
         UserPrincipal nonExistentUserPrincipal = new UserPrincipal(NON_EXIST_ID);
-        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(TestConstants.UPDATE_MEMBER_NICKNAME, UPDATE_MEMBER_TERMS);
+        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(TestConstants.UPDATE_MEMBER_NICKNAME);
 
         // when & then
         assertThatThrownBy(() -> profileController.updateMember(nonExistentUserPrincipal, memberUpdateRequest, mockFiles))

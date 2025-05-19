@@ -94,8 +94,7 @@ public class ProfileController {
         }
 
         Member updatedMember = memberUpdateService.update(requestMemberId, req);
-        log.info("Updated : Member ID: {} Updated successfully with nickname: {}, terms : {}",
-                updatedMember.getId(), updatedMember.getNickname(), updatedMember.getTerms());
+        log.info("Updated : Member ID: {} Updated successfully with nickname: {}", updatedMember.getId(), updatedMember.getNickname());
 
         MyProfileResponse myProfileResponse = MyProfileResponse.from(updatedMember, cloudStorageService.getProfileImageUrl(updatedMember.getProfileImageKey()));
         log.info("Response sent: MyProfileDto : {}", myProfileResponse);

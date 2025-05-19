@@ -105,7 +105,7 @@ class RegistrationControllerIntegrationTest {
     @Test
     @DisplayName("POST /register - add member success with valid Authorization header")
     void addMemberSuccessTest() throws Exception {
-        InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+        InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
         String jsonRequest = objectMapper.writeValueAsString(initMemberInfoRequest);
         MockMultipartFile jsonPart = new MockMultipartFile(
                 "req",

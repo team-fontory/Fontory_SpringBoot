@@ -27,7 +27,4 @@ public class InitMemberInfoRequest {
     @NotNull(message = "생년월일을 입력해주세요.")
     @Past(message = "생년월일은 과거 날짜만 가능합니다.")
     private LocalDate birth;
-
-    @NotNull(message = "이용약관 동의 여부를 선택해주세요.")
-    private Boolean terms;
 }
