@@ -15,6 +15,7 @@ public class FontRequestProduceDto {
     private Long fontId;
     private String fileKey;
     private String fontName;
+    private String fontEngName;
     private String templateURL;
     private String author;
     private String requestUUID;
@@ -25,6 +26,7 @@ public class FontRequestProduceDto {
                 .fileKey(font.getKey())
                 .fontId(font.getId())
                 .fontName(font.getName())
+                .fontEngName(font.getEngName())
                 .templateURL(templateUrl)
                 .author(member.getNickname())
                 .requestUUID(MDC.get("requestId"))
