@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.authentication.adapter.inbound.annotation.Login;
 import org.fontory.fontorybe.authentication.application.AuthService;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
+import org.fontory.fontorybe.authentication.domain.exception.AuthenticationRequiredException;
 import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
@@ -20,6 +21,7 @@ import org.fontory.fontorybe.member.controller.dto.MyProfileResponse;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.controller.port.MemberUpdateService;
 import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.member.infrastructure.entity.MemberStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,6 +56,9 @@ public class ProfileController {
         log.info("Request received: getMyInfo member ID: {}", requestMemberId);
 
         Member lookupMember = memberLookupService.getOrThrowById(requestMemberId);
+        if (lookupMember.getStatus().equals(MemberStatus.ONBOARDING)) {
+            throw new AuthenticationRequiredException();
+        }
         String fileUrl = cloudStorageService.getProfileImageUrl(lookupMember.getProfileImageKey());
         log.info("ProfileImageUrl generated : {}", fileUrl);
 
@@ -73,21 +78,26 @@ public class ProfileController {
     public ResponseEntity<MyProfileResponse> updateMember(
             @Login UserPrincipal userPrincipal,
             @RequestPart @Valid MemberUpdateRequest req,
-            @SingleFileUpload @RequestPart("file") List<MultipartFile> files
+            @SingleFileUpload @RequestPart(value = "file", required = false) List<MultipartFile> files
     ) {
         Long requestMemberId = userPrincipal.getId();
-        MultipartFile file = extractSingleMultipartFile(files);
-
         log.info("Request received: update member ID: {} with request: {}",
                 requestMemberId, req);
-        logFileDetails(file, "Member profile image upload");
 
-        FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
+        if (files != null && !files.isEmpty()) {
+            MultipartFile file = extractSingleMultipartFile(files);
+            logFileDetails(file, "Member profile image upload");
+            FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
+            log.info("fileUploadResult: {}", fileUploadResult);
+        } else {
+            log.info("No profile image upload found");
+        }
+
         Member updatedMember = memberUpdateService.update(requestMemberId, req);
         log.info("Updated : Member ID: {} Updated successfully with nickname: {}, terms : {}",
                 updatedMember.getId(), updatedMember.getNickname(), updatedMember.getTerms());
 
-        MyProfileResponse myProfileResponse = MyProfileResponse.from(updatedMember, fileUploadResult.getFileUrl());
+        MyProfileResponse myProfileResponse = MyProfileResponse.from(updatedMember, cloudStorageService.getProfileImageUrl(updatedMember.getProfileImageKey()));
         log.info("Response sent: MyProfileDto : {}", myProfileResponse);
 
         return ResponseEntity
