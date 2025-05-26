@@ -273,7 +273,7 @@ public class FontController {
             summary = "폰트 이름 중복 검사",
             description = "이름이 중복이면 true를 반환합니다."
     )
-    @PostMapping("/verify-name")
+    @GetMapping("/verify-name")
     public ResponseEntity<?> verifyFontName(
             @Login UserPrincipal userPrincipal,
             @RequestParam String fontName
