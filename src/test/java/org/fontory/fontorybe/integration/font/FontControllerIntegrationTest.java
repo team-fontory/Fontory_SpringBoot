@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -66,6 +67,8 @@ class FontControllerIntegrationTest {
     private FileService fileService;
     @MockitoBean
     private FontRequestProducer fontRequestProducer;
+    @MockitoBean
+    private ApplicationEventPublisher eventPublisher;
 
     private final Long existMemberId = 999L;
     private final String existMemberName = "existMemberNickName";

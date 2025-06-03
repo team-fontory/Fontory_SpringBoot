@@ -28,6 +28,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.jdbc.Sql;
@@ -43,6 +45,8 @@ class FontServiceIntegrationTest {
     private FileService fileService;
     @MockitoBean
     private FontRequestProducer fontRequestProducer;
+    @MockitoBean
+    private ApplicationEventPublisher eventPublisher;
 
     private final Long existMemberId = 999L;
     private final String existMemberName = "existMemberNickName";

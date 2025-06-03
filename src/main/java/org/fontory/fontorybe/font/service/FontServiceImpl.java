@@ -10,6 +10,8 @@ import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
+import org.fontory.fontorybe.font.FontCreateCompleteNotificationEvent;
+import org.fontory.fontorybe.font.FontCreateRequestNotificationEvent;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontDeleteResponse;
 import org.fontory.fontorybe.font.controller.dto.FontDownloadResponse;
@@ -33,6 +35,7 @@ import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.sms.application.port.PhoneNumberStorage;
 import org.fontory.fontorybe.sms.application.port.SmsService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -51,8 +54,7 @@ public class FontServiceImpl implements FontService {
     private final FontRequestProducer fontRequestProducer;
     private final CloudStorageService cloudStorageService;
     private final BadWordFiltering badWordFiltering;
-    private final SmsService smsService;
-    private final PhoneNumberStorage phoneNumberStorage;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -73,8 +75,8 @@ public class FontServiceImpl implements FontService {
         fontRequestProducer.sendFontRequest(FontRequestProduceDto.from(savedFont, member, fontPaperUrl));
 
         if (fontCreateDTO.getPhoneNumber() != null && !fontCreateDTO.getPhoneNumber().isBlank()) {
-            phoneNumberStorage.savePhoneNumber(savedFont, fontCreateDTO.getPhoneNumber());
-            smsService.sendFontCreationNotification(fontCreateDTO.getPhoneNumber(), fontCreateDTO.getName());
+            String notificationPhoneNumber = fontCreateDTO.getPhoneNumber();
+            eventPublisher.publishEvent(new FontCreateRequestNotificationEvent(savedFont, notificationPhoneNumber));
         }
 
         log.info("Service completed: Font created with ID: {} and Font template image uploaded successfully", savedFont.getId());
@@ -302,12 +304,7 @@ public class FontServiceImpl implements FontService {
         String woff2Url = cloudStorageService.getWoff2Url(updatedFont.getKey());
 
         if (fontProgressUpdateDTO.getStatus() == FontStatus.DONE) {
-            String phoneNumber = phoneNumberStorage.getPhoneNumber(targetFont);
-
-            if (phoneNumber != null && !phoneNumber.isBlank()) {
-                smsService.sendFontProgressNotification(phoneNumber, updatedFont.getName());
-                phoneNumberStorage.removePhoneNumber(targetFont);
-            }
+            eventPublisher.publishEvent(new FontCreateCompleteNotificationEvent(updatedFont));
         }
 
         log.info("Service completed: Font ID: {} updated successfully", fontId);
