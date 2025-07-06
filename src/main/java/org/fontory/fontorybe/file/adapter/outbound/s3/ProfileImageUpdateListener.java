@@ -28,8 +28,8 @@ public class ProfileImageUpdateListener {
         profileImagePrefix = s3Config.getPrefix(FileType.PROFILE_IMAGE);
     }
 
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
-    public void beforeCommit(ProfileImageUpdatedEvent event) {
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void afterCommit(ProfileImageUpdatedEvent event) {
         s3.copyObject(CopyObjectRequest.builder()
                         .sourceBucket(profileImageBucketName)
                         .sourceKey(profileImagePrefix + "/" + event.getTempKey())
