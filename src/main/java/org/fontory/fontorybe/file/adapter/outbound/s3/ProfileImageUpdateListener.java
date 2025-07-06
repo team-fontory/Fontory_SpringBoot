@@ -30,17 +30,23 @@ public class ProfileImageUpdateListener {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void afterCommit(ProfileImageUpdatedEvent event) {
-        s3.copyObject(CopyObjectRequest.builder()
-                        .sourceBucket(profileImageBucketName)
-                        .sourceKey(profileImagePrefix + "/" + event.getTempKey())
-                        .destinationBucket(profileImageBucketName)
-                        .destinationKey(profileImagePrefix + "/" + event.getFixedKey())
-                        .build());
+        try {
+            s3.copyObject(CopyObjectRequest.builder()
+                            .sourceBucket(profileImageBucketName)
+                            .sourceKey(profileImagePrefix + "/" + event.getTempKey())
+                            .destinationBucket(profileImageBucketName)
+                            .destinationKey(profileImagePrefix + "/" + event.getFixedKey())
+                            .build());
 
-        s3.deleteObject(DeleteObjectRequest.builder()
-                .bucket(profileImageBucketName)
-                .key(profileImagePrefix + "/" + event.getTempKey())
-                .build());
+            s3.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(profileImageBucketName)
+                    .key(profileImagePrefix + "/" + event.getTempKey())
+                    .build());
+        } catch (Exception e) {
+            log.error("Error while copying/deleting profile image to s3: tempKey={}, fixedKey={}",
+                    event.getTempKey(), event.getFixedKey(), e);
+            throw e;
+        }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_ROLLBACK)
