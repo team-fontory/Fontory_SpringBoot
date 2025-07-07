@@ -144,7 +144,6 @@ public class TestContainer {
         fileService = FileServiceImpl.builder()
                 .memberLookupService(memberLookupService)
                 .memberDefaults(memberDefaults)
-                .memberUpdateService(memberUpdateService)
                 .fileRepository(fileRepository)
                 .fileRequestMapper(fileRequestMapper)
                 .eventPublisher(eventPublisher)

@@ -74,11 +74,10 @@ public class RegistrationController {
             MultipartFile file = extractSingleMultipartFile(files);
             logFileDetails(file, "Member profile image upload");
             FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
-            updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, req, fileUploadResult);
         } else {
             log.info("No profile image upload found");
-            updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, req);
         }
+        updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, req);
 
         log.info("Response sent: Member ID: {} Created successfully with nickname: {}",
                 updatedMember.getId(), updatedMember.getNickname());

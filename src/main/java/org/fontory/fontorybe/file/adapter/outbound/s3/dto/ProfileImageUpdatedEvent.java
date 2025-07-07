@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class ProfileImageUpdatedEvent {
+    private final Long memberId;
     private final String tempKey;
     private final String fixedKey;
 }

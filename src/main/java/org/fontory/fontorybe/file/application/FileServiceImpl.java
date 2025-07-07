@@ -35,7 +35,6 @@ public class FileServiceImpl implements FileService {
     private final FileRequestMapper fileRequestMapper;
     private final CloudStorageService cloudStorageService;
     private final MemberLookupService memberLookupService;
-    private final MemberUpdateService memberUpdateService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -46,32 +45,51 @@ public class FileServiceImpl implements FileService {
                 .orElseThrow(() -> new FileNotFoundException(id));
     }
 
+    /**
+     * Upload profile image in two phase
+     * 1) Stage the file in S3 under tempKey and save metadata in DB
+     * 2) Publish an event for AFTER_COMMIT listener to promote and update DB.
+     */
     @Override
     @Transactional
     public FileUploadResult uploadProfileImage(MultipartFile file, Long memberId) {
-        log.info("Processing profile image upload: fileName={}, memberId={}", file.getOriginalFilename(), memberId);
+        log.info("Start profile image upload: fileName={}, memberId={}", file.getOriginalFilename(), memberId);
 
+        // Lookup member and build FileCreate DTO
         Member requestMember = memberLookupService.getOrThrowById(memberId);
+        log.debug("Fetched member for upload: memberId={}, currentProfileKey={}",
+                memberId, requestMember.getProfileImageKey());
         FileCreate profileImageFileCreate = fileRequestMapper.toProfileImageFileCreate(file, requestMember);
+
+        // Determine fixedKey: new UUID for first upload, else reuse
         boolean isInitial = memberDefaults.getProfileImageKey().equals(requestMember.getProfileImageKey());
         String fixedKey = isInitial
                 ? UUID.randomUUID().toString()
                 : requestMember.getProfileImageKey();
+        log.debug("Determined fixedKey: {} (initialUpload={})", fixedKey, isInitial);
 
+        // Stage upload to S3 under tempKey
         String tempKey = UUID.randomUUID().toString();
-
-        log.info("Uploading profile image to cloud storage: memberId={}, tempKey={}", memberId, tempKey);
+        log.info("Staging profile image to S3: memberId={}, tempKey={}", memberId, tempKey);
         FileMetadata metadata = cloudStorageService.uploadProfileImage(profileImageFileCreate, tempKey);
+        log.debug("S3 upload complete, metadata key updated: tempKey={}, metadataKey={}",
+                tempKey, metadata.getKey());
+
+        // Save metadata with the final key placeholder
         metadata.updateKey(fixedKey);
         FileMetadata savedMetaData = fileRepository.save(metadata);
-        Member updated = memberUpdateService.setProfileImageKey(requestMember, fixedKey);
+        log.info("File metadata saved: id={}, key={}", savedMetaData.getId(), savedMetaData.getKey());
 
-        log.info("Updating member profile image key: memberId={}, memberProfileImageKey={}", updated.getId(), updated.getProfileImageKey());
-        log.info("Publishing image update event: tempKey={}, fixedKey={}", tempKey, fixedKey);
-        eventPublisher.publishEvent(new ProfileImageUpdatedEvent(tempKey, fixedKey));
+        // Publish event for AFTER_COMMIT promotion listener
+        log.info("Publishing ProfileImageUpdatedEvent: memberId={}, tempKey={}, fixedKey={}",
+                memberId, tempKey, fixedKey);
+        eventPublisher.publishEvent(new ProfileImageUpdatedEvent(memberId, tempKey, fixedKey));
+
+        // 6) Build result URL from fixedKey (will be live after promotion)
         String fileUrl = cloudStorageService.getProfileImageUrl(fixedKey);
         FileUploadResult result = FileUploadResult.from(savedMetaData, fileUrl);
-        log.info("Profile image upload completed successfully: memberId={}, fileUrl={}", memberId, fileUrl);
+        log.info("Profile image upload request processed: memberId={}, resultUrl={}", memberId, fileUrl);
+
         return result;
     }
 

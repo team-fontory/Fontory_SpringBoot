@@ -5,6 +5,6 @@ import org.fontory.fontorybe.member.controller.dto.MemberUpdateRequest;
 
 public interface MemberUpdateService {
     Member update(Long requestMemberId, MemberUpdateRequest memberUpdateRequest);
-    Member setProfileImageKey(Member requetMember, String profileImageKey);
+    Member setProfileImageKey(Long requestMemberId, String profileImageKey);
     Member disable(Long requestMemberId);
 }
