@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.fontory.fontorybe.file.adapter.inbound.FileRequestMapper;
-import org.fontory.fontorybe.file.adapter.outbound.s3.dto.ProfileImageUpdatedEvent;
 import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileRepository;
 import org.fontory.fontorybe.file.application.port.FileService;
@@ -13,7 +12,6 @@ import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.file.domain.exception.FileNotFoundException;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
-import org.fontory.fontorybe.member.controller.port.MemberUpdateService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.MemberDefaults;
 import org.springframework.context.ApplicationEventPublisher;
@@ -43,54 +41,6 @@ public class FileServiceImpl implements FileService {
         return Optional.ofNullable(id)
                 .flatMap(fileRepository::findById)
                 .orElseThrow(() -> new FileNotFoundException(id));
-    }
-
-    /**
-     * Upload profile image in two phase
-     * 1) Stage the file in S3 under tempKey and save metadata in DB
-     * 2) Publish an event for AFTER_COMMIT listener to promote and update DB.
-     */
-    @Override
-    @Transactional
-    public FileUploadResult uploadProfileImage(MultipartFile file, Long memberId) {
-        log.info("Start profile image upload: fileName={}, memberId={}", file.getOriginalFilename(), memberId);
-
-        // Lookup member and build FileCreate DTO
-        Member requestMember = memberLookupService.getOrThrowById(memberId);
-        log.debug("Fetched member for upload: memberId={}, currentProfileKey={}",
-                memberId, requestMember.getProfileImageKey());
-        FileCreate profileImageFileCreate = fileRequestMapper.toProfileImageFileCreate(file, requestMember);
-
-        // Determine fixedKey: new UUID for first upload, else reuse
-        boolean isInitial = memberDefaults.getProfileImageKey().equals(requestMember.getProfileImageKey());
-        String fixedKey = isInitial
-                ? UUID.randomUUID().toString()
-                : requestMember.getProfileImageKey();
-        log.debug("Determined fixedKey: {} (initialUpload={})", fixedKey, isInitial);
-
-        // Stage upload to S3 under tempKey
-        String tempKey = UUID.randomUUID().toString();
-        log.info("Staging profile image to S3: memberId={}, tempKey={}", memberId, tempKey);
-        FileMetadata metadata = cloudStorageService.uploadProfileImage(profileImageFileCreate, tempKey);
-        log.debug("S3 upload complete, metadata key updated: tempKey={}, metadataKey={}",
-                tempKey, metadata.getKey());
-
-        // Save metadata with the final key placeholder
-        metadata.updateKey(fixedKey);
-        FileMetadata savedMetaData = fileRepository.save(metadata);
-        log.info("File metadata saved: id={}, key={}", savedMetaData.getId(), savedMetaData.getKey());
-
-        // Publish event for AFTER_COMMIT promotion listener
-        log.info("Publishing ProfileImageUpdatedEvent: memberId={}, tempKey={}, fixedKey={}",
-                memberId, tempKey, fixedKey);
-        eventPublisher.publishEvent(new ProfileImageUpdatedEvent(memberId, tempKey, fixedKey));
-
-        // 6) Build result URL from fixedKey (will be live after promotion)
-        String fileUrl = cloudStorageService.getProfileImageUrl(fixedKey);
-        FileUploadResult result = FileUploadResult.from(savedMetaData, fileUrl);
-        log.info("Profile image upload request processed: memberId={}, resultUrl={}", memberId, fileUrl);
-
-        return result;
     }
 
     @Override

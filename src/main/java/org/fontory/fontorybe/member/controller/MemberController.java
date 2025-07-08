@@ -36,10 +36,8 @@ public class MemberController {
         log.info("Request received: Get member info ID: {} by member ID: {}", id, requestMemberId);
 
         Member targetMember = memberLookupService.getOrThrowById(id);
-        String fileUrl = cloudStorageService.getProfileImageUrl(targetMember.getProfileImageKey());
-        log.info("ProfileImageUrl generated : {}", fileUrl);
 
-        ProfileResponse profileResponse = ProfileResponse.from(targetMember, fileUrl);
+        ProfileResponse profileResponse = ProfileResponse.from(targetMember);
         log.info("Response sent: ProfileResponse : {}", profileResponse);
 
         return ResponseEntity

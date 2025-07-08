@@ -99,7 +99,6 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
                             .birth(LocalDate.now())
                             .nickname("Tester")
                             .status(MemberStatus.ONBOARDING)
-                            .profileImageKey(memberDefaults.getProfileImageKey())
                             .build();
                     return memberRepository.save(m);
                 });

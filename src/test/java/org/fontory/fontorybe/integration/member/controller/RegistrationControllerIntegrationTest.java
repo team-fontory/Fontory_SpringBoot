@@ -31,8 +31,7 @@ import java.util.UUID;
 import static org.fontory.fontorybe.TestConstants.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,12 +57,6 @@ class RegistrationControllerIntegrationTest {
         UserPrincipal userPrincipal = new UserPrincipal(TEST_MEMBER_ID);
         validAccessToken = jwtTokenProvider.generateAccessToken(userPrincipal);
 
-        FileUploadResult mockFileUploadResult = FileUploadResult.builder()
-                .fileName(TEST_FILE_NAME)
-                .fileUrl(TEST_FILE_URL)
-                .fileUploadTime(TEST_FILE_UPLOAD_TIME)
-                .size(TEST_FILE_SIZE)
-                .build();
         FileMetadata fileMetadata = FileMetadata.builder()
                 .id(TEST_FILE_ID)
                 .fileName(TEST_FILE_NAME)
@@ -79,7 +72,6 @@ class RegistrationControllerIntegrationTest {
         notInitializedAccessToken = jwtTokenProvider.generateAccessToken(UserPrincipal.from(notInitedMember));
 
         given(fileService.getOrThrowById(any())).willReturn(fileMetadata);
-        given(fileService.uploadProfileImage(any(), any())).willReturn(mockFileUploadResult);
     }
 
     @Test
@@ -107,25 +99,11 @@ class RegistrationControllerIntegrationTest {
     void addMemberSuccessTest() throws Exception {
         InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
         String jsonRequest = objectMapper.writeValueAsString(initMemberInfoRequest);
-        MockMultipartFile jsonPart = new MockMultipartFile(
-                "req",
-                null,
-                "application/json",
-                jsonRequest.getBytes(StandardCharsets.UTF_8)
-        );
-        MockMultipartFile filePart = new MockMultipartFile(
-                "file",
-                TEST_FILE_NAME,
-                "image/jpeg",
-                "fileBytes".getBytes(StandardCharsets.UTF_8)
-        );
 
-
-        mockMvc.perform(multipart("/register")
-                        .file(jsonPart)
-                        .file(filePart)
+        mockMvc.perform(post("/register")
                         .cookie(new Cookie("accessToken", notInitializedAccessToken))
-                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
                 .andExpect(status().isCreated());
     }
 }

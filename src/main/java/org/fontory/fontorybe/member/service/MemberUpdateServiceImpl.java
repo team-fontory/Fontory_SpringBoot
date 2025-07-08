@@ -44,14 +44,6 @@ public class MemberUpdateServiceImpl implements MemberUpdateService {
 
     @Override
     @Transactional
-    public Member setProfileImageKey(Long requestMemberId, String profileImageKey) {
-        Member targetMember = memberLookupService.getOrThrowById(requestMemberId);
-        Member member = targetMember.setProfileImageKey(profileImageKey);
-        return memberRepository.save(member);
-    }
-
-    @Override
-    @Transactional
     public Member disable(Long requestMemberId) {
         Member targetMember = memberLookupService.getOrThrowById(requestMemberId);
 

@@ -71,7 +71,6 @@ class MemberUpdateServiceTest {
                 () -> assertThat(foundMember.getNickname()).isEqualTo(TEST_MEMBER_NICKNAME),
                 () -> assertThat(foundMember.getGender()).isEqualTo(TEST_MEMBER_GENDER),
                 () -> assertThat(foundMember.getProvideId()).isEqualTo(testMemberProvideId),
-                () -> assertThat(foundMember.getProfileImageKey()).isNotEqualTo(DEFAULT_PROFILE_KEY),
                 () -> assertThat(foundMember.getCreatedAt()).isNotNull(),
                 () -> assertThat(foundMember.getUpdatedAt()).isNotNull(),
                 () -> assertThat(foundMember.getDeletedAt()).isNull()
@@ -101,7 +100,6 @@ class MemberUpdateServiceTest {
                 () -> assertThat(defaultMember.getNickname()).isNotNull(),
                 () -> assertThat(defaultMember.getGender()).isEqualTo(memberDefaults.getGender()),
                 () -> assertThat(defaultMember.getBirth()).isEqualTo(memberDefaults.getBirth()),
-                () -> assertThat(defaultMember.getProfileImageKey()).isEqualTo(memberDefaults.getProfileImageKey()),
                 () -> assertThat(defaultMember.getCreatedAt()).isNotNull(),
                 () -> assertThat(defaultMember.getUpdatedAt()).isNotNull()
         );
@@ -122,7 +120,6 @@ class MemberUpdateServiceTest {
                 () -> assertThat(createdMember.getNickname()).isEqualTo(NEW_MEMBER_NICKNAME),
                 () -> assertThat(createdMember.getGender()).isEqualTo(NEW_MEMBER_GENDER),
                 () -> assertThat(createdMember.getBirth()).isEqualTo(NEW_MEMBER_BIRTH),
-                () -> assertThat(createdMember.getProfileImageKey()).isNotEqualTo(DEFAULT_PROFILE_KEY),
                 () -> assertThat(createdMember.getCreatedAt()).isNotNull(),
                 () -> assertThat(createdMember.getUpdatedAt()).isNotNull()
         );
@@ -162,7 +159,6 @@ class MemberUpdateServiceTest {
                 () -> assertThat(updatedMember.getCreatedAt()).isEqualTo(member.getCreatedAt()),
                 () -> assertThat(updatedMember.getProvideId()).isEqualTo(member.getProvideId()),
                 () -> assertThat(updatedMember.getNickname()).isEqualTo(UPDATE_MEMBER_NICKNAME),
-                () -> assertThat(updatedMember.getProfileImageKey()).isEqualTo(member.getProfileImageKey()),
                 () -> assertThat(updatedMember.getUpdatedAt()).isAfter(member.getUpdatedAt())
         );
     }
@@ -229,8 +225,7 @@ class MemberUpdateServiceTest {
         Member updatedMember = memberUpdateService.update(member.getId(), memberUpdateRequest);
         assertAll(
                 () -> assertThat(updatedMember.getId()).isEqualTo(member.getId()),
-                () -> assertThat(updatedMember.getNickname()).isEqualTo(member.getNickname()),
-                () -> assertThat(updatedMember.getProfileImageKey()).isEqualTo(member.getProfileImageKey())
+                () -> assertThat(updatedMember.getNickname()).isEqualTo(member.getNickname())
         );
     }
 

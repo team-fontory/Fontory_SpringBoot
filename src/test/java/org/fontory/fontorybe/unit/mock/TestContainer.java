@@ -221,8 +221,7 @@ public class TestContainer {
                 "image/png",         // Content-Type
                 "dummy-image-data".getBytes()  // 파일 내용
         );
-        FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, defaultMember.getId());
-        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), initNewMemberInfoRequest, fileUploadResult);
+        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), initNewMemberInfoRequest);
     }
 
     public final ProvideCreateDto testMemberProvideCreateDto = new ProvideCreateDto(TEST_MEMBER_PROVIDER, TEST_MEMBER_PROVIDED_ID, TEST_MEMBER_EMAIL);

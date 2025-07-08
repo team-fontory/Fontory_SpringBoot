@@ -114,15 +114,14 @@ class ProfileControllerTest {
         );
 
         //when
-        ResponseEntity<MyProfileResponse> response = profileController.updateMember(testMemberUserPrincipal, memberUpdateRequest, mockFiles);
+        ResponseEntity<MyProfileResponse> response = profileController.updateMember(testMemberUserPrincipal, memberUpdateRequest);
         MyProfileResponse body = response.getBody();
 
         //then
         assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
                 () -> assertThat(body).isNotNull(),
-                () -> assertThat(body.getNickname()).isEqualTo(UPDATE_MEMBER_NICKNAME),
-                () -> assertThat(body.getProfileImageUrl()).isEqualTo(cloudStorageService.getProfileImageUrl(testMember.getProfileImageKey()))
+                () -> assertThat(body.getNickname()).isEqualTo(UPDATE_MEMBER_NICKNAME)
         );
     }
 
@@ -134,7 +133,7 @@ class ProfileControllerTest {
         MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(TestConstants.UPDATE_MEMBER_NICKNAME);
 
         // when & then
-        assertThatThrownBy(() -> profileController.updateMember(nonExistentUserPrincipal, memberUpdateRequest, mockFiles))
+        assertThatThrownBy(() -> profileController.updateMember(nonExistentUserPrincipal, memberUpdateRequest))
                 .isInstanceOf(MemberNotFoundException.class);
     }
 }

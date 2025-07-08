@@ -57,23 +57,6 @@ class FileServiceIntegrationTest {
         given(s3Client.deleteObject(any(DeleteObjectRequest.class)))
                 .willReturn(DeleteObjectResponse.builder().build());
 
-        // Stub cloud storage upload for profile image
-        given(cloudStorageService.uploadProfileImage(any(FileCreate.class), anyString()))
-                .willAnswer(invocation -> {
-                    FileCreate fc = invocation.getArgument(0);
-                    String key = invocation.getArgument(1);
-                    return FileMetadata.builder()
-                            .fileName(fc.getFileName())
-                            .fileType(fc.getFileType())
-                            .extension(fc.getExtension())
-                            .key(key)
-                            .uploaderId(fc.getUploaderId())
-                            .size(fc.getFile().getSize())
-                            .uploadedAt(LocalDateTime.now())
-                            .createdAt(LocalDateTime.now())
-                            .updatedAt(LocalDateTime.now())
-                            .build();
-                });
         // Stub cloud storage upload for font template
         given(cloudStorageService.uploadFontTemplateImage(any(FileCreate.class)))
                 .willAnswer(invocation -> {
@@ -91,10 +74,8 @@ class FileServiceIntegrationTest {
                             .updatedAt(LocalDateTime.now())
                             .build();
                 });
-        // Stub getting file URL
-        given(cloudStorageService.getProfileImageUrl(anyString()))
-                .willReturn(mockedFileUrl);
 
+        // Stub getting file URL
         given(cloudStorageService.getFontPaperUrl(anyString()))
                 .willReturn(mockedFileUrl);
     }
@@ -114,30 +95,6 @@ class FileServiceIntegrationTest {
     void getNonExistentFileMetadataTest() {
         assertThatThrownBy(() -> fileService.getOrThrowById(nonExistentId))
                 .isInstanceOf(FileNotFoundException.class);
-    }
-
-    @Test
-    @DisplayName("uploadProfileImage - uploads successfully and updates member")
-    void uploadProfileImageTest() {
-        MockMultipartFile mockFile = createMockImageFile("profileTest.jpg", "image/jpeg");
-
-        FileUploadResult result = fileService.uploadProfileImage(mockFile, existMemberId);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getFileUrl()).isEqualTo(mockedFileUrl);
-        assertThat(result.getFileName()).isEqualTo(existMemberId + ".jpg");
-        assertThat(result.getSize()).isEqualTo(mockFile.getSize());
-
-        Member member = memberLookupService.getOrThrowById(existMemberId);
-        assertThat(member.getProfileImageKey()).isNotNull();
-    }
-
-    @Test
-    @DisplayName("uploadProfileImage - non-existent member throws")
-    void uploadProfileImageNonExistentMemberTest() {
-        MockMultipartFile mockFile = createMockImageFile("profileTest.jpg", "image/jpeg");
-        assertThatThrownBy(() -> fileService.uploadProfileImage(mockFile, nonExistentId))
-                .isInstanceOf(MemberNotFoundException.class);
     }
 
     @Test

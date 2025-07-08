@@ -73,17 +73,10 @@ class RegistrationControllerTest {
     @DisplayName("addMember returns created member response")
     void testAddMember() {
         //given
-        MockMultipartFile file = new MockMultipartFile(
-                "file",              // RequestPart 이름
-                "test.png",          // 원본 파일명
-                "image/png",         // Content-Type
-                "dummy-image-data".getBytes()  // 파일 내용
-        );
-        List<MultipartFile> files = Collections.singletonList(file);
         Member notInitedMember = testContainer.createNotInitedMember();
 
         //when
-        ResponseEntity<MemberCreateResponse> response = registrationController.register(UserPrincipal.from(notInitedMember), newInitMemberInfoRequest, files);
+        ResponseEntity<MemberCreateResponse> response = registrationController.register(UserPrincipal.from(notInitedMember), newInitMemberInfoRequest);
         MemberCreateResponse body = response.getBody();
 
         //then

@@ -36,8 +36,6 @@ public class MemberEntity extends BaseEntity {
 
     private LocalDate birth;
 
-    private String profileImageKey;
-
     private Long provideId;
 
     @Enumerated(EnumType.STRING)
@@ -51,7 +49,6 @@ public class MemberEntity extends BaseEntity {
                 .nickname(nickname)
                 .gender(gender)
                 .birth(birth)
-                .profileImageKey(profileImageKey)
                 .provideId(provideId)
                 .status(status)
                 .createdAt(getCreatedAt())
@@ -66,7 +63,6 @@ public class MemberEntity extends BaseEntity {
                 .nickname(member.getNickname())
                 .gender(member.getGender())
                 .birth(member.getBirth())
-                .profileImageKey(member.getProfileImageKey())
                 .provideId(member.getProvideId())
                 .status(member.getStatus())
                 .createdAt(member.getCreatedAt())

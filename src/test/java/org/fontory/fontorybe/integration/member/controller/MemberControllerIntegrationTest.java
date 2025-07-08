@@ -47,9 +47,6 @@ class MemberControllerIntegrationTest {
         UserPrincipal userPrincipal = new UserPrincipal(TEST_MEMBER_ID);
         validAccessToken = jwtTokenProvider.generateAccessToken(userPrincipal);
         testMember = memberLookupService.getOrThrowById(TEST_MEMBER_ID);
-
-        given(cloudStorageService.getProfileImageUrl(testMember.getProfileImageKey()))
-                .willReturn(TEST_FILE_URL);
     }
 
     @Test
@@ -60,8 +57,7 @@ class MemberControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.memberId").value(TEST_MEMBER_ID.intValue()))
-                .andExpect(jsonPath("$.nickname").value(TEST_MEMBER_NICKNAME))
-                .andExpect(jsonPath("$.profileImageUrl").value(TEST_FILE_URL));
+                .andExpect(jsonPath("$.nickname").value(TEST_MEMBER_NICKNAME));
     }
 
     @Test
