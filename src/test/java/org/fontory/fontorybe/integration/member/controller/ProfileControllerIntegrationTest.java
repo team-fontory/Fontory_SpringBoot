@@ -62,8 +62,6 @@ class ProfileControllerIntegrationTest {
                 .fileUploadTime(TEST_FILE_UPLOAD_TIME)
                 .size(TEST_FILE_SIZE)
                 .build();
-
-        given(fileService.uploadProfileImage(any(), any())).willReturn(mockFileUploadResult);
     }
 
     @Test
@@ -81,31 +79,13 @@ class ProfileControllerIntegrationTest {
     void updateMemberSuccessTest() throws Exception {
         MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME);
         String jsonRequest = objectMapper.writeValueAsString(memberUpdateRequest);
-        MockMultipartFile jsonPart = new MockMultipartFile(
-                "req",
-                null,
-                "application/json",
-                jsonRequest.getBytes(StandardCharsets.UTF_8)
-        );
-        MockMultipartFile filePart = new MockMultipartFile(
-                "file",
-                UPDDATE_FILE_NAME,
-                "image/jpeg",
-                "fileBytes".getBytes(StandardCharsets.UTF_8)
-        );
 
-        MockMultipartHttpServletRequestBuilder builder = multipart("/member/me");
-        builder.with(request -> { request.setMethod("PATCH"); return request; });
-
-        mockMvc.perform(builder
-                        .file(jsonPart)
-                        .file(filePart)
+        mockMvc.perform(patch("/member/me")
                         .cookie(new Cookie("accessToken", validAccessToken))
-                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.memberId", is(TEST_MEMBER_ID.intValue())))
                 .andExpect(jsonPath("$.nickname", is(UPDATE_MEMBER_NICKNAME)))
-                .andExpect(jsonPath("$.profileImageUrl", containsString(testMember.getProfileImageKey())))
                 .andExpect(jsonPath("$.gender", is(testMember.getGender().name())))
                 .andExpect(jsonPath("$.birth", is(testMember.getBirth().toString())));
     }

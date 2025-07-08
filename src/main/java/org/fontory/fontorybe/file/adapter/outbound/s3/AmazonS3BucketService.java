@@ -27,38 +27,13 @@ public class AmazonS3BucketService implements CloudStorageService {
     private final S3Client s3;
     private final S3Config s3Config;
     private final ClockHolder clockHolder;
-    private String profileImageBucketName;
     private String fontPaperBucketName;
-    private String profileImagePrefix;
     private String fontPaperPrefix;
 
     @PostConstruct
     void init() {
-        profileImageBucketName = s3Config.getBucketName(FileType.PROFILE_IMAGE);
         fontPaperBucketName = s3Config.getBucketName(FileType.FONT_PAPER);
-        profileImagePrefix = s3Config.getPrefix(FileType.PROFILE_IMAGE);
         fontPaperPrefix = s3Config.getPrefix(FileType.FONT_PAPER);
-    }
-
-    @Override
-    public FileMetadata uploadProfileImage(FileCreate request, String key) {
-        log.info("Uploading profile image: fileName={}, contentType={}, size={} bytes, fileKey={}",
-            request.getFileName(), request.getFile().getContentType(), request.getFile().getSize(), key);
-
-        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(
-                request,
-                key,
-                profileImageBucketName,
-                profileImagePrefix,
-                clockHolder.getCurrentTimeStamp());
-
-        log.info("Profile image uploaded successfully: fileKey={}, bucket={}", key, profileImageBucketName);
-        return uploadFile(amazonS3PutRequest).toModel();
-    }
-
-    @Override
-    public String getProfileImageUrl(String key) {
-        return getFileUrl(FileType.PROFILE_IMAGE, key);
     }
 
     @Override

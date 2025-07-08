@@ -4,7 +4,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.fontory.fontorybe.file.adapter.inbound.FileRequestMapper;
-import org.fontory.fontorybe.file.adapter.outbound.s3.dto.ProfileImageUpdatedEvent;
 import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileRepository;
 import org.fontory.fontorybe.file.application.port.FileService;
@@ -13,7 +12,6 @@ import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.file.domain.exception.FileNotFoundException;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
-import org.fontory.fontorybe.member.controller.port.MemberUpdateService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.MemberDefaults;
 import org.springframework.context.ApplicationEventPublisher;
@@ -35,7 +33,6 @@ public class FileServiceImpl implements FileService {
     private final FileRequestMapper fileRequestMapper;
     private final CloudStorageService cloudStorageService;
     private final MemberLookupService memberLookupService;
-    private final MemberUpdateService memberUpdateService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -44,35 +41,6 @@ public class FileServiceImpl implements FileService {
         return Optional.ofNullable(id)
                 .flatMap(fileRepository::findById)
                 .orElseThrow(() -> new FileNotFoundException(id));
-    }
-
-    @Override
-    @Transactional
-    public FileUploadResult uploadProfileImage(MultipartFile file, Long memberId) {
-        log.info("Processing profile image upload: fileName={}, memberId={}", file.getOriginalFilename(), memberId);
-
-        Member requestMember = memberLookupService.getOrThrowById(memberId);
-        FileCreate profileImageFileCreate = fileRequestMapper.toProfileImageFileCreate(file, requestMember);
-        boolean isInitial = memberDefaults.getProfileImageKey().equals(requestMember.getProfileImageKey());
-        String fixedKey = isInitial
-                ? UUID.randomUUID().toString()
-                : requestMember.getProfileImageKey();
-
-        String tempKey = UUID.randomUUID().toString();
-
-        log.info("Uploading profile image to cloud storage: memberId={}, tempKey={}", memberId, tempKey);
-        FileMetadata metadata = cloudStorageService.uploadProfileImage(profileImageFileCreate, tempKey);
-        metadata.updateKey(fixedKey);
-        FileMetadata savedMetaData = fileRepository.save(metadata);
-        Member updated = memberUpdateService.setProfileImageKey(requestMember, fixedKey);
-
-        log.info("Updating member profile image key: memberId={}, memberProfileImageKey={}", updated.getId(), updated.getProfileImageKey());
-        log.info("Publishing image update event: tempKey={}, fixedKey={}", tempKey, fixedKey);
-        eventPublisher.publishEvent(new ProfileImageUpdatedEvent(tempKey, fixedKey));
-        String fileUrl = cloudStorageService.getProfileImageUrl(fixedKey);
-        FileUploadResult result = FileUploadResult.from(savedMetaData, fileUrl);
-        log.info("Profile image upload completed successfully: memberId={}, fileUrl={}", memberId, fileUrl);
-        return result;
     }
 
     @Override

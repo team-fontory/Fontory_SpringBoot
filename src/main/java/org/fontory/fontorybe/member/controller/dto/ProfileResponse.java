@@ -11,13 +11,11 @@ import org.fontory.fontorybe.member.domain.Member;
 public class ProfileResponse {
     private Long memberId;
     private String nickname;
-    private String profileImageUrl;
 
-    public static ProfileResponse from(Member member, String url) {
+    public static ProfileResponse from(Member member) {
         return ProfileResponse.builder()
                 .memberId(member.getId())
                 .nickname(member.getNickname())
-                .profileImageUrl(url)
                 .build();
     }
 }

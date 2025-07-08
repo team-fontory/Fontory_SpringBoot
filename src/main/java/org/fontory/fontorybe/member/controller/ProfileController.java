@@ -64,10 +64,8 @@ public class ProfileController {
             log.info("Request received: getMyInfo - member is onboarding");
             throw new MemberNotFoundException();
         }
-        String fileUrl = cloudStorageService.getProfileImageUrl(lookupMember.getProfileImageKey());
-        log.info("ProfileImageUrl generated : {}", fileUrl);
 
-        MyProfileResponse myProfileResponse = MyProfileResponse.from(lookupMember, fileUrl);
+        MyProfileResponse myProfileResponse = MyProfileResponse.from(lookupMember);
         log.info("Response sent: MyProfileDto : {}", myProfileResponse);
 
         return ResponseEntity
@@ -79,29 +77,19 @@ public class ProfileController {
     @Operation(
             summary = "내정보 수정"
     )
-    @PatchMapping(consumes = MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping
     public ResponseEntity<MyProfileResponse> updateMember(
             @Login UserPrincipal userPrincipal,
-            @RequestPart @Valid MemberUpdateRequest req,
-            @SingleFileUpload @RequestPart(value = "file", required = false) List<MultipartFile> files
+            @RequestBody @Valid MemberUpdateRequest req
     ) {
         Long requestMemberId = userPrincipal.getId();
         log.info("Request received: update member ID: {} with request: {}",
                 requestMemberId, req);
 
-        if (files != null && !files.isEmpty()) {
-            MultipartFile file = extractSingleMultipartFile(files);
-            logFileDetails(file, "Member profile image upload");
-            FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
-            log.info("fileUploadResult: {}", fileUploadResult);
-        } else {
-            log.info("No profile image upload found");
-        }
-
         Member updatedMember = memberUpdateService.update(requestMemberId, req);
         log.info("Updated : Member ID: {} Updated successfully with nickname: {}", updatedMember.getId(), updatedMember.getNickname());
 
-        MyProfileResponse myProfileResponse = MyProfileResponse.from(updatedMember, cloudStorageService.getProfileImageUrl(updatedMember.getProfileImageKey()));
+        MyProfileResponse myProfileResponse = MyProfileResponse.from(updatedMember);
         log.info("Response sent: MyProfileDto : {}", myProfileResponse);
 
         return ResponseEntity

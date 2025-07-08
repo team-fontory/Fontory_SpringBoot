@@ -72,7 +72,6 @@ class MemberUpdateServiceIntegrationTest {
                 .build();
 
         given(fileService.getOrThrowById(any())).willReturn(profileImageFileMetadata);
-        given(fileService.uploadProfileImage(any(), any())).willReturn(profileImageFileUploadResult);
     }
 
     @Test
@@ -85,7 +84,6 @@ class MemberUpdateServiceIntegrationTest {
                 () -> assertThat(foundMember.getNickname()).isEqualTo(TEST_MEMBER_NICKNAME),
                 () -> assertThat(foundMember.getGender()).isEqualTo(TEST_MEMBER_GENDER),
                 () -> assertThat(foundMember.getProvideId()).isEqualTo(TEST_PROVIDE_ID),
-                () -> assertThat(foundMember.getProfileImageKey()).isEqualTo(TEST_MEMBER_PROFILE_KEY),
                 () -> assertThat(foundMember.getCreatedAt()).isNotNull(),
                 () -> assertThat(foundMember.getUpdatedAt()).isNotNull(),
                 () -> assertThat(foundMember.getDeletedAt()).isNull()
@@ -114,7 +112,6 @@ class MemberUpdateServiceIntegrationTest {
                 () -> assertThat(createdMember.getNickname()).isEqualTo(NEW_MEMBER_NICKNAME),
                 () -> assertThat(createdMember.getGender()).isEqualTo(NEW_MEMBER_GENDER),
                 () -> assertThat(createdMember.getBirth()).isEqualTo(NEW_MEMBER_BIRTH),
-                () -> assertThat(createdMember.getProfileImageKey()).isEqualTo(NEW_MEMBER_PROFILE_KEY),
                 () -> assertThat(createdMember.getCreatedAt()).isNotNull(),
                 () -> assertThat(createdMember.getUpdatedAt()).isNotNull()
         );
@@ -154,7 +151,6 @@ class MemberUpdateServiceIntegrationTest {
                 () -> assertThat(updatedMember.getCreatedAt()).isEqualTo(member.getCreatedAt()),
                 () -> assertThat(updatedMember.getProvideId()).isEqualTo(member.getProvideId()),
                 () -> assertThat(updatedMember.getNickname()).isEqualTo(UPDATE_MEMBER_NICKNAME),
-                () -> assertThat(updatedMember.getProfileImageKey()).isEqualTo(member.getProfileImageKey()),
                 () -> assertThat(updatedMember.getUpdatedAt()).isAfter(member.getUpdatedAt())
         );
     }
@@ -230,14 +226,6 @@ class MemberUpdateServiceIntegrationTest {
 
     private Member create(InitMemberInfoRequest initNewMemberInfoRequest, Provide provide) {
         Member defaultMember = memberCreationService.createDefaultMember(provide);
-        MockMultipartFile file = new MockMultipartFile(
-                TEST_FILE_NAME,              // RequestPart 이름
-                TEST_FILE_NAME,          // 원본 파일명
-                "image/png",         // Content-Type
-                "dummy-image-data".getBytes()  // 파일 내용
-        );
-        FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, defaultMember.getId());
-        System.out.println("fileUploadResult = " + fileUploadResult);
-        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), initNewMemberInfoRequest, fileUploadResult);
+        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), initNewMemberInfoRequest);
     }
 }

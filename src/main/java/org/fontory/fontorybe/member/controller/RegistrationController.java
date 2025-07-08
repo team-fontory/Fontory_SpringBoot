@@ -59,41 +59,22 @@ public class RegistrationController {
     @Operation(
             summary = "회원가입"
     )
-    @PostMapping(consumes = MULTIPART_FORM_DATA_VALUE)
+    @PostMapping
     public ResponseEntity<MemberCreateResponse> register(
             @Login UserPrincipal user,
-            @RequestPart @Valid InitMemberInfoRequest req,
-            @SingleFileUpload @RequestPart(value = "file", required = false) List<MultipartFile> files
+            @RequestBody @Valid InitMemberInfoRequest req
     ) {
         Long requestMemberId = user.getId();
         log.info("Request received: Create member ID: {} with request: {}",
                 requestMemberId, req);
 
-        Member updatedMember;
-        if (files != null && !files.isEmpty()) {
-            MultipartFile file = extractSingleMultipartFile(files);
-            logFileDetails(file, "Member profile image upload");
-            FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
-            updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, req, fileUploadResult);
-        } else {
-            log.info("No profile image upload found");
-            updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, req);
-        }
+        Member updatedMember = memberOnboardService.initNewMemberInfo(requestMemberId, req);
 
         log.info("Response sent: Member ID: {} Created successfully with nickname: {}",
                 updatedMember.getId(), updatedMember.getNickname());
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(MemberCreateResponse.from(updatedMember, cloudStorageService.getProfileImageUrl(updatedMember.getProfileImageKey())));
-    }
-
-    private void logFileDetails(MultipartFile file, String context) {
-        log.debug("{} - File details: name='{}', original name='{}', size={} bytes, contentType='{}'",
-                context,
-                file.getName(),
-                file.getOriginalFilename(),
-                file.getSize(),
-                file.getContentType());
+                .body(MemberCreateResponse.from(updatedMember));
     }
 }

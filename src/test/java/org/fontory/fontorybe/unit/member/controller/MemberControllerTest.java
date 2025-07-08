@@ -69,7 +69,6 @@ class MemberControllerTest {
 
         assertAll(
                 () -> assertThat(body.getMemberId()).isEqualTo(testMember.getId()),
-                () -> assertThat(body.getProfileImageUrl()).isEqualTo(cloudStorageService.getProfileImageUrl(testMember.getProfileImageKey())),
                 () -> assertThat(body.getNickname()).isEqualTo(testMember.getNickname())
         );
     }
