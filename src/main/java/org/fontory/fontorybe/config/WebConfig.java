@@ -40,6 +40,7 @@ public class WebConfig implements WebMvcConfigurer {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
+                "http://localhost:3000",
                 "http://localhost:5173",
                 "https://www.fontory.co.kr",
                 "https://fontory.co.kr",
