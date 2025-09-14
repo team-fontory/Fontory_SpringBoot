@@ -13,14 +13,11 @@ import java.time.LocalDate;
 @ConfigurationProperties(prefix="member.default")
 public class MemberDefaults {
     private LocalDate birth;
-    private String profileImageKey;
     private Gender gender;
 
     @ConstructorBinding
-    public MemberDefaults(LocalDate birth,
-                          String profileImageKey) {
+    public MemberDefaults(LocalDate birth) {
         this.birth = birth;
-        this.profileImageKey = profileImageKey;
         this.gender = Gender.NONE;
     }
 }

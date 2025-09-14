@@ -43,20 +43,6 @@ public class Member {
                 .build();
     }
 
-    public Member initNewMemberInfo(InitMemberInfoRequest initNewMemberInfo, String profileImageKey) {
-        return Member.builder()
-                .id(this.id)
-                .nickname(initNewMemberInfo.getNickname())
-                .gender(initNewMemberInfo.getGender())
-                .birth(initNewMemberInfo.getBirth())
-                .createdAt(this.createdAt)
-                .provideId(this.provideId)
-                .deletedAt(this.deletedAt)
-                .provideId(this.provideId)
-                .status(MemberStatus.ACTIVATE)
-                .build();
-    }
-
     public Member initNewMemberInfo(InitMemberInfoRequest initNewMemberInfo) {
         return Member.builder()
                 .id(this.id)
