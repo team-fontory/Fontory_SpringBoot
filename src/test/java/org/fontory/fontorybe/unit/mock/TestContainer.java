@@ -15,7 +15,6 @@ import org.fontory.fontorybe.file.application.FileServiceImpl;
 import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileRepository;
 import org.fontory.fontorybe.file.application.port.FileService;
-import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.member.controller.MemberController;
 import org.fontory.fontorybe.member.controller.ProfileController;
 import org.fontory.fontorybe.member.controller.RegistrationController;
@@ -38,7 +37,6 @@ import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -138,8 +136,7 @@ public class TestContainer {
                 .build();
 
         memberDefaults = new MemberDefaults(
-                LocalDate.of(1999, 12, 31),
-                DEFAULT_PROFILE_KEY);
+                LocalDate.of(1999, 12, 31));
 
         fileService = FileServiceImpl.builder()
                 .memberLookupService(memberLookupService)
