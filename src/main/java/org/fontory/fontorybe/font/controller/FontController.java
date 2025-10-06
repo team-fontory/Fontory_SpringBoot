@@ -25,12 +25,10 @@ import org.fontory.fontorybe.font.controller.dto.FontPageResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressResponse;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontResponse;
-import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontUpdateResponse;
 import org.fontory.fontorybe.font.controller.port.FontService;
 import org.fontory.fontorybe.font.domain.Font;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -118,27 +116,6 @@ public class FontController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(fontsProgress);
-    }
-
-    @Operation(summary = "폰트 정보 수정")
-    @Parameter(name = "fontId", description = "수정할 폰트 ID")
-    @PutMapping("/{fontId}")
-    public ResponseEntity<?> updateFont(
-            @RequestBody FontUpdateDTO fontUpdateDTO,
-            @PathVariable Long fontId,
-            @Login UserPrincipal userPrincipal
-    ) {
-        Long memberId = userPrincipal.getId();
-        log.info("Request received: Update font ID: {} by member ID: {}, request: {}", 
-                fontId, memberId, toJson(fontUpdateDTO));
-
-        FontUpdateResponse fontUpdateResponse = fontService.update(memberId, fontId, fontUpdateDTO);
-        log.info("Response sent: Font ID: {} updated successfully, name: {}",
-                fontUpdateResponse.getId(), fontUpdateResponse.getName());
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(fontUpdateResponse);
     }
 
     @Operation(summary = "내가 제작한 폰트")
@@ -260,7 +237,7 @@ public class FontController {
     @Parameter(name = "fontId", description = "수정할 폰트 ID")
     @PatchMapping("/progress/{fontId}")
     public ResponseEntity<?> updateFontProgress(
-            @RequestBody FontProgressUpdateDTO fontProgressUpdateDTO,
+            @RequestBody @Valid FontProgressUpdateDTO fontProgressUpdateDTO,
             @PathVariable Long fontId
     ) {
         log.info("Request received: Update font progress ID: {}, request: {}",
@@ -296,7 +273,7 @@ public class FontController {
             summary = "폰트 이름 중복 검사",
             description = "이름이 중복이면 true를 반환합니다."
     )
-    @PostMapping("/verify-name")
+    @GetMapping("/verify-name")
     public ResponseEntity<?> verifyFontName(
             @Login UserPrincipal userPrincipal,
             @RequestParam String fontName

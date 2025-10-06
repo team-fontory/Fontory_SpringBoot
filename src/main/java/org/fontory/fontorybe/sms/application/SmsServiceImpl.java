@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 public class SmsServiceImpl implements SmsService {
 
     @Value("${coolsms.phone-number}")
-    private String phoneNumber;
+    private String fromPhoneNumber;
 
     private final DefaultMessageService messageService;
 
@@ -23,25 +23,25 @@ public class SmsServiceImpl implements SmsService {
     private static final String FONT_PROGRESS_MESSAGE_FORMAT = "[Fontory]\n\"%s\" 폰트 제작이 완료되었습니다.";
 
     @Override
-    public void sendFontCreationNotification(String to, String fontName) {
+    public void sendFontCreateRequestNotification(String to, String fontName) {
         sendSms(to, String.format(FONT_CREATION_MESSAGE_FORMAT, fontName));
     }
 
     @Override
-    public void sendFontProgressNotification(String to, String fontName) {
+    public void sendFontCreateCompleteNotification(String to, String fontName) {
         sendSms(to, String.format(FONT_PROGRESS_MESSAGE_FORMAT, fontName));
     }
 
-    private void sendSms(String to, String text) {
-        if (to == null || to.isBlank()) {
+    private void sendSms(String toPhoneNumber, String content) {
+        if (toPhoneNumber == null || toPhoneNumber.isBlank()) {
             log.warn("Service warning: recipient phone number is empty");
             return;
         }
 
         Message message = new Message();
-        message.setFrom(phoneNumber);
-        message.setTo(to);
-        message.setText(text);
+        message.setFrom(fromPhoneNumber);
+        message.setTo(toPhoneNumber);
+        message.setText(content);
 
         messageService.sendOne(new SingleMessageSendingRequest(message));
     }

@@ -26,7 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import static org.fontory.fontorybe.TestConstants.*;
-import static org.fontory.fontorybe.TestConstants.UPDATE_MEMBER_TERMS;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -62,8 +62,6 @@ class ProfileControllerIntegrationTest {
                 .fileUploadTime(TEST_FILE_UPLOAD_TIME)
                 .size(TEST_FILE_SIZE)
                 .build();
-
-        given(fileService.uploadProfileImage(any(), any())).willReturn(mockFileUploadResult);
     }
 
     @Test
@@ -79,34 +77,15 @@ class ProfileControllerIntegrationTest {
     @Test
     @DisplayName("PUT /member - update member success with valid Authorization JWT Cookie")
     void updateMemberSuccessTest() throws Exception {
-        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME, UPDATE_MEMBER_TERMS);
+        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME);
         String jsonRequest = objectMapper.writeValueAsString(memberUpdateRequest);
-        MockMultipartFile jsonPart = new MockMultipartFile(
-                "req",
-                null,
-                "application/json",
-                jsonRequest.getBytes(StandardCharsets.UTF_8)
-        );
-        MockMultipartFile filePart = new MockMultipartFile(
-                "file",
-                UPDDATE_FILE_NAME,
-                "image/jpeg",
-                "fileBytes".getBytes(StandardCharsets.UTF_8)
-        );
 
-        MockMultipartHttpServletRequestBuilder builder = multipart("/member/me");
-        builder.with(request -> { request.setMethod("PATCH"); return request; });
-
-        mockMvc.perform(builder
-                        .file(jsonPart)
-                        .file(filePart)
+        mockMvc.perform(patch("/member/me")
                         .cookie(new Cookie("accessToken", validAccessToken))
-                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.memberId", is(TEST_MEMBER_ID.intValue())))
                 .andExpect(jsonPath("$.nickname", is(UPDATE_MEMBER_NICKNAME)))
-                .andExpect(jsonPath("$.terms", is(UPDATE_MEMBER_TERMS)))
-                .andExpect(jsonPath("$.profileImageUrl", is(testMember.getProfileImageKey())))
                 .andExpect(jsonPath("$.gender", is(testMember.getGender().name())))
                 .andExpect(jsonPath("$.birth", is(testMember.getBirth().toString())));
     }
@@ -114,7 +93,7 @@ class ProfileControllerIntegrationTest {
     @Test
     @DisplayName("PUT /member without Authorization JWT Cookie returns 401")
     void putMemberWithoutAuthHeader() throws Exception {
-        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME, UPDATE_MEMBER_TERMS);
+        MemberUpdateRequest memberUpdateRequest = new MemberUpdateRequest(UPDATE_MEMBER_NICKNAME);
         String jsonRequest = objectMapper.writeValueAsString(memberUpdateRequest);
 
         mockMvc.perform(put("/member/me")

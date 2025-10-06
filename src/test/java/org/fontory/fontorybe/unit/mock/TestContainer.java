@@ -15,7 +15,6 @@ import org.fontory.fontorybe.file.application.FileServiceImpl;
 import org.fontory.fontorybe.file.application.port.CloudStorageService;
 import org.fontory.fontorybe.file.application.port.FileRepository;
 import org.fontory.fontorybe.file.application.port.FileService;
-import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.member.controller.MemberController;
 import org.fontory.fontorybe.member.controller.ProfileController;
 import org.fontory.fontorybe.member.controller.RegistrationController;
@@ -38,7 +37,6 @@ import org.fontory.fontorybe.provide.service.dto.ProvideCreateDto;
 import org.fontory.fontorybe.provide.service.port.ProvideRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
@@ -138,14 +136,11 @@ public class TestContainer {
                 .build();
 
         memberDefaults = new MemberDefaults(
-                LocalDate.of(1999, 12, 31),
-                false,
-                DEFAULT_PROFILE_KEY);
+                LocalDate.of(1999, 12, 31));
 
         fileService = FileServiceImpl.builder()
                 .memberLookupService(memberLookupService)
                 .memberDefaults(memberDefaults)
-                .memberUpdateService(memberUpdateService)
                 .fileRepository(fileRepository)
                 .fileRequestMapper(fileRequestMapper)
                 .eventPublisher(eventPublisher)
@@ -191,6 +186,7 @@ public class TestContainer {
         registrationController = RegistrationController.builder()
                 .memberLookupService(memberLookupService)
                 .memberOnboardService(memberOnboardService)
+                .cloudStorageService(cloudStorageService)
                 .fileService(fileService)
                 .build();
     }
@@ -222,15 +218,14 @@ public class TestContainer {
                 "image/png",         // Content-Type
                 "dummy-image-data".getBytes()  // 파일 내용
         );
-        FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, defaultMember.getId());
-        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), initNewMemberInfoRequest, fileUploadResult);
+        return memberOnboardService.initNewMemberInfo(defaultMember.getId(), initNewMemberInfoRequest);
     }
 
     public final ProvideCreateDto testMemberProvideCreateDto = new ProvideCreateDto(TEST_MEMBER_PROVIDER, TEST_MEMBER_PROVIDED_ID, TEST_MEMBER_EMAIL);
     public Provide testMemberProvide;
     public Provide newMemberProvide;
 
-    public final InitMemberInfoRequest newInitMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+    public final InitMemberInfoRequest newInitMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
     public final ProvideCreateDto newMemberProvideCreateDto = new ProvideCreateDto(NEW_MEMBER_PROVIDER, NEW_MEMBER_PROVIDED_ID, NEW_MEMBER_EMAIL);
 
     public Member createNotInitedMember() {
@@ -240,13 +235,13 @@ public class TestContainer {
 
     public Member createTestMember() {
         testMemberProvide = provideService.create(testMemberProvideCreateDto);
-        InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(TEST_MEMBER_NICKNAME, TEST_MEMBER_GENDER, TEST_MEMBER_BIRTH, TEST_MEMBER_TERMS);
+        InitMemberInfoRequest initMemberInfoRequest = new InitMemberInfoRequest(TEST_MEMBER_NICKNAME, TEST_MEMBER_GENDER, TEST_MEMBER_BIRTH);
         return create(initMemberInfoRequest, testMemberProvide);
     }
 
     public Member createNewMember() {
         newMemberProvide = provideService.create(newMemberProvideCreateDto);
-        InitMemberInfoRequest initNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH, NEW_MEMBER_TERMS);
+        InitMemberInfoRequest initNewMemberInfoRequest = new InitMemberInfoRequest(NEW_MEMBER_NICKNAME, NEW_MEMBER_GENDER, NEW_MEMBER_BIRTH);
         return create(initNewMemberInfoRequest, newMemberProvide);
     }
 }

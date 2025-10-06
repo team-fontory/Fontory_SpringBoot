@@ -11,7 +11,6 @@ public final class TestConstants {
 
     // NOT created in SQL
     public static final Gender NEW_MEMBER_GENDER       = Gender.FEMALE;
-    public static final boolean NEW_MEMBER_TERMS        = false;
     public static final LocalDate NEW_MEMBER_BIRTH      = LocalDate.of(2025, 1, 22);
     public static final String NEW_MEMBER_NICKNAME      = "newMemberNickName";
     public static final String NEW_MEMBER_PROFILE_KEY   = "newMemberProfileImage";
@@ -23,7 +22,6 @@ public final class TestConstants {
     public static final String DEFAULT_PROFILE_KEY      = "defaultProfileImage";
     // Created in SQL
     public static final Gender TEST_MEMBER_GENDER       = Gender.MALE;
-    public static final boolean TEST_MEMBER_TERMS        = true;
     public static final LocalDate TEST_MEMBER_BIRTH      = LocalDate.of(2025, 1, 26);
     public static final String TEST_MEMBER_NICKNAME      = "testMemberNickName";
     public static final String TEST_MEMBER_PROFILE_KEY   = "testMemberProfileImage";
@@ -36,7 +34,6 @@ public final class TestConstants {
     public static final Long TEST_PROVIDE_ID           = 1L;
     public static final Long NON_EXIST_ID              = -1L;
 
-    public static final boolean UPDATE_MEMBER_TERMS     = Boolean.FALSE;
     public static final String UPDATE_MEMBER_NICKNAME   = "updateMemberNickName";
     public static final String UPDATE_MEMBER_PROFILE_KEY= "updateMemberProfileImage";
 

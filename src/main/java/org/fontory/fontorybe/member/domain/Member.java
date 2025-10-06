@@ -23,10 +23,6 @@ public class Member {
 
     private LocalDate birth;
 
-    private boolean terms;
-
-    private String profileImageKey;
-
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
@@ -42,21 +38,17 @@ public class Member {
                 .nickname(nickname)
                 .gender(memberDefaults.getGender())
                 .birth(memberDefaults.getBirth())
-                .terms(memberDefaults.getTerms())
-                .profileImageKey(memberDefaults.getProfileImageKey())
                 .provideId(provide.getId())
                 .status(MemberStatus.ONBOARDING)
                 .build();
     }
 
-    public Member initNewMemberInfo(InitMemberInfoRequest initNewMemberInfo, String profileImageKey) {
+    public Member initNewMemberInfo(InitMemberInfoRequest initNewMemberInfo) {
         return Member.builder()
                 .id(this.id)
                 .nickname(initNewMemberInfo.getNickname())
                 .gender(initNewMemberInfo.getGender())
                 .birth(initNewMemberInfo.getBirth())
-                .terms(initNewMemberInfo.getTerms())
-                .profileImageKey(profileImageKey)
                 .createdAt(this.createdAt)
                 .provideId(this.provideId)
                 .deletedAt(this.deletedAt)
@@ -69,7 +61,6 @@ public class Member {
         return Member.builder()
                 //tobe update
                 .nickname(memberUpdateRequest.getNickname())
-                .terms(memberUpdateRequest.getTerms())
 
                 //not to be update
                 .id(this.id)
@@ -80,32 +71,10 @@ public class Member {
                 .deletedAt(this.deletedAt)
                 .provideId(this.provideId)
                 .status(this.status)
-                .profileImageKey(this.profileImageKey)
                 .build();
     }
     public void disable() {
         this.status = MemberStatus.DEACTIVATE;
         this.deletedAt = LocalDateTime.now();
-    }
-
-    public boolean getTerms() {
-        return this.terms;
-    }
-
-    public Member setProfileImageKey(String profileImageKey) {
-        return Member.builder()
-                .profileImageKey(profileImageKey)
-
-                .id(this.id)
-                .nickname(this.nickname)
-                .gender(this.gender)
-                .birth(this.birth)
-                .createdAt(this.createdAt)
-                .provideId(this.provideId)
-                .deletedAt(this.deletedAt)
-                .terms(this.terms)
-                .provideId(this.provideId)
-                .status(this.status)
-                .build();
     }
 }

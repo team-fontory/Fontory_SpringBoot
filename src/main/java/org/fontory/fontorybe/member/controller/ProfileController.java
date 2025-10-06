@@ -3,6 +3,7 @@ package org.fontory.fontorybe.member.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,8 @@ import org.fontory.fontorybe.member.controller.dto.MyProfileResponse;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.controller.port.MemberUpdateService;
 import org.fontory.fontorybe.member.domain.Member;
+import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
+import org.fontory.fontorybe.member.infrastructure.entity.MemberStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -48,15 +51,21 @@ public class ProfileController {
     )
     @GetMapping
     public ResponseEntity<MyProfileResponse> getMyProfile(
-            @Login UserPrincipal me) {
+            @Login(required = false) UserPrincipal me) {
+        if (me == null) {
+            log.info("Request received: getMyInfo - no login");
+            throw new MemberNotFoundException();
+        }
         Long requestMemberId = me.getId();
         log.info("Request received: getMyInfo member ID: {}", requestMemberId);
 
         Member lookupMember = memberLookupService.getOrThrowById(requestMemberId);
-        String fileUrl = cloudStorageService.getProfileImageUrl(lookupMember.getProfileImageKey());
-        log.info("ProfileImageUrl generated : {}", fileUrl);
+        if (lookupMember.getStatus().equals(MemberStatus.ONBOARDING)) {
+            log.info("Request received: getMyInfo - member is onboarding");
+            throw new MemberNotFoundException();
+        }
 
-        MyProfileResponse myProfileResponse = MyProfileResponse.from(lookupMember, fileUrl);
+        MyProfileResponse myProfileResponse = MyProfileResponse.from(lookupMember);
         log.info("Response sent: MyProfileDto : {}", myProfileResponse);
 
         return ResponseEntity
@@ -68,25 +77,19 @@ public class ProfileController {
     @Operation(
             summary = "내정보 수정"
     )
-    @PatchMapping(consumes = MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping
     public ResponseEntity<MyProfileResponse> updateMember(
             @Login UserPrincipal userPrincipal,
-            @RequestPart MemberUpdateRequest req,
-            @SingleFileUpload @RequestPart("file") List<MultipartFile> files
+            @RequestBody @Valid MemberUpdateRequest req
     ) {
         Long requestMemberId = userPrincipal.getId();
-        MultipartFile file = extractSingleMultipartFile(files);
-
         log.info("Request received: update member ID: {} with request: {}",
                 requestMemberId, req);
-        logFileDetails(file, "Member profile image upload");
 
-        FileUploadResult fileUploadResult = fileService.uploadProfileImage(file, requestMemberId);
         Member updatedMember = memberUpdateService.update(requestMemberId, req);
-        log.info("Updated : Member ID: {} Updated successfully with nickname: {}, terms : {}",
-                updatedMember.getId(), updatedMember.getNickname(), updatedMember.getTerms());
+        log.info("Updated : Member ID: {} Updated successfully with nickname: {}", updatedMember.getId(), updatedMember.getNickname());
 
-        MyProfileResponse myProfileResponse = MyProfileResponse.from(updatedMember, fileUploadResult.getFileUrl());
+        MyProfileResponse myProfileResponse = MyProfileResponse.from(updatedMember);
         log.info("Response sent: MyProfileDto : {}", myProfileResponse);
 
         return ResponseEntity

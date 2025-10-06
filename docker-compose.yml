@@ -7,7 +7,7 @@ services:
     container_name: fontory-mariadb
     environment:
       MYSQL_ROOT_PASSWORD: rootPW
-      MYSQL_DATRABASE: FONTORY
+      MYSQL_DATABASE: FONTORY
       MYSQL_USER: fontory
       MYSQL_PASSWORD: fontoryPW
     ports:

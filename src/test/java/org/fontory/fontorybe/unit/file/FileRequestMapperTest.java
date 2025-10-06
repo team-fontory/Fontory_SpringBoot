@@ -108,8 +108,7 @@ class FileRequestMapperTest {
         return new InitMemberInfoRequest(
                 nickname,
                 Gender.MALE,
-                LocalDate.of(2025, 1, 26),
-                true
+                LocalDate.of(2025, 1, 26)
         );
     }
 

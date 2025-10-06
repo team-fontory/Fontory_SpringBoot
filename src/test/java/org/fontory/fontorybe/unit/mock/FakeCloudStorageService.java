@@ -19,17 +19,6 @@ public class FakeCloudStorageService implements CloudStorageService {
     }
 
     @Override
-    public FileMetadata uploadProfileImage(FileCreate fileCreate, String key) {
-        AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(
-                fileCreate,
-                key,
-                s3Config.getBucketName(FileType.PROFILE_IMAGE),
-                s3Config.getPrefix(FileType.PROFILE_IMAGE),
-                LocalDateTime.now());
-        return uploadFile(amazonS3PutRequest).toModel();
-    }
-
-    @Override
     public FileMetadata uploadFontTemplateImage(FileCreate request) {
         String key = UUID.randomUUID().toString();
         AmazonS3PutRequest amazonS3PutRequest = AmazonS3PutRequest.from(
@@ -43,11 +32,6 @@ public class FakeCloudStorageService implements CloudStorageService {
 
     private String getFileUrl(FileType fileType, String key) {
         return String.format("%s/%s/%s", s3Config.getCdnUrl(), s3Config.getPrefix(fileType), key);
-    }
-
-    @Override
-    public String getProfileImageUrl(String key) {
-        return getFileUrl(FileType.PROFILE_IMAGE, key);
     }
 
     @Override

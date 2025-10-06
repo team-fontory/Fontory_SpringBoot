@@ -7,5 +7,5 @@ import org.fontory.fontorybe.provide.domain.Provide;
 
 public interface MemberOnboardService {
     Member fetchOrCreateMember(Provide p);
-    Member initNewMemberInfo(Long requestMemberId, InitMemberInfoRequest initMemberInfoRequest, FileUploadResult fileUploadResult);
+    Member initNewMemberInfo(Long requestMemberId, InitMemberInfoRequest initMemberInfoRequest);
 }

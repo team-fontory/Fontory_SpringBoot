@@ -13,18 +13,14 @@ import java.time.LocalDateTime;
 public class MemberCreateResponse {
     private final String nickname;
     private final Gender gender;
-    private final String profileImageUrl;
     private final LocalDate birth;
-    private final boolean terms;
     private final LocalDateTime createdAt;
 
-    public static MemberCreateResponse from(Member member, String url) {
+    public static MemberCreateResponse from(Member member) {
         return MemberCreateResponse.builder()
                 .nickname(member.getNickname())
                 .gender(member.getGender())
-                .profileImageUrl(url)
                 .birth(member.getBirth())
-                .terms(member.getTerms())
                 .createdAt(member.getCreatedAt())
                 .build();
     }

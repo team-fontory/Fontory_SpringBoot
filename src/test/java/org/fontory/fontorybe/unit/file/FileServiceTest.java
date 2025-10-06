@@ -71,8 +71,7 @@ class FileServiceTest {
         return new InitMemberInfoRequest(
                 nickname,
                 Gender.MALE,
-                LocalDate.of(2025, 1, 26),
-                true
+                LocalDate.of(2025, 1, 26)
         );
     }
 
@@ -84,7 +83,7 @@ class FileServiceTest {
         MultipartFile mockFile = createValidImageFile(profileImageFilename, "image/jpeg");
 
         // Upload a file to get its ID
-        FileUploadResult uploadResult = fileService.uploadProfileImage(mockFile, existMemberId);
+        FileUploadResult uploadResult = fileService.uploadFontTemplateImage(mockFile, existMemberId);
         FileMetadata savedMetadata = testContainer.fileRepository.findById(uploadResult.getId()).get();
         Long fileId = savedMetadata.getId();
 
@@ -96,7 +95,7 @@ class FileServiceTest {
                 () -> assertThat(retrievedMetadata).isNotNull(),
                 () -> assertThat(retrievedMetadata.getId()).isEqualTo(fileId),
                 () -> assertThat(retrievedMetadata.getFileName()).isEqualTo(existMemberId + ".jpg"),
-                () -> assertThat(retrievedMetadata.getFileType()).isEqualTo(FileType.PROFILE_IMAGE),
+                () -> assertThat(retrievedMetadata.getFileType()).isEqualTo(FileType.FONT_PAPER),
                 () -> assertThat(retrievedMetadata.getUploaderId()).isEqualTo(existMemberId),
                 () -> assertThat(retrievedMetadata.getSize()).isEqualTo(fileContent.length),
                 () -> assertThat(retrievedMetadata.getUploadedAt()).isNotNull(),
@@ -115,41 +114,6 @@ class FileServiceTest {
         assertThatThrownBy(
                 () -> fileService.getOrThrowById(nonExistentFileId)
         ).isExactlyInstanceOf(FileNotFoundException.class);
-    }
-
-    @Test
-    @DisplayName("uploadProfileImage - should upload profile image successfully")
-    void uploadProfileImageTest() {
-        // given
-        MultipartFile mockFile = createValidImageFile(profileImageFilename, "image/jpeg");
-
-        // when
-        FileUploadResult result = fileService.uploadProfileImage(mockFile, existMemberId);
-
-        // then
-        assertAll(
-                () -> assertThat(result).isNotNull(),
-                () -> assertThat(result.getFileName()).isEqualTo(existMemberId + ".jpg"),
-                () -> assertThat(result.getFileUrl()).isNotNull(),
-                () -> assertThat(result.getFileUploadTime()).isNotNull(),
-                () -> assertThat(result.getSize()).isEqualTo(fileContent.length)
-        );
-
-        // 멤버의 프로필 이미지가 업데이트되었는지 확인
-        Member updatedMember = memberLookupService.getOrThrowById(existMemberId);
-        assertThat(updatedMember.getProfileImageKey()).isNotNull();
-    }
-
-    @Test
-    @DisplayName("uploadProfileImage - should throw exception when member doesn't exist")
-    void uploadProfileImageNonExistentMemberTest() {
-        // given
-        MultipartFile mockFile = createValidImageFile(profileImageFilename, "image/jpeg");
-
-        // when & then
-        assertThatThrownBy(
-                () -> fileService.uploadProfileImage(mockFile, nonExistentId)
-        ).isExactlyInstanceOf(MemberNotFoundException.class);
     }
 
     @Test
@@ -187,10 +151,10 @@ class FileServiceTest {
     @DisplayName("upload and retrieve file metadata should work together")
     void uploadAndRetrieveTest() {
         // given
-        MockMultipartFile mockFile = createValidImageFile("profile.jpg", "image/jpeg");
+        MockMultipartFile mockFile = createValidImageFile("fontPaper.jpg", "image/jpeg");
 
         // when - upload file
-        FileUploadResult uploadResult = fileService.uploadProfileImage(mockFile, existMemberId);
+        FileUploadResult uploadResult = fileService.uploadFontTemplateImage(mockFile, existMemberId);
 
         // Find the file ID from repository
         FileMetadata savedMetadata = testContainer.fileRepository.findById(uploadResult.getId()).get();
@@ -204,7 +168,7 @@ class FileServiceTest {
                 () -> assertThat(retrievedMetadata).isNotNull(),
                 () -> assertThat(retrievedMetadata.getId()).isEqualTo(fileId),
                 () -> assertThat(retrievedMetadata.getFileName()).isEqualTo(existMemberId + ".jpg"),
-                () -> assertThat(retrievedMetadata.getFileType()).isEqualTo(FileType.PROFILE_IMAGE),
+                () -> assertThat(retrievedMetadata.getFileType()).isEqualTo(FileType.FONT_PAPER),
                 () -> assertThat(uploadResult.getFileUrl()).contains(retrievedMetadata.getKey())
         );
     }
@@ -213,24 +177,20 @@ class FileServiceTest {
     @DisplayName("uploading different types of images should update FileMetadata correctly")
     void uploadDifferentImagesTest() {
         // given
-        MockMultipartFile profileFile = createValidImageFile("profile.jpg", "image/jpeg");
-        MockMultipartFile templateFile = createValidImageFile("template.png", "image/png");
+        MockMultipartFile jpgFile = createValidImageFile("profile.jpg", "image/jpeg");
+        MockMultipartFile pngFile = createValidImageFile("template.png", "image/png");
 
         // when - upload profile image
-        FileUploadResult profileResult = fileService.uploadProfileImage(profileFile, existMemberId);
+        FileUploadResult jpgResult = fileService.uploadFontTemplateImage(jpgFile, existMemberId);
 
         // when - upload template image
-        FileUploadResult templateResult = fileService.uploadFontTemplateImage(templateFile, existMemberId);
+        FileUploadResult pngResult = fileService.uploadFontTemplateImage(pngFile, existMemberId);
 
         // then
         assertAll(
-                () -> assertThat(profileResult.getFileName()).contains("jpg"),
-                () -> assertThat(templateResult.getFileName()).contains("png"),
-                () -> assertThat(((FakeFileRepository)testContainer.fileRepository).findAll()).hasSize(3)
+                () -> assertThat(jpgResult.getFileName()).contains("jpg"),
+                () -> assertThat(pngResult.getFileName()).contains("png"),
+                () -> assertThat(((FakeFileRepository)testContainer.fileRepository).findAll()).hasSize(2)
         );
-
-        // Member should have profile image updated
-        Member updatedMember = memberLookupService.getOrThrowById(existMemberId);
-        assertThat(updatedMember.getProfileImageKey()).isNotNull();
     }
 }

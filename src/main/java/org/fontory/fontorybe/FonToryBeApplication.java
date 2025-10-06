@@ -10,12 +10,14 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @EnableAsync
+@EnableRetry
 @EnableJpaAuditing
 @SpringBootApplication
 @EnableConfigurationProperties({JwtProperties.class, MemberDefaults.class})

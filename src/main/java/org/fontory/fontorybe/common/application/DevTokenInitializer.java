@@ -14,6 +14,7 @@ import org.fontory.fontorybe.config.jwt.JwtProperties;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.MemberDefaults;
 import org.fontory.fontorybe.member.infrastructure.entity.Gender;
+import org.fontory.fontorybe.member.infrastructure.entity.MemberStatus;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.domain.Provide;
 import org.fontory.fontorybe.provide.infrastructure.entity.Provider;
@@ -95,10 +96,9 @@ public class DevTokenInitializer implements ApplicationListener<ContextRefreshed
                     Member m = Member.builder()
                             .gender(Gender.MALE)
                             .provideId(provide.getId())
-                            .terms(true)
                             .birth(LocalDate.now())
                             .nickname("Tester")
-                            .profileImageKey(memberDefaults.getProfileImageKey())
+                            .status(MemberStatus.ONBOARDING)
                             .build();
                     return memberRepository.save(m);
                 });

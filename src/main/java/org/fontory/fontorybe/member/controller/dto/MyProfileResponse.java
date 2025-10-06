@@ -12,25 +12,15 @@ import java.time.LocalDate;
 @Builder
 @ToString
 public class MyProfileResponse {
-    private Long memberId;
     private String nickname;
     private Gender gender;
     private LocalDate birth;
-    private boolean terms;
-    private String profileImageUrl;
 
-    public static MyProfileResponse from(Member member, String url) {
+    public static MyProfileResponse from(Member member) {
         return MyProfileResponse.builder()
-                .memberId(member.getId())
                 .nickname(member.getNickname())
                 .birth(member.getBirth())
                 .gender(member.getGender())
-                .terms(member.getTerms())
-                .profileImageUrl(url)
                 .build();
-    }
-
-    public boolean getTerms() {
-        return this.terms;
     }
 }

@@ -6,10 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.fontory.fontorybe.file.domain.FileUploadResult;
 import org.fontory.fontorybe.font.controller.dto.FontCreateDTO;
 import org.fontory.fontorybe.font.controller.dto.FontProgressUpdateDTO;
-import org.fontory.fontorybe.font.controller.dto.FontUpdateDTO;
 import org.fontory.fontorybe.font.infrastructure.entity.FontStatus;
 
 @Getter
@@ -21,6 +19,8 @@ public class Font {
     private Long id;
 
     private String name;
+
+    private String engName;
 
     private FontStatus status;
 
@@ -53,6 +53,7 @@ public class Font {
     public static Font from(FontCreateDTO fontCreateDTO, Long memberId, String key) {
         return Font.builder()
                 .name(fontCreateDTO.getName())
+                .engName(fontCreateDTO.getEngName())
                 .status(FontStatus.PROGRESS)
                 .example(fontCreateDTO.getExample())
                 .key(key)
@@ -62,12 +63,13 @@ public class Font {
                 .build();
     }
 
-    public Font update(FontUpdateDTO fontUpdateDTO) {
+    public Font updateProgress(FontProgressUpdateDTO fontProgressUpdateDTO) {
         return Font.builder()
-                .name(fontUpdateDTO.getName())
-                .example(fontUpdateDTO.getExample())
+                .name(this.name)
+                .engName(this.engName)
+                .example(this.example)
                 .id(this.id)
-                .status(this.status)
+                .status(fontProgressUpdateDTO.getStatus())
                 .downloadCount(this.downloadCount)
                 .bookmarkCount(this.bookmarkCount)
                 .key(this.key)
@@ -75,36 +77,5 @@ public class Font {
                 .createdAt(this.createdAt)
                 .updatedAt(this.updatedAt)
                 .build();
-    }
-
-    public Font updateProgress(FontProgressUpdateDTO fontProgressUpdateDTO, Long fontId) {
-
-        if (fontProgressUpdateDTO.getStatus() == FontStatus.DONE) {
-            return Font.builder()
-                    .name(this.name)
-                    .example(this.example)
-                    .id(this.id)
-                    .status(fontProgressUpdateDTO.getStatus())
-                    .downloadCount(this.downloadCount)
-                    .bookmarkCount(this.bookmarkCount)
-                    .key(this.key)
-                    .memberId(this.memberId)
-                    .createdAt(this.createdAt)
-                    .updatedAt(this.updatedAt)
-                    .build();
-        } else {
-            return Font.builder()
-                    .name(this.name)
-                    .example(this.example)
-                    .id(this.id)
-                    .status(fontProgressUpdateDTO.getStatus())
-                    .downloadCount(this.downloadCount)
-                    .bookmarkCount(this.bookmarkCount)
-                    .key(this.key)
-                    .memberId(this.memberId)
-                    .createdAt(this.createdAt)
-                    .updatedAt(this.updatedAt)
-                    .build();
-        }
     }
 }

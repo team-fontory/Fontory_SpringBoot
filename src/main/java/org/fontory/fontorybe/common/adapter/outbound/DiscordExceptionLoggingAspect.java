@@ -156,24 +156,28 @@ public class DiscordExceptionLoggingAspect {
      */
     @Async
     protected void sendToDiscord(String payloadJson, String fullStackTrace) {
-        byte[] stackTraceBytes = fullStackTrace.getBytes(StandardCharsets.UTF_8);
-        ByteArrayResource stackTraceResource = new ByteArrayResource(stackTraceBytes) {
-            @Override
-            public String getFilename() {
-                return "stacktrace.txt";
-            }
-        };
+        try {
+            byte[] stackTraceBytes = fullStackTrace.getBytes(StandardCharsets.UTF_8);
+            ByteArrayResource stackTraceResource = new ByteArrayResource(stackTraceBytes) {
+                @Override
+                public String getFilename() {
+                    return "stacktrace.txt";
+                }
+            };
 
-        LinkedMultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
-        multipartBody.add("payload_json", payloadJson);
-        multipartBody.add("file", stackTraceResource);
+            LinkedMultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
+            multipartBody.add("payload_json", payloadJson);
+            multipartBody.add("file", stackTraceResource);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        HttpEntity<MultiValueMap<String, Object>> requestEntity =
-                new HttpEntity<>(multipartBody, headers);
+            HttpEntity<MultiValueMap<String, Object>> requestEntity =
+                    new HttpEntity<>(multipartBody, headers);
 
-        restTemplate.postForEntity(discordWebhookUrl, requestEntity, String.class);
+            restTemplate.postForEntity(discordWebhookUrl, requestEntity, String.class);
+        } catch (Exception e) {
+            log.warn("Exception occured while sending stacktrace to Discord: {}", e);
+        }
     }
 }
