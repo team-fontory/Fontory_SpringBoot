@@ -3,6 +3,7 @@ package org.fontory.fontorybe.authentication.adapter.inbound;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.authentication.application.dto.ResponseCookies;
 import org.fontory.fontorybe.authentication.application.AuthService;
 import org.fontory.fontorybe.authentication.application.port.CookieUtils;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.Objects;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CustomOauth2SuccessHandler implements AuthenticationSuccessHandler {
@@ -37,19 +39,39 @@ public class CustomOauth2SuccessHandler implements AuthenticationSuccessHandler 
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
+        log.info("OAuth2 authentication success handler triggered");
+        
         OAuth2User authUser = (OAuth2User) authentication.getPrincipal();
         Provide provide = authUser.getAttribute("provide");
         Objects.requireNonNull(provide, "OAuth2User must have 'provide' attribute");
+        
+        log.info("Processing successful OAuth2 login: provideId={}, provider={}, email={}", 
+                provide.getId(), provide.getProvider(), provide.getEmail());
 
         Member member = memberOnboardService.fetchOrCreateMember(provide);
+        log.info("Member fetched/created: memberId={}, status={}",
+                member.getId(), member.getStatus());
+        
         ResponseCookies cookies = authService.issueAuthCookies(member);
+        log.debug("Auth cookies issued for member: memberId={}", member.getId());
+        
         cookieUtils.addCookies(response, cookies);
+        log.debug("Auth cookies added to response: memberId={}", member.getId());
 
-        redirectStrategy.sendRedirect(request, response, buildRedirectUrl(member));
+        String redirectUrl = buildRedirectUrl(member);
+        log.info("Redirecting user after successful OAuth2 login: memberId={}, status={}, redirectUrl={}", 
+                member.getId(), member.getStatus(), redirectUrl);
+        
+        redirectStrategy.sendRedirect(request, response, redirectUrl);
     }
 
     private String buildRedirectUrl(Member member) {
         String path = (member.getStatus() == MemberStatus.ONBOARDING) ? signUpPath : authPath;
-        return baseUrl + path;
+        String redirectUrl = baseUrl + path;
+        
+        log.debug("Building redirect URL: memberStatus={}, path={}, fullUrl={}", 
+                member.getStatus(), path, redirectUrl);
+        
+        return redirectUrl;
     }
 }
