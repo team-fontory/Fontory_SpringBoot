@@ -2,6 +2,9 @@ package org.fontory.fontorybe.unit.mock;
 
 import com.vane.badwordfiltering.BadWordFiltering;
 import org.fontory.fontorybe.authentication.adapter.outbound.CookieUtilsImpl;
+import org.fontory.fontorybe.bookmark.controller.port.BookmarkService;
+import org.fontory.fontorybe.bookmark.service.BookmarkServiceImpl;
+import org.fontory.fontorybe.bookmark.service.port.BookmarkRepository;
 import org.fontory.fontorybe.config.S3Config;
 import org.fontory.fontorybe.config.jwt.JwtProperties;
 import org.fontory.fontorybe.authentication.adapter.outbound.JwtTokenProviderImpl;
@@ -10,6 +13,8 @@ import org.fontory.fontorybe.authentication.adapter.outbound.RedisTokenStorage;
 import org.fontory.fontorybe.authentication.application.port.CookieUtils;
 import org.fontory.fontorybe.authentication.application.port.JwtTokenProvider;
 import org.fontory.fontorybe.authentication.application.port.TokenStorage;
+import org.fontory.fontorybe.font.controller.port.FontService;
+import org.fontory.fontorybe.font.service.port.FontRepository;
 import org.fontory.fontorybe.file.adapter.inbound.FileRequestMapper;
 import org.fontory.fontorybe.file.application.FileServiceImpl;
 import org.fontory.fontorybe.file.application.port.CloudStorageService;
@@ -59,6 +64,8 @@ public class TestContainer {
     public final MemberRepository memberRepository;
     public final ProvideRepository provideRepository;
     public final FileRepository fileRepository;
+    public final BookmarkRepository bookmarkRepository;
+    public final FontRepository fontRepository;
 
     public final MemberLookupService memberLookupService;
     public final MemberCreationService memberCreationService;
@@ -69,6 +76,8 @@ public class TestContainer {
     public final TokenStorage tokenStorage;
     public final AuthService authService;
     public final FileService fileService;
+    public final FontService fontService;
+    public final BookmarkService bookmarkService;
 
     public final ProfileController profileController;
     public final MemberController memberController;
@@ -102,6 +111,8 @@ public class TestContainer {
         memberRepository = new FakeMemberRepository();
         provideRepository = new FakeProvideRepository();
         fileRepository = new FakeFileRepository();
+        bookmarkRepository = new FakeBookmarkRepository();
+        fontRepository = new FakeFontRepository();
 
         tokenStorage = new RedisTokenStorage(fakeRedisTemplate, props);
 
@@ -147,6 +158,8 @@ public class TestContainer {
                 .cloudStorageService(cloudStorageService)
                 .build();
 
+        fontService = new FakeFontService(fontRepository);
+
         memberCreationService = MemberCreationServiceImpl.builder()
                 .memberDefaults(memberDefaults)
                 .memberRepository(memberRepository)
@@ -168,6 +181,14 @@ public class TestContainer {
                 .memberCreationService(memberCreationService)
                 .badWordFiltering(badWordFiltering)
                 .build();
+
+        bookmarkService = new BookmarkServiceImpl(
+                bookmarkRepository,
+                fontRepository,
+                memberLookupService,
+                fontService,
+                cloudStorageService
+        );
 
         memberController = MemberController.builder()
                 .memberLookupService(memberLookupService)
