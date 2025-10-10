@@ -70,17 +70,52 @@ public class BookmarkServiceImpl implements BookmarkService {
     public Page<FontResponse> getBookmarkedFonts(Long memberId, int page, int size, String keyword) {
         Member member = memberLookupService.getOrThrowById(memberId);
 
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
-        Page<Bookmark> bookmarks = bookmarkRepository.findAllByMemberId(memberId, pageRequest);
+        // If no keyword, use normal pagination
+        if (!StringUtils.hasText(keyword)) {
+            PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+            Page<Bookmark> bookmarks = bookmarkRepository.findAllByMemberId(memberId, pageRequest);
 
-        List<Long> fontIds = bookmarks.stream()
+            List<Long> fontIds = bookmarks.stream()
+                    .map(Bookmark::getFontId)
+                    .toList();
+
+            List<Font> fonts = fontRepository.findAllByIdIn(fontIds);
+
+            List<FontResponse> fontResponses = fonts.stream()
+                    .map(font -> {
+                        Member writer = memberLookupService.getOrThrowById(font.getMemberId());
+                        String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
+                        return FontResponse.from(font, true, writer.getNickname(), woff2Url);
+                    })
+                    .toList();
+
+            return new PageImpl<>(fontResponses, pageRequest, bookmarks.getTotalElements());
+        }
+
+        // With keyword, need to filter all bookmarks first, then paginate
+        // Get all bookmarks for the member (no pagination)
+        PageRequest allBookmarksRequest = PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Order.desc("createdAt")));
+        Page<Bookmark> allBookmarks = bookmarkRepository.findAllByMemberId(memberId, allBookmarksRequest);
+        
+        List<Long> allFontIds = allBookmarks.stream()
                 .map(Bookmark::getFontId)
                 .toList();
 
-        List<Font> fonts = fontRepository.findAllByIdIn(fontIds);
+        List<Font> allFonts = fontRepository.findAllByIdIn(allFontIds);
 
-        List<FontResponse> filtered = fonts.stream()
-                .filter(font -> !StringUtils.hasText(keyword) || font.getName().contains(keyword))
+        // Filter by keyword
+        List<Font> filteredFonts = allFonts.stream()
+                .filter(font -> font.getName().contains(keyword))
+                .toList();
+
+        // Apply manual pagination
+        int start = page * size;
+        int end = Math.min(start + size, filteredFonts.size());
+        
+        List<FontResponse> pageContent = filteredFonts.subList(
+                Math.min(start, filteredFonts.size()),
+                end
+        ).stream()
                 .map(font -> {
                     Member writer = memberLookupService.getOrThrowById(font.getMemberId());
                     String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
@@ -88,6 +123,7 @@ public class BookmarkServiceImpl implements BookmarkService {
                 })
                 .toList();
 
-        return new PageImpl<>(filtered, pageRequest, bookmarks.getTotalElements());
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+        return new PageImpl<>(pageContent, pageRequest, filteredFonts.size());
     }
 }
