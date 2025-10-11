@@ -2,6 +2,7 @@ package org.fontory.fontorybe.provide.service;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  * OAuth2 제공자 정보 관리 서비스 구현체
  * 외부 OAuth2 제공자(Google 등)로부터 받은 사용자 정보를 관리
  */
+@Slf4j
 @Service
 @Builder
 @RequiredArgsConstructor
@@ -31,8 +33,12 @@ public class ProvideServiceImpl implements ProvideService {
      */
     @Override
     public Provide getOrThrownById(Long id) {
+        log.debug("Looking up provide by ID: provideId={}", id);
         return provideRepository.findById(id)
-                .orElseThrow(ProvideNotFoundException::new);
+                .orElseThrow(() -> {
+                    log.warn("Provide not found: provideId={}", id);
+                    return new ProvideNotFoundException();
+                });
     }
 
     /**
@@ -44,8 +50,12 @@ public class ProvideServiceImpl implements ProvideService {
     @Override
     @Transactional
     public Provide create(ProvideCreateDto provideCreateDto) {
+        log.info("Creating provide from DTO: provider={}, email={}",
+                provideCreateDto.getProvider(), provideCreateDto.getEmail());
         Provide provide = Provide.from(provideCreateDto);
-        return provideRepository.save(provide);
+        Provide saved = provideRepository.save(provide);
+        log.info("Provide created successfully: provideId={}", saved.getId());
+        return saved;
     }
 
     /**
@@ -59,8 +69,12 @@ public class ProvideServiceImpl implements ProvideService {
     @Override
     @Transactional
     public Provide create(Provider provider, String email, String providedId) {
+        log.info("Creating provide: provider={}, email={}, providedId={}",
+                provider, email, providedId);
         Provide provide = Provide.from(provider, providedId, email);
-        return provideRepository.save(provide);
+        Provide saved = provideRepository.save(provide);
+        log.info("Provide created successfully: provideId={}", saved.getId());
+        return saved;
     }
 
     /**
@@ -74,7 +88,10 @@ public class ProvideServiceImpl implements ProvideService {
     @Override
     @Transactional
     public Provide setMember(Provide provide, Member member) {
+        log.info("Linking member to provide: provideId={}, memberId={}", provide.getId(), member.getId());
         provide.setMember(member.getId());
-        return provideRepository.save(provide);
+        Provide updated = provideRepository.save(provide);
+        log.debug("Member linked successfully: provideId={}, memberId={}", provide.getId(), member.getId());
+        return updated;
     }
 }

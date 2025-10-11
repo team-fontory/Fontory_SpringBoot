@@ -2,6 +2,7 @@ package org.fontory.fontorybe.member.service;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.member.controller.port.MemberLookupService;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
@@ -15,6 +16,7 @@ import java.util.Optional;
  * 회원 조회 관련 비즈니스 로직을 처리하는 서비스 구현체
  * 회원 정보 조회 및 존재 여부 확인 기능을 제공
  */
+@Slf4j
 @Builder
 @Service
 @RequiredArgsConstructor
@@ -32,11 +34,16 @@ public class MemberLookupServiceImpl implements MemberLookupService {
     @Override
     @Transactional(readOnly = true)
     public Member getOrThrowById(Long id) {
+        log.debug("Looking up member by ID: memberId={}", id);
         if (id == null) {
+            log.warn("Member lookup failed: memberId is null");
             throw new MemberNotFoundException();
         }
         return memberRepository.findById(id)
-                .orElseThrow(MemberNotFoundException::new);
+                .orElseThrow(() -> {
+                    log.warn("Member not found: memberId={}", id);
+                    return new MemberNotFoundException();
+                });
     }
 
     /**
@@ -48,6 +55,9 @@ public class MemberLookupServiceImpl implements MemberLookupService {
     @Override
     @Transactional(readOnly = true)
     public boolean existsByNickname(String targetName) {
-        return memberRepository.existsByNickname(targetName);
+        log.debug("Checking nickname existence: nickname={}", targetName);
+        boolean exists = memberRepository.existsByNickname(targetName);
+        log.debug("Nickname existence check result: nickname={}, exists={}", targetName, exists);
+        return exists;
     }
 }

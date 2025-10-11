@@ -2,6 +2,7 @@ package org.fontory.fontorybe.bookmark.service;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.bookmark.controller.dto.BookmarkDeleteResponse;
 import org.fontory.fontorybe.bookmark.controller.port.BookmarkService;
 import org.fontory.fontorybe.bookmark.domain.Bookmark;
@@ -27,6 +28,7 @@ import org.springframework.util.StringUtils;
  * 북마크 관련 비즈니스 로직을 처리하는 서비스 구현체
  * 폰트의 북마크 추가, 삭제 및 북마크한 폰트 목록 조회 기능 제공
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookmarkServiceImpl implements BookmarkService {
@@ -48,7 +50,10 @@ public class BookmarkServiceImpl implements BookmarkService {
     @Override
     @Transactional
     public Bookmark create(Long memberId, Long fontId) {
+        log.info("Creating bookmark: memberId={}, fontId={}", memberId, fontId);
+
         if (bookmarkRepository.existsByMemberIdAndFontId(memberId, fontId)) {
+            log.warn("Bookmark already exists: memberId={}, fontId={}", memberId, fontId);
             throw new BookmarkAlreadyException();
         }
 
@@ -57,8 +62,12 @@ public class BookmarkServiceImpl implements BookmarkService {
 
         font.increaseBookmarkCount();
         fontRepository.save(font);
+        log.debug("Font bookmark count increased: fontId={}, newCount={}", fontId, font.getBookmarkCount());
 
-        return bookmarkRepository.save(Bookmark.from(memberId, fontId));
+        Bookmark bookmark = bookmarkRepository.save(Bookmark.from(memberId, fontId));
+        log.info("Bookmark created successfully: bookmarkId={}, memberId={}, fontId={}",
+                bookmark.getId(), memberId, fontId);
+        return bookmark;
     }
 
     /**
@@ -73,17 +82,26 @@ public class BookmarkServiceImpl implements BookmarkService {
     @Override
     @Transactional
     public BookmarkDeleteResponse delete(Long memberId, Long fontId) {
+        log.info("Deleting bookmark: memberId={}, fontId={}", memberId, fontId);
+
         Member member = memberLookupService.getOrThrowById(memberId);
         Font font = fontService.getOrThrowById(fontId);
 
         Bookmark bookmark = bookmarkRepository.findByMemberIdAndFontId(memberId, fontId)
-                .orElseThrow(BookmarkNotFoundException::new);
+                .orElseThrow(() -> {
+                    log.warn("Bookmark not found for deletion: memberId={}, fontId={}", memberId, fontId);
+                    return new BookmarkNotFoundException();
+                });
 
         bookmarkRepository.deleteById(bookmark.getId());
+        log.debug("Bookmark deleted: bookmarkId={}", bookmark.getId());
 
         font.decreaseBookmarkCount();
         fontRepository.save(font);
+        log.debug("Font bookmark count decreased: fontId={}, newCount={}", fontId, font.getBookmarkCount());
 
+        log.info("Bookmark deleted successfully: bookmarkId={}, memberId={}, fontId={}",
+                bookmark.getId(), memberId, fontId);
         return BookmarkDeleteResponse.from(bookmark.getId());
     }
 
@@ -100,10 +118,14 @@ public class BookmarkServiceImpl implements BookmarkService {
     @Override
     @Transactional(readOnly = true)
     public Page<FontResponse> getBookmarkedFonts(Long memberId, int page, int size, String keyword) {
+        log.info("Getting bookmarked fonts: memberId={}, page={}, size={}, keyword={}",
+                memberId, page, size, keyword);
+
         Member member = memberLookupService.getOrThrowById(memberId);
 
         // 키워드가 없으면 일반 페이지네이션 사용
         if (!StringUtils.hasText(keyword)) {
+            log.debug("Fetching bookmarked fonts without keyword filter: memberId={}", memberId);
             PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
             Page<Bookmark> bookmarks = bookmarkRepository.findAllByMemberId(memberId, pageRequest);
 
@@ -121,14 +143,17 @@ public class BookmarkServiceImpl implements BookmarkService {
                     })
                     .toList();
 
+            log.debug("Bookmarked fonts retrieved: memberId={}, count={}, totalElements={}",
+                    memberId, fontResponses.size(), bookmarks.getTotalElements());
             return new PageImpl<>(fontResponses, pageRequest, bookmarks.getTotalElements());
         }
 
         // With keyword, need to filter all bookmarks first, then paginate
+        log.debug("Fetching bookmarked fonts with keyword filter: memberId={}, keyword={}", memberId, keyword);
         // Get all bookmarks for the member (no pagination)
         PageRequest allBookmarksRequest = PageRequest.of(0, Integer.MAX_VALUE, Sort.by(Sort.Order.desc("createdAt")));
         Page<Bookmark> allBookmarks = bookmarkRepository.findAllByMemberId(memberId, allBookmarksRequest);
-        
+
         List<Long> allFontIds = allBookmarks.stream()
                 .map(Bookmark::getFontId)
                 .toList();
@@ -139,6 +164,7 @@ public class BookmarkServiceImpl implements BookmarkService {
         List<Font> filteredFonts = allFonts.stream()
                 .filter(font -> font.getName().contains(keyword))
                 .toList();
+        log.debug("Fonts filtered by keyword: totalFonts={}, filteredCount={}", allFonts.size(), filteredFonts.size());
 
         // Apply manual pagination
         int start = page * size;
@@ -156,6 +182,8 @@ public class BookmarkServiceImpl implements BookmarkService {
                 .toList();
 
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
+        log.info("Bookmarked fonts retrieved with keyword: memberId={}, keyword={}, pageContent={}, total={}",
+                memberId, keyword, pageContent.size(), filteredFonts.size());
         return new PageImpl<>(pageContent, pageRequest, filteredFonts.size());
     }
 }

@@ -2,6 +2,7 @@ package org.fontory.fontorybe.member.service;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.fontory.fontorybe.file.application.port.FileService;
 import org.fontory.fontorybe.file.domain.FileMetadata;
 import org.fontory.fontorybe.file.domain.FileUploadResult;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 회원 온보딩 관련 비즈니스 로직을 처리하는 서비스 구현체
  * OAuth2 로그인 후 신규 회원의 초기 정보 설정 및 기존 회원 조회를 담당
  */
+@Slf4j
 @Builder
 @Service
 @RequiredArgsConstructor
@@ -41,11 +43,20 @@ public class MemberOnboardServiceImpl implements MemberOnboardService {
     @Override
     @Transactional
     public Member fetchOrCreateMember(Provide p) {
+        log.info("Fetching or creating member for OAuth2 provide: provideId={}, memberId={}",
+                p.getId(), p.getMemberId());
+
         if (p.getMemberId()==null) {
             // 신규 회원: 기본 정보로 회원 생성
-            return memberCreationService.createDefaultMember(p);
+            log.info("No existing member found, creating new member: provideId={}", p.getId());
+            Member newMember = memberCreationService.createDefaultMember(p);
+            log.info("New member created successfully: memberId={}, provideId={}",
+                    newMember.getId(), p.getId());
+            return newMember;
         } else {
             // 기존 회원: ID로 조회
+            log.info("Existing member found, fetching member: memberId={}, provideId={}",
+                    p.getMemberId(), p.getId());
             return memberLookupService.getOrThrowById(p.getMemberId());
         }
     }
@@ -65,14 +76,25 @@ public class MemberOnboardServiceImpl implements MemberOnboardService {
     @Transactional
     public Member initNewMemberInfo(Long requestMemberId,
                                     InitMemberInfoRequest initNewMemberInfoRequest) {
+        log.info("Initializing new member info: memberId={}, nickname={}",
+                requestMemberId, initNewMemberInfoRequest.getNickname());
+
         Member targetMember = memberLookupService.getOrThrowById(requestMemberId);
+
         if (targetMember.getStatus() == MemberStatus.ACTIVATE) {
+            log.warn("Member already activated, cannot reinitialize: memberId={}, status={}",
+                    requestMemberId, targetMember.getStatus());
             throw new MemberAlreadyJoinedException();
         }
-        
+
         // 닉네임 유효성 검사 (금지 단어 + 중복)
+        log.debug("Validating nickname for member: memberId={}, nickname={}",
+                requestMemberId, initNewMemberInfoRequest.getNickname());
         memberValidationService.validateNickname(initNewMemberInfoRequest.getNickname());
 
-        return memberRepository.save(targetMember.initNewMemberInfo(initNewMemberInfoRequest));
+        Member updated = memberRepository.save(targetMember.initNewMemberInfo(initNewMemberInfoRequest));
+        log.info("Member info initialized successfully: memberId={}, nickname={}, status={}",
+                updated.getId(), updated.getNickname(), updated.getStatus());
+        return updated;
     }
 }
