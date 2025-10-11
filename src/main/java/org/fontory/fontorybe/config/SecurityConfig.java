@@ -137,6 +137,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/fonts").permitAll()
                         .requestMatchers(HttpMethod.GET, "/fonts/{fontId:[\\d]+}/others").permitAll()
                         .requestMatchers(HttpMethod.GET, "/fonts/popular").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/register/check-duplicate").permitAll()
                         // 그 외엔 인증 필요
                         .anyRequest().authenticated()
                 )
