@@ -48,7 +48,7 @@ public class MemberLookupServiceImpl implements MemberLookupService {
 
     /**
      * 특정 닉네임이 이미 사용 중인지 확인
-     * 
+     *
      * @param targetName 확인할 닉네임
      * @return 사용 중이면 true, 사용 가능하면 false
      */
@@ -59,5 +59,26 @@ public class MemberLookupServiceImpl implements MemberLookupService {
         boolean exists = memberRepository.existsByNickname(targetName);
         log.debug("Nickname existence check result: nickname={}, exists={}", targetName, exists);
         return exists;
+    }
+
+    /**
+     * ID로 회원을 조회하고, 존재하지 않으면 Optional.empty() 반환
+     *
+     * @param id 조회할 회원 ID
+     * @return 조회된 회원 정보를 담은 Optional
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Member> findById(Long id) {
+        log.debug("Looking up member by ID (optional): memberId={}", id);
+        if (id == null) {
+            log.debug("Member lookup skipped: memberId is null");
+            return Optional.empty();
+        }
+        Optional<Member> member = memberRepository.findById(id);
+        if (member.isEmpty()) {
+            log.debug("Member not found: memberId={}", id);
+        }
+        return member;
     }
 }
