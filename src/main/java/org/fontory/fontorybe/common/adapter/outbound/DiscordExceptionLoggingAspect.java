@@ -48,18 +48,9 @@ public class DiscordExceptionLoggingAspect {
      * Jwt관련 예외나 @SkipDiscordNotification 이 붙은 예외인 경우 알림을 보내지 않음
      */
     private boolean shouldSkipNotification(Throwable ex) {
-        if (ex instanceof io.jsonwebtoken.MalformedJwtException ||
-        ex instanceof io.jsonwebtoken.JwtException ||
-        ex instanceof io.jsonwebtoken.ExpiredJwtException ||
-        ex instanceof TokenNotFoundException) {
-            return true;
-        }
-
-        if (ex.getClass().isAnnotationPresent(SkipDiscordNotification.class)) {
-            return true;
-        }
-
-        return false;
+        return ex instanceof io.jsonwebtoken.JwtException ||
+               ex instanceof TokenNotFoundException ||
+               ex.getClass().isAnnotationPresent(SkipDiscordNotification.class);
     }
 
     /**
@@ -101,33 +92,20 @@ public class DiscordExceptionLoggingAspect {
     }
 
     private List<Map<String, Object>> buildFields(JoinPoint joinPoint, Throwable ex) {
-        Map<String, Object> locationField = new LinkedHashMap<>();
-        locationField.put("name", "Location");
-        locationField.put("value", joinPoint.getSignature().getDeclaringTypeName());
-        locationField.put("inline", false);
-
-        Map<String, Object> exceptionField = new LinkedHashMap<>();
-        exceptionField.put("name", "Exception Type");
-        exceptionField.put("value", ex.getClass().getName());
-        exceptionField.put("inline", false);
-
-        Map<String, Object> messageField = new LinkedHashMap<>();
-        messageField.put("name", "Message");
-        messageField.put("value", ex.getMessage() != null ? ex.getMessage() : "No message");
-        messageField.put("inline", false);
-
-        Map<String, Object> timeField = new LinkedHashMap<>();
-        timeField.put("name", "Time");
-        timeField.put("value", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        timeField.put("inline", false);
-
-        List<Map<String, Object>> fields = new ArrayList<>();
-        fields.add(locationField);
-        fields.add(exceptionField);
-        fields.add(messageField);
-        fields.add(timeField);
-
-        return fields;
+        return List.of(
+            createField("Location", joinPoint.getSignature().getDeclaringTypeName()),
+            createField("Exception Type", ex.getClass().getName()),
+            createField("Message", ex.getMessage() != null ? ex.getMessage() : "No message"),
+            createField("Time", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+        );
+    }
+    
+    private Map<String, Object> createField(String name, String value) {
+        Map<String, Object> field = new LinkedHashMap<>();
+        field.put("name", name);
+        field.put("value", value);
+        field.put("inline", false);
+        return field;
     }
 
     private Map<String, Object> buildEmbed(List<Map<String, Object>> fields) {

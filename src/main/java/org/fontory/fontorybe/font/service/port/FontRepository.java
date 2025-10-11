@@ -20,4 +20,5 @@ public interface FontRepository {
     List<Font> findTop4ByMemberIdAndStatusOrderByDownloadAndBookmarkCountDesc(Long memberId, FontStatus status);
     List<Font> findTop3ByStatusOrderByDownloadAndBookmarkCountDesc(FontStatus status);
     boolean existsByName(String fontName);
+    boolean existsByMemberIdAndName(Long memberId, String fontName);
 }

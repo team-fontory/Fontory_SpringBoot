@@ -1,6 +1,7 @@
 package org.fontory.fontorybe.member.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -46,8 +47,8 @@ public class ProfileController {
     private final MemberLookupService memberLookupService;
 
     @Operation(
-            summary = "내정보",
-            description = "쿠키를 바탕으로 내정보를 조회"
+            summary = "내 프로필 조회",
+            description = "JWT 토큰을 기반으로 현재 로그인한 사용자의 프로필 정보를 조회합니다."
     )
     @GetMapping
     public ResponseEntity<MyProfileResponse> getMyProfile(
@@ -75,12 +76,13 @@ public class ProfileController {
 
 
     @Operation(
-            summary = "내정보 수정"
+            summary = "내 프로필 수정",
+            description = "닉네임, 소개 메시지 등 프로필 정보를 수정합니다."
     )
     @PatchMapping
     public ResponseEntity<MyProfileResponse> updateMember(
             @Login UserPrincipal userPrincipal,
-            @RequestBody @Valid MemberUpdateRequest req
+            @RequestBody @Valid @Parameter(description = "수정할 회원 정보") MemberUpdateRequest req
     ) {
         Long requestMemberId = userPrincipal.getId();
         log.info("Request received: update member ID: {} with request: {}",
@@ -98,11 +100,12 @@ public class ProfileController {
     }
 
     @Operation(
-            summary = "회원탈퇴"
+            summary = "회원 탈퇴",
+            description = "회원 상태를 DISABLED로 변경하고 인증 쿠키를 삭제합니다."
     )
     @DeleteMapping
     public ResponseEntity<MemberDisableResponse> disableMember(
-            HttpServletResponse res,
+            @Parameter(hidden = true) HttpServletResponse res,
             @Login UserPrincipal me
     ) {
         Long requestMemberId = me.getId();

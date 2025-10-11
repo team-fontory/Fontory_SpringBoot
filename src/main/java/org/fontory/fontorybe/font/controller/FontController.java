@@ -45,8 +45,12 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * 폰트 관련 REST API 엔드포인트를 제공하는 컨트롤러
+ * 폰트 생성, 조회, 수정, 삭제, 다운로드 및 진행 상태 확인 기능을 제공
+ */
 @Slf4j
-@Tag(name = "폰트 관리", description = "폰트 API")
+@Tag(name = "폰트 관리", description = "폰트 생성, 조회, 수정, 삭제 API")
 @RestController
 @RequestMapping("/fonts")
 @RequiredArgsConstructor
@@ -68,12 +72,24 @@ public class FontController {
         }
     }
 
-    @Operation(summary = "폰트 생성")
+    /**
+     * 새로운 폰트 생성 요청을 처리
+     * 사용자가 업로드한 이미지를 S3에 저장하고 AI 폰트 제작을 요청
+     * 
+     * @param userPrincipal 인증된 사용자 정보
+     * @param fontCreateDTO 폰트 생성 요청 데이터
+     * @param files 폰트 템플릿 이미지 파일
+     * @return 생성된 폰트 정보와 업로드된 파일 정보
+     */
+    @Operation(
+            summary = "폰트 생성",
+            description = "사용자가 업로드한 이미지를 기반으로 AI가 폰트를 생성합니다."
+    )
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> addFont(
             @Login UserPrincipal userPrincipal,
-            @RequestPart("fontCreateDTO") @Valid FontCreateDTO fontCreateDTO,
-            @SingleFileUpload @RequestPart("file") List<MultipartFile> files
+            @RequestPart("fontCreateDTO") @Valid @Parameter(description = "폰트 생성 정보") FontCreateDTO fontCreateDTO,
+            @SingleFileUpload @RequestPart("file") @Parameter(description = "폰트 생성에 사용할 이미지 파일") List<MultipartFile> files
     ) {
         Long memberId = userPrincipal.getId();
         MultipartFile file = extractSingleMultipartFile(files);
@@ -83,7 +99,10 @@ public class FontController {
 
         logFileDetails(file, "Font template image upload");
 
+        // S3에 폰트 템플릿 이미지 업로드
         FileUploadResult fileDetails = fileService.uploadFontTemplateImage(file, memberId);
+        
+        // 폰트 생성 및 SQS로 제작 요청 전송
         Font createdFont = fontService.create(memberId, fontCreateDTO, fileDetails);
 
         log.info("Response sent: Font created with ID: {}, name: {} and Font template image uploaded successfully, url: {}, fileName: {}, size: {} bytes",
@@ -104,7 +123,10 @@ public class FontController {
                 file.getContentType());
     }
 
-    @Operation(summary = "폰트 제작 상황")
+    @Operation(
+            summary = "폰트 제작 상황",
+            description = "현재 제작 중인 폰트의 진행 상황을 조회합니다."
+    )
     @GetMapping("/progress")
     public ResponseEntity<?> getFontProgress(@Login UserPrincipal userPrincipal) {
         Long memberId = userPrincipal.getId();
@@ -118,7 +140,10 @@ public class FontController {
                 .body(fontsProgress);
     }
 
-    @Operation(summary = "내가 제작한 폰트")
+    @Operation(
+            summary = "내가 제작한 폰트",
+            description = "로그인한 사용자가 제작한 폰트 목록을 페이지네이션으로 조회합니다."
+    )
     @GetMapping("/members")
     public ResponseEntity<?> getFonts(
             @Parameter(description = "페이지 시작 오프셋 (기본값: 0)", example = "0") @RequestParam(defaultValue = "0") int page,
@@ -136,11 +161,13 @@ public class FontController {
                 .body(fonts);
     }
 
-    @Operation(summary = "폰트 상세보기")
-    @Parameter(name = "fontId", description = "상세 조회 할 폰트 ID")
+    @Operation(
+            summary = "폰트 상세보기",
+            description = "특정 폰트의 상세 정보를 조회합니다."
+    )
     @GetMapping("/{fontId}")
     public ResponseEntity<?> getFont(
-            @PathVariable Long fontId,
+            @PathVariable @Parameter(description = "상세 조회할 폰트 ID") Long fontId,
             @Login(required = false) UserPrincipal userPrincipal
     ) {
         Long memberId = userPrincipal != null ? userPrincipal.getId() : null;
@@ -155,10 +182,14 @@ public class FontController {
                 .body(font);
     }
 
-    @Operation(summary = "내가 제작한 폰트 삭제")
-    @Parameter(name = "fontId", description = "삭제 할 폰트 ID")
+    @Operation(
+            summary = "내가 제작한 폰트 삭제",
+            description = "로그인한 사용자가 제작한 폰트를 삭제합니다."
+    )
     @DeleteMapping("/members/{fontId}")
-    public ResponseEntity<?> deleteFont(@PathVariable Long fontId, @Login UserPrincipal userPrincipal) {
+    public ResponseEntity<?> deleteFont(
+            @PathVariable @Parameter(description = "삭제할 폰트 ID") Long fontId, 
+            @Login UserPrincipal userPrincipal) {
         Long memberId = userPrincipal.getId();
         log.info("Request received: Delete font ID: {} by member ID: {}", fontId, memberId);
 
@@ -170,7 +201,10 @@ public class FontController {
                 .body(deletedFont);
     }
 
-    @Operation(summary = "폰트 둘러보기")
+    @Operation(
+            summary = "폰트 둘러보기",
+            description = "모든 폰트를 조회합니다. 정렬, 검색, 페이지네이션을 지원합니다."
+    )
     @GetMapping
     public ResponseEntity<?> getFontPage(
             @Parameter(description = "페이지 시작 오프셋 (기본값: 0)", example = "0") @RequestParam(defaultValue = "0") int page,
@@ -191,8 +225,10 @@ public class FontController {
                 .body(fontPage);
     }
 
-    @Operation(summary = "제작자의 다른 폰트 3개 조회")
-    @Parameter(name = "fontId", description = "현재 상세보기 한 폰트 ID")
+    @Operation(
+            summary = "제작자의 다른 폰트 3개 조회",
+            description = "같은 제작자가 만든 다른 폰트 3개를 조회합니다."
+    )
     @GetMapping("/{fontId}/others")
     public ResponseEntity<?> getOtherFontsByWriter(@PathVariable Long fontId) {
         log.info("Request received: Get other fonts by the creator of font ID: {}", fontId);

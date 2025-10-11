@@ -25,16 +25,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Tag(name = "북마크 관리", description = "북마크 API")
+@Tag(name = "북마크 관리", description = "폰트 북마크 추가, 삭제, 조회 API")
 @RestController
 @RequestMapping("/bookmarks")
 @RequiredArgsConstructor
 public class BookmarkController {
     private final BookmarkService bookmarkService;
 
-    @Operation(summary = "북마크 추가")
+    @Operation(
+            summary = "북마크 추가",
+            description = "특정 폰트를 북마크에 추가합니다."
+    )
     @PostMapping("/{fontId}")
-    public ResponseEntity<?> addBookmark(@Login UserPrincipal userPrincipal, @PathVariable Long fontId) {
+    public ResponseEntity<?> addBookmark(
+            @Login UserPrincipal userPrincipal, 
+            @PathVariable @Parameter(description = "북마크할 폰트 ID") Long fontId) {
         Long memberId = userPrincipal.getId();
         log.info("Request received: Add bookmark for font ID: {} by member ID: {}", fontId, memberId);
 
@@ -47,9 +52,14 @@ public class BookmarkController {
                 .body(BookmarkCreateResponse.from(createdBookmark));
     }
 
-    @Operation(summary = "북마크 삭제")
+    @Operation(
+            summary = "북마크 삭제",
+            description = "특정 폰트를 북마크에서 제거합니다."
+    )
     @DeleteMapping("/{fontId}")
-    public ResponseEntity<?> deleteBookmark(@Login UserPrincipal userPrincipal, @PathVariable Long fontId) {
+    public ResponseEntity<?> deleteBookmark(
+            @Login UserPrincipal userPrincipal, 
+            @PathVariable @Parameter(description = "북마크 삭제할 폰트 ID") Long fontId) {
         Long memberId = userPrincipal.getId();
         log.info("Request received: Delete bookmark for font ID: {} by member ID: {}", fontId, memberId);
 
@@ -62,7 +72,10 @@ public class BookmarkController {
                 .body(deletedBookmark);
     }
 
-    @Operation(summary = "북마크한 폰트 보기")
+    @Operation(
+            summary = "북마크한 폰트 보기",
+            description = "로그인한 사용자가 북마크한 폰트 목록을 조회합니다. 페이지네이션 및 검색을 지원합니다."
+    )
     @GetMapping
     public ResponseEntity<?> getBookmarks(
             @Parameter(description = "페이지 시작 오프셋 (기본값: 0)", example = "0") @RequestParam(defaultValue = "0") int page,
