@@ -14,12 +14,23 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+/**
+ * Font 도메인과 데이터베이스 간의 매핑을 처리하는 레포지토리 구현체
+ * JPA Entity와 도메인 모델 간의 변환을 담당하고 데이터 지속성을 관리
+ */
 @Repository
 @RequiredArgsConstructor
 public class FontRepositoryImpl implements FontRepository {
     private final FontJpaRepository fontJpaRepository;
     private final EntityManager em;
 
+    /**
+     * 폰트 엔티티를 데이터베이스에 저장
+     * flush와 refresh를 통해 데이터베이스의 최신 상태를 반영 (예: auto_increment ID)
+     * 
+     * @param font 저장할 Font 도메인 모델
+     * @return 저장된 Font 도메인 모델 (ID 포함)
+     */
     @Override
     public Font save(Font font) {
         FontEntity savedFont = fontJpaRepository.save(FontEntity.from(font));
@@ -30,6 +41,13 @@ public class FontRepositoryImpl implements FontRepository {
         return savedFont.toModel();
     }
 
+    /**
+     * 특정 회원의 최근 생성된 폰트 5개를 조회
+     * 주로 폰트 제작 진행 상태를 보여주기 위해 사용
+     * 
+     * @param memberId 조회할 회원 ID
+     * @return 최근 생성된 폰트 목록 (최대 5개)
+     */
     @Override
     public List<Font> findTop5ByMemberIdOrderByCreatedAtDesc(Long memberId) {
         List<FontEntity> fontEntities = fontJpaRepository.findTop5ByMemberIdOrderByCreatedAtDesc(memberId);
@@ -39,6 +57,12 @@ public class FontRepositoryImpl implements FontRepository {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * ID로 폰트를 조회
+     * 
+     * @param id 조회할 폰트 ID
+     * @return 폰트 Optional 객체
+     */
     @Override
     public Optional<Font> findById(Long id) {
         return fontJpaRepository.findById(id).map(FontEntity::toModel);

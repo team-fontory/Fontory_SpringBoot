@@ -45,6 +45,10 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * 폰트 관련 REST API 엔드포인트를 제공하는 컨트롤러
+ * 폰트 생성, 조회, 수정, 삭제, 다운로드 및 진행 상태 확인 기능을 제공
+ */
 @Slf4j
 @Tag(name = "폰트 관리", description = "폰트 생성, 조회, 수정, 삭제 API")
 @RestController
@@ -68,6 +72,15 @@ public class FontController {
         }
     }
 
+    /**
+     * 새로운 폰트 생성 요청을 처리
+     * 사용자가 업로드한 이미지를 S3에 저장하고 AI 폰트 제작을 요청
+     * 
+     * @param userPrincipal 인증된 사용자 정보
+     * @param fontCreateDTO 폰트 생성 요청 데이터
+     * @param files 폰트 템플릿 이미지 파일
+     * @return 생성된 폰트 정보와 업로드된 파일 정보
+     */
     @Operation(
             summary = "폰트 생성",
             description = "사용자가 업로드한 이미지를 기반으로 AI가 폰트를 생성합니다."
@@ -86,7 +99,10 @@ public class FontController {
 
         logFileDetails(file, "Font template image upload");
 
+        // S3에 폰트 템플릿 이미지 업로드
         FileUploadResult fileDetails = fileService.uploadFontTemplateImage(file, memberId);
+        
+        // 폰트 생성 및 SQS로 제작 요청 전송
         Font createdFont = fontService.create(memberId, fontCreateDTO, fileDetails);
 
         log.info("Response sent: Font created with ID: {}, name: {} and Font template image uploaded successfully, url: {}, fileName: {}, size: {} bytes",

@@ -42,6 +42,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+/**
+ * 폰트 관련 비즈니스 로직을 처리하는 핵심 서비스 구현체
+ * 폰트 생성, 조회, 수정, 삭제 및 다운로드 기능을 제공
+ * AWS SQS를 통한 폰트 제작 요청 및 SMS 알림 기능 포함
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -55,6 +60,16 @@ public class FontServiceImpl implements FontService {
     private final FontValidationService fontValidationService;
     private final ApplicationEventPublisher eventPublisher;
 
+    /**
+     * 새로운 폰트를 생성하고 제작 요청을 SQS로 전송
+     * 
+     * @param memberId 폰트를 생성하는 회원 ID
+     * @param fontCreateDTO 폰트 생성 요청 데이터
+     * @param fileDetails 업로드된 폰트 템플릿 파일 정보
+     * @return 생성된 Font 엔티티
+     * @throws FontDuplicateNameExistsException 중복된 폰트 이름인 경우
+     * @throws FontContainsBadWordException 금지 단어가 포함된 경우
+     */
     @Override
     @Transactional
     public Font create(Long memberId, FontCreateDTO fontCreateDTO, FileUploadResult fileDetails) {
@@ -65,12 +80,17 @@ public class FontServiceImpl implements FontService {
         fontValidationService.validateFontNameNotDuplicated(memberId, fontCreateDTO.getName());
         fontValidationService.validateFontTextsNoBadWords(fontCreateDTO.getName(), fontCreateDTO.getEngName(), fontCreateDTO.getExample());
 
+        // 파일 메타데이터 조회
         FileMetadata fileMetadata = fileService.getOrThrowById(fileDetails.getId());
 
+        // 폰트 엔티티 생성 및 저장
         Font savedFont = fontRepository.save(Font.from(fontCreateDTO, member.getId(), fileMetadata.getKey()));
+        
+        // SQS로 폰트 제작 요청 전송
         String fontPaperUrl = cloudStorageService.getFontPaperUrl(savedFont.getKey());
         fontRequestProducer.sendFontRequest(FontRequestProduceDto.from(savedFont, member, fontPaperUrl));
 
+        // SMS 알림 요청 처리 (선택적)
         if (fontCreateDTO.getPhoneNumber() != null && !fontCreateDTO.getPhoneNumber().isBlank()) {
             String notificationPhoneNumber = fontCreateDTO.getPhoneNumber();
             eventPublisher.publishEvent(new FontCreateRequestNotificationEvent(savedFont, notificationPhoneNumber));
@@ -80,6 +100,13 @@ public class FontServiceImpl implements FontService {
         return savedFont;
     }
 
+    /**
+     * 회원의 폰트 제작 진행 상태를 조회
+     * 최근 생성된 5개의 폰트에 대한 진행 상태를 반환
+     * 
+     * @param memberId 조회할 회원 ID
+     * @return 폰트 진행 상태 목록
+     */
     @Override
     @Transactional(readOnly = true)
     public List<FontProgressResponse> getFontProgress(Long memberId) {
@@ -95,6 +122,13 @@ public class FontServiceImpl implements FontService {
         return result;
     }
 
+    /**
+     * ID로 폰트를 조회하고, 없으면 예외 발생
+     * 
+     * @param id 조회할 폰트 ID
+     * @return 폰트 엔티티
+     * @throws FontNotFoundException 폰트가 존재하지 않는 경우
+     */
     @Override
     @Transactional(readOnly = true)
     public Font getOrThrowById(Long id) {

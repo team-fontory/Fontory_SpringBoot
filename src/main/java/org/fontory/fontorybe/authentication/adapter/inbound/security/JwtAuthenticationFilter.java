@@ -26,6 +26,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * JWT 기반 인증을 처리하는 Spring Security 필터
+ * 모든 HTTP 요청에 대해 JWT 토큰을 검증하고 인증 처리
+ * Access Token 만료 시 Refresh Token을 사용한 자동 갱신 기능 포함
+ */
 @Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -34,6 +39,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final AuthService authService;
     private final CookieUtils cookieUtils;
 
+    /**
+     * JWT 토큰 검증 및 인증 처리
+     * 쿠키 또는 Authorization 헤더에서 토큰을 추출하고 검증
+     * 
+     * @param req HTTP 요청
+     * @param res HTTP 응답
+     * @param chain 필터 체인
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest req,
                                     @NonNull HttpServletResponse res,
@@ -41,6 +54,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         log.info("JwtAuthenticationFilter: {} {}", req.getMethod(), req.getRequestURI());
 
+        // 쿠키 또는 Authorization 헤더에서 토큰 추출
         String accessToken = cookieUtils
                 .extractTokenFromCookieInRequest(req, ACCESS_TOKEN_COOKIE_NAME)
                 .or(() -> Optional.ofNullable(req.getHeader("Authorization"))
@@ -51,6 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .orElse(null);
         log.info("Access token: {}, Refresh token: {}", accessToken, refreshToken);
 
+        // 토큰 존재 여부에 따른 처리
         if (accessToken != null) {
             log.debug("Access token found - attempting authentication");
             authenticateOrRefresh(accessToken, refreshToken, res);
@@ -67,6 +82,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         log.debug("JwtAuthenticationFilter completed");
     }
 
+    /**
+     * Access Token 검증 및 만료 시 Refresh Token으로 갱신
+     * 
+     * @param accessToken 검증할 Access Token
+     * @param refreshToken 갱신에 사용할 Refresh Token
+     * @param res HTTP 응답 (새 쿠키 설정용)
+     * @throws JwtAuthenticationException JWT 인증 실패 시
+     */
     private void authenticateOrRefresh(String accessToken,
                                           String refreshToken,
                                    HttpServletResponse res) throws JwtAuthenticationException {
@@ -76,6 +99,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(auth);
             log.info("Authentication successful: user={}, authorities={}", auth.getName(), auth.getAuthorities());
         } catch (ExpiredJwtException e) {
+            // Access Token 만료 시 Refresh Token으로 갱신 시도
             log.warn("Access token expired: {}", e.getMessage());
             if (refreshToken == null) {
                 throw new JwtAuthenticationException("Refresh token missing");
