@@ -147,18 +147,20 @@ public class FontServiceImpl implements FontService {
         PageRequest pageRequest = PageRequest.of(page, size, sort);
 
         Page<Font> fontPage = fontRepository.findAllByMemberIdAndStatus(memberId, pageRequest, FontStatus.DONE);
-        log.debug("Service detail: Found {} fonts on page {} for member ID: {}", 
+        log.debug("Service detail: Found {} fonts on page {} for member ID: {}",
                 fontPage.getNumberOfElements(), page, memberId);
 
         Page<FontResponse> result = fontPage.map(font -> {
             boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, font.getId());
-            Member writer = memberLookupService.getOrThrowById(font.getMemberId());
+            String writerNickname = memberLookupService.findById(font.getMemberId())
+                    .map(Member::getNickname)
+                    .orElse("알 수 없는 사용자");
             String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
-            return FontResponse.from(font, bookmarked, writer.getNickname(), woff2Url);
+            return FontResponse.from(font, bookmarked, writerNickname, woff2Url);
         });
 
-        
-        log.info("Service completed: Retrieved {} fonts out of {} total for member ID: {}", 
+
+        log.info("Service completed: Retrieved {} fonts out of {} total for member ID: {}",
                 result.getNumberOfElements(), result.getTotalElements(), memberId);
         return result;
     }
@@ -169,16 +171,18 @@ public class FontServiceImpl implements FontService {
         log.info("Service executing: Fetching font details for font ID: {}", fontId);
         Font targetFont = getOrThrowById(fontId);
         checkFontStatusIsDone(targetFont);
-        Member writer = memberLookupService.getOrThrowById(targetFont.getMemberId());
+        String writerNickname = memberLookupService.findById(targetFont.getMemberId())
+                .map(Member::getNickname)
+                .orElse("알 수 없는 사용자");
 
         boolean isBookmarked = false;
         if (memberId != null) {
             isBookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, fontId);
         }
         String woff2Url = cloudStorageService.getWoff2Url(targetFont.getKey());
-        FontResponse fontResponse = FontResponse.from(targetFont, isBookmarked, writer.getNickname(), woff2Url);
+        FontResponse fontResponse = FontResponse.from(targetFont, isBookmarked, writerNickname, woff2Url);
 
-        log.info("Service completed: Retrieved font details for font ID: {} with name: {}", 
+        log.info("Service completed: Retrieved font details for font ID: {} with name: {}",
                 fontId, targetFont.getName());
 
         return fontResponse;
@@ -202,9 +206,9 @@ public class FontServiceImpl implements FontService {
 
     @Override
     public Page<FontPageResponse> getFontPage(Long memberId, int page, int size, String sortBy, String keyword) {
-        log.info("Service executing: Fetching font page with memberId: {}, page: {}, size: {}, sortBy: {}, keyword: {}", 
+        log.info("Service executing: Fetching font page with memberId: {}, page: {}, size: {}, sortBy: {}, keyword: {}",
                 memberId, page, size, sortBy, keyword);
-                
+
         Sort sort = Sort.by(Sort.Order.desc("createdAt"));
         if ("downloadCount".equalsIgnoreCase(sortBy)) {
             sort = Sort.by(Sort.Order.desc("downloadCount"));
@@ -221,26 +225,30 @@ public class FontServiceImpl implements FontService {
             log.debug("Service detail: Searching fonts with keyword: {}", keyword);
             fontPage = fontRepository.findByNameContainingAndStatus(keyword, pageRequest, FontStatus.DONE);
         }
-        
+
         log.debug("Service detail: Found {} fonts on page {}", fontPage.getNumberOfElements(), page);
 
         Page<FontPageResponse> result;
         if (memberId == null) {
             result = fontPage.map(font -> {
-                Member member = memberLookupService.getOrThrowById(font.getMemberId());
+                String writerNickname = memberLookupService.findById(font.getMemberId())
+                        .map(Member::getNickname)
+                        .orElse("알 수 없는 사용자");
                 String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
-                return FontPageResponse.from(font, member.getNickname(), false, woff2Url);
+                return FontPageResponse.from(font, writerNickname, false, woff2Url);
             });
         } else {
             result = fontPage.map(font -> {
-                Member member = memberLookupService.getOrThrowById(font.getMemberId());
+                String writerNickname = memberLookupService.findById(font.getMemberId())
+                        .map(Member::getNickname)
+                        .orElse("알 수 없는 사용자");
                 boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(memberId, font.getId());
                 String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
-                return FontPageResponse.from(font, member.getNickname(), bookmarked, woff2Url);
+                return FontPageResponse.from(font, writerNickname, bookmarked, woff2Url);
             });
         }
-        
-        log.info("Service completed: Retrieved {} fonts out of {} total, {} pages", 
+
+        log.info("Service completed: Retrieved {} fonts out of {} total, {} pages",
                 result.getNumberOfElements(), result.getTotalElements(), result.getTotalPages());
         return result;
     }
@@ -261,12 +269,14 @@ public class FontServiceImpl implements FontService {
         List<FontResponse> result = fonts.stream()
                 .map(f -> {
                     boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), f.getId());
-                    Member writer = memberLookupService.getOrThrowById(f.getMemberId());
-                    String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
-                    return FontResponse.from(f, bookmarked, writer.getNickname(), woff2Url);
+                    String writerNickname = memberLookupService.findById(f.getMemberId())
+                            .map(Member::getNickname)
+                            .orElse("알 수 없는 사용자");
+                    String woff2Url = cloudStorageService.getWoff2Url(f.getKey());
+                    return FontResponse.from(f, bookmarked, writerNickname, woff2Url);
                 })
                 .collect(Collectors.toList());
-                
+
         log.info("Service completed: Retrieved {} other fonts from creator of font ID: {}", result.size(), fontId);
         return result;
     }
@@ -283,12 +293,14 @@ public class FontServiceImpl implements FontService {
         List<FontResponse> result = fonts.stream()
                 .map(font -> {
                     boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), font.getId());
-                    Member writer = memberLookupService.getOrThrowById(font.getMemberId());
+                    String writerNickname = memberLookupService.findById(font.getMemberId())
+                            .map(Member::getNickname)
+                            .orElse("알 수 없는 사용자");
                     String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
-                    return FontResponse.from(font, bookmarked, writer.getNickname(), woff2Url);
+                    return FontResponse.from(font, bookmarked, writerNickname, woff2Url);
                 })
                 .collect(Collectors.toList());
-                
+
         log.info("Service completed: Retrieved {} popular fonts for member ID: {}", result.size(), memberId);
         return result;
     }
@@ -304,9 +316,11 @@ public class FontServiceImpl implements FontService {
         if (memberId == null) {
             result = fonts.stream()
                     .map(font -> {
-                        Member writer = memberLookupService.getOrThrowById(font.getMemberId());
+                        String writerNickname = memberLookupService.findById(font.getMemberId())
+                                .map(Member::getNickname)
+                                .orElse("알 수 없는 사용자");
                         String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
-                        return FontResponse.from(font, false, writer.getNickname(), woff2Url);
+                        return FontResponse.from(font, false, writerNickname, woff2Url);
                     })
                     .collect(Collectors.toList());
         } else {
@@ -314,13 +328,15 @@ public class FontServiceImpl implements FontService {
             result = fonts.stream()
                     .map(font -> {
                         boolean bookmarked = bookmarkRepository.existsByMemberIdAndFontId(member.getId(), font.getId());
-                        Member writer = memberLookupService.getOrThrowById(font.getMemberId());
+                        String writerNickname = memberLookupService.findById(font.getMemberId())
+                                .map(Member::getNickname)
+                                .orElse("알 수 없는 사용자");
                         String woff2Url = cloudStorageService.getWoff2Url(font.getKey());
-                        return FontResponse.from(font, bookmarked, writer.getNickname(), woff2Url);
+                        return FontResponse.from(font, bookmarked, writerNickname, woff2Url);
                     })
                     .collect(Collectors.toList());
         }
-        
+
         log.info("Service completed: Retrieved {} globally popular fonts", result.size());
         return result;
     }

@@ -6,6 +6,7 @@ import org.fontory.fontorybe.member.domain.exception.MemberNotFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class FakeMemberLookupService implements MemberLookupService {
     private final Map<Long, Member> members = new HashMap<>();
@@ -23,6 +24,11 @@ public class FakeMemberLookupService implements MemberLookupService {
     public boolean existsByNickname(String nickname) {
         return members.values().stream()
                 .anyMatch(member -> member.getNickname().equals(nickname));
+    }
+
+    @Override
+    public Optional<Member> findById(Long id) {
+        return Optional.ofNullable(members.get(id));
     }
 
     // Test helper methods
