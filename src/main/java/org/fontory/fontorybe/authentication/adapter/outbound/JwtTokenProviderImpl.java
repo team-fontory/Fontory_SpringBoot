@@ -31,15 +31,10 @@ public class JwtTokenProviderImpl implements JwtTokenProvider {
     private final JwtParser provideJwtParser;
     private final JwtParser fontCreateJwtParser;
 
-    private SecretKey getSigningKey(String key) {
-        byte[] keyBytes = Decoders.BASE64.decode(key);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    public JwtTokenProviderImpl(
-            JwtProperties props) {
+    public JwtTokenProviderImpl(JwtProperties props) {
         log.info("Initializing JWT token provider");
         
+        this.props = props;
         this.accessSecretKey = getSigningKey(props.getAccessSecretKey());
         this.refreshSecretKey = getSigningKey(props.getRefreshSecretKey());
         this.provideSecretKey = getSigningKey(props.getProvideSecretKey());
@@ -49,25 +44,20 @@ public class JwtTokenProviderImpl implements JwtTokenProvider {
         this.refreshJwtParser = Jwts.parserBuilder().setSigningKey(refreshSecretKey).build();
         this.provideJwtParser = Jwts.parserBuilder().setSigningKey(provideSecretKey).build();
         this.fontCreateJwtParser = Jwts.parserBuilder().setSigningKey(fontCreateSecretKey).build();
-        this.props = props;
         
         log.debug("JWT token provider initialized with token validities - access: {}ms, refresh: {}ms", 
                 props.getAccessTokenValidityMs(), props.getRefreshTokenValidityMs());
     }
+    
+    private SecretKey getSigningKey(String key) {
+        byte[] keyBytes = Decoders.BASE64.decode(key);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
 
     public String generateTemporalProvideToken(String id) {
         log.debug("Generating temporal provide token for id: {}", id);
-        
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + props.getTempTokenValidityMs());
-        String token = Jwts.builder()
-                .setSubject(String.valueOf(id))
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(this.provideSecretKey)
-                .compact();
-        
-        log.info("Temporal provide token generated: id={}, expiresAt={}", id, expiryDate);
+        String token = generateToken(id, props.getTempTokenValidityMs(), provideSecretKey);
+        log.info("Temporal provide token generated for id: {}", id);
         return token;
     }
 
@@ -85,56 +75,28 @@ public class JwtTokenProviderImpl implements JwtTokenProvider {
 
     public String generateAccessToken(UserPrincipal user) {
         log.debug("Generating access token for user: {}", user.getId());
-        
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + props.getAccessTokenValidityMs());
-        String token = Jwts.builder()
-                .setSubject(String.valueOf(user.getId()))
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(this.accessSecretKey)
-                .compact();
-        
-        log.info("Access token generated: userId={}, expiresAt={}", user.getId(), expiryDate);
+        String token = generateToken(String.valueOf(user.getId()), props.getAccessTokenValidityMs(), accessSecretKey);
+        log.info("Access token generated for user: {}", user.getId());
         return token;
     }
 
     public String generateRefreshToken(UserPrincipal user) {
         log.debug("Generating refresh token for user: {}", user.getId());
-        
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + props.getRefreshTokenValidityMs());
-        String token = Jwts.builder()
-                .setSubject(String.valueOf(user.getId()))
-                .setIssuedAt(now)
-                .setExpiration(expiryDate)
-                .signWith(refreshSecretKey)
-                .compact();
-        
-        log.info("Refresh token generated: userId={}, expiresAt={}", user.getId(), expiryDate);
+        String token = generateToken(String.valueOf(user.getId()), props.getRefreshTokenValidityMs(), refreshSecretKey);
+        log.info("Refresh token generated for user: {}", user.getId());
         return token;
     }
 
     public Long getMemberIdFromAccessToken(String token) {
         log.debug("Extracting member ID from access token");
-        
-        Claims claims = accessJwtParser
-                .parseClaimsJws(token)
-                .getBody();
-        Long memberId = Long.valueOf(claims.getSubject());
-        
+        Long memberId = extractMemberIdFromToken(token, accessJwtParser);
         log.debug("Member ID extracted from access token: {}", memberId);
         return memberId;
     }
 
     public Long getMemberIdFromRefreshToken(String token) {
         log.debug("Extracting member ID from refresh token");
-        
-        Claims claims = refreshJwtParser
-                .parseClaimsJws(token)
-                .getBody();
-        Long memberId = Long.valueOf(claims.getSubject());
-        
+        Long memberId = extractMemberIdFromToken(token, refreshJwtParser);
         log.debug("Member ID extracted from refresh token: {}", memberId);
         return memberId;
     }
@@ -156,13 +118,25 @@ public class JwtTokenProviderImpl implements JwtTokenProvider {
 
     public String getFontCreateServer(String token) {
         log.debug("Validating font create server token");
-        
-        Claims claims = fontCreateJwtParser
-                .parseClaimsJws(token)
-                .getBody();
+        Claims claims = fontCreateJwtParser.parseClaimsJws(token).getBody();
         String subject = claims.getSubject();
-        
         log.debug("Font create server token validated: subject={}", subject);
         return subject;
+    }
+    
+    private String generateToken(String subject, long validityMs, SecretKey key) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + validityMs);
+        return Jwts.builder()
+                .setSubject(subject)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(key)
+                .compact();
+    }
+    
+    private Long extractMemberIdFromToken(String token, JwtParser parser) {
+        Claims claims = parser.parseClaimsJws(token).getBody();
+        return Long.valueOf(claims.getSubject());
     }
 }

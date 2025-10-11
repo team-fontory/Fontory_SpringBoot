@@ -20,7 +20,8 @@ public class AuthController {
     private final AuthService authService;
 
     @Operation(
-            summary = "로그아웃"
+            summary = "로그아웃",
+            description = "JWT 쿠키를 삭제하여 사용자를 로그아웃 처리합니다."
     )
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(

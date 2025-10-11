@@ -112,4 +112,9 @@ public class FontRepositoryImpl implements FontRepository {
     public boolean existsByName(String fontName) {
         return fontJpaRepository.existsByName(fontName);
     }
+    
+    @Override
+    public boolean existsByMemberIdAndName(Long memberId, String fontName) {
+        return fontJpaRepository.existsByMemberIdAndName(memberId, fontName);
+    }
 }

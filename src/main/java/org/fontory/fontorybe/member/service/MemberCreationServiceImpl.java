@@ -25,7 +25,10 @@ public class MemberCreationServiceImpl implements MemberCreationService {
     @Override
     @Transactional
     public Member createDefaultMember(Provide p) {
-        if (p.getMemberId() != null) { throw new MemberAlreadyExistException(); }
+        if (p.getMemberId() != null) {
+            throw new MemberAlreadyExistException();
+        }
+        
         String newNickname = UUID.randomUUID().toString();
         Member defaultMember = memberRepository.save(Member.fromDefaults(memberDefaults, newNickname, p));
         provideService.setMember(p, defaultMember);

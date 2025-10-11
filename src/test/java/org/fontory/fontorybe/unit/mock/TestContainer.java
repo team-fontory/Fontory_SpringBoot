@@ -34,6 +34,7 @@ import org.fontory.fontorybe.member.service.MemberCreationServiceImpl;
 import org.fontory.fontorybe.member.service.MemberLookupServiceImpl;
 import org.fontory.fontorybe.member.service.MemberOnboardServiceImpl;
 import org.fontory.fontorybe.member.service.MemberUpdateServiceImpl;
+import org.fontory.fontorybe.member.service.MemberValidationService;
 import org.fontory.fontorybe.member.service.port.MemberRepository;
 import org.fontory.fontorybe.provide.controller.port.ProvideService;
 import org.fontory.fontorybe.provide.domain.Provide;
@@ -138,12 +139,15 @@ public class TestContainer {
                 .memberRepository(memberRepository)
                 .build();
 
+        MemberValidationService memberValidationService = new MemberValidationService(
+                badWordFiltering, memberLookupService);
+                
         memberUpdateService = MemberUpdateServiceImpl.builder()
                 .memberLookupService(memberLookupService)
                 .memberRepository(memberRepository)
                 .provideService(provideService)
                 .jwtTokenProvider(jwtTokenProvider)
-                .badWordFiltering(badWordFiltering)
+                .memberValidationService(memberValidationService)
                 .build();
 
         memberDefaults = new MemberDefaults(
@@ -179,7 +183,7 @@ public class TestContainer {
                 .memberRepository(memberRepository)
                 .memberLookupService(memberLookupService)
                 .memberCreationService(memberCreationService)
-                .badWordFiltering(badWordFiltering)
+                .memberValidationService(memberValidationService)
                 .build();
 
         bookmarkService = new BookmarkServiceImpl(

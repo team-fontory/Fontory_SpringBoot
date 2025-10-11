@@ -1,6 +1,5 @@
 package org.fontory.fontorybe.font.service;
 
-import com.vane.badwordfiltering.BadWordFiltering;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +52,7 @@ public class FontServiceImpl implements FontService {
     private final MemberLookupService memberLookupService;
     private final FontRequestProducer fontRequestProducer;
     private final CloudStorageService cloudStorageService;
-    private final BadWordFiltering badWordFiltering;
+    private final FontValidationService fontValidationService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Override
@@ -62,11 +61,9 @@ public class FontServiceImpl implements FontService {
         log.info("Service executing: Creating font for member ID: {}, font name: {}", memberId, fontCreateDTO.getName());
         Member member = memberLookupService.getOrThrowById(memberId);
 
-        if (isDuplicateNameExists(memberId, fontCreateDTO.getName())) {
-            throw new FontDuplicateNameExistsException();
-        }
-
-        checkFontNameAndExampleContainsBadWord(fontCreateDTO.getName(), fontCreateDTO.getEngName(), fontCreateDTO.getExample());
+        // 폰트 이름 중복 및 금지 단어 검증
+        fontValidationService.validateFontNameNotDuplicated(memberId, fontCreateDTO.getName());
+        fontValidationService.validateFontTextsNoBadWords(fontCreateDTO.getName(), fontCreateDTO.getEngName(), fontCreateDTO.getExample());
 
         FileMetadata fileMetadata = fileService.getOrThrowById(fileDetails.getId());
 
@@ -331,7 +328,7 @@ public class FontServiceImpl implements FontService {
     @Override
     @Transactional(readOnly = true)
     public Boolean isDuplicateNameExists(Long memberId, String fontName) {
-        return fontRepository.existsByName(fontName);
+        return fontValidationService.isDuplicateNameExists(memberId, fontName);
     }
 
     private void checkFontOwnership(Long requestMemberId, Long targetMemberId) {
@@ -354,12 +351,4 @@ public class FontServiceImpl implements FontService {
         }
     }
 
-    private void checkFontNameAndExampleContainsBadWord(String name, String engName, String example) {
-        log.debug("Service detail: Checking bad word: name={}, engName={} example={}", name, engName, example);
-
-        if (badWordFiltering.blankCheck(name) || badWordFiltering.blankCheck(engName) || badWordFiltering.blankCheck(example)) {
-            log.warn("Service warning: Font contains bad word: name={}, engName={}, example={}", name, engName, example);
-            throw new FontContainsBadWordException();
-        }
-    }
 }

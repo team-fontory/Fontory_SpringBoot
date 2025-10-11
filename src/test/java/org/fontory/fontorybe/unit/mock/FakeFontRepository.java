@@ -171,6 +171,12 @@ public class FakeFontRepository implements FontRepository {
         return data.stream()
                 .anyMatch(font -> font.getName().equals(fontName));
     }
+    
+    @Override
+    public boolean existsByMemberIdAndName(Long memberId, String fontName) {
+        return data.stream()
+                .anyMatch(font -> font.getMemberId().equals(memberId) && font.getName().equals(fontName));
+    }
 
     // Helper methods for testing
     public List<Font> findAll() {

@@ -21,8 +21,10 @@ public class MemberLookupServiceImpl implements MemberLookupService {
     @Override
     @Transactional(readOnly = true)
     public Member getOrThrowById(Long id) {
-        return Optional.ofNullable(id)
-                .flatMap(memberRepository::findById)
+        if (id == null) {
+            throw new MemberNotFoundException();
+        }
+        return memberRepository.findById(id)
                 .orElseThrow(MemberNotFoundException::new);
     }
 

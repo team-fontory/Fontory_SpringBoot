@@ -38,8 +38,10 @@ public class FileServiceImpl implements FileService {
     @Override
     @Transactional(readOnly = true)
     public FileMetadata getOrThrowById(Long id) {
-        return Optional.ofNullable(id)
-                .flatMap(fileRepository::findById)
+        if (id == null) {
+            throw new FileNotFoundException(null);
+        }
+        return fileRepository.findById(id)
                 .orElseThrow(() -> new FileNotFoundException(id));
     }
 
