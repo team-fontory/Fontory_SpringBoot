@@ -17,6 +17,10 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 회원 정보 조회를 위한 REST API 컨트롤러
+ * 다른 회원의 공개 프로필 정보를 조회하는 기능 제공
+ */
 @Slf4j
 @Tag(name = "사용자 - 정보조회", description = "다른 회원 정보 조회")
 @Builder
@@ -27,6 +31,13 @@ public class MemberController {
     private final CloudStorageService cloudStorageService;
     private final MemberLookupService memberLookupService;
 
+    /**
+     * 특정 회원의 공개 프로필 정보를 조회
+     * 
+     * @param me 현재 로그인한 사용자 정보
+     * @param id 조회할 대상 회원의 ID
+     * @return 회원의 프로필 정보
+     */
     @Operation(
             summary = "회원 정보 조회",
             description = "회원 ID를 통해 특정 회원의 공개 프로필 정보를 조회합니다."

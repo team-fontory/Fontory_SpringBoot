@@ -11,6 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+/**
+ * 회원 조회 관련 비즈니스 로직을 처리하는 서비스 구현체
+ * 회원 정보 조회 및 존재 여부 확인 기능을 제공
+ */
 @Builder
 @Service
 @RequiredArgsConstructor
@@ -18,6 +22,13 @@ public class MemberLookupServiceImpl implements MemberLookupService {
 
     private final MemberRepository memberRepository;
 
+    /**
+     * ID로 회원을 조회하고, 존재하지 않으면 예외 발생
+     * 
+     * @param id 조회할 회원 ID
+     * @return 조회된 회원 정보
+     * @throws MemberNotFoundException 회원이 존재하지 않거나 ID가 null인 경우
+     */
     @Override
     @Transactional(readOnly = true)
     public Member getOrThrowById(Long id) {
@@ -28,6 +39,12 @@ public class MemberLookupServiceImpl implements MemberLookupService {
                 .orElseThrow(MemberNotFoundException::new);
     }
 
+    /**
+     * 특정 닉네임이 이미 사용 중인지 확인
+     * 
+     * @param targetName 확인할 닉네임
+     * @return 사용 중이면 true, 사용 가능하면 false
+     */
     @Override
     @Transactional(readOnly = true)
     public boolean existsByNickname(String targetName) {

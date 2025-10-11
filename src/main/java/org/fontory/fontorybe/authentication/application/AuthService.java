@@ -27,8 +27,11 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
 
     /**
-     * 새롭게 토큰 발급
-     * 기존에 토큰이 존재한다면 제거, 기존 토큰이 존재할 필요 X
+     * 새로운 Access/Refresh 토큰 쌍을 발급
+     * Refresh Token은 Redis에 저장하여 검증에 사용
+     * 
+     * @param member 토큰을 발급할 회원 정보
+     * @return 발급된 토큰 쌍
      */
     private TokenResponse issueNewTokens(Member member) {
         log.info("Issuing new token pair for member: memberId={}, provideId={}",

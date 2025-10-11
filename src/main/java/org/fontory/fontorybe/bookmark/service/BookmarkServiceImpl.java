@@ -23,6 +23,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+/**
+ * 북마크 관련 비즈니스 로직을 처리하는 서비스 구현체
+ * 폰트의 북마크 추가, 삭제 및 북마크한 폰트 목록 조회 기능 제공
+ */
 @Service
 @RequiredArgsConstructor
 public class BookmarkServiceImpl implements BookmarkService {
@@ -32,6 +36,15 @@ public class BookmarkServiceImpl implements BookmarkService {
     private final FontService fontService;
     private final CloudStorageService cloudStorageService;
 
+    /**
+     * 폰트를 북마크에 추가
+     * 북마크 추가 시 해당 폰트의 북마크 카운트를 증가
+     * 
+     * @param memberId 북마크를 추가하는 회원 ID
+     * @param fontId 북마크할 폰트 ID
+     * @return 생성된 북마크 엔티티
+     * @throws BookmarkAlreadyException 이미 북마크된 폰트인 경우
+     */
     @Override
     @Transactional
     public Bookmark create(Long memberId, Long fontId) {
@@ -48,6 +61,15 @@ public class BookmarkServiceImpl implements BookmarkService {
         return bookmarkRepository.save(Bookmark.from(memberId, fontId));
     }
 
+    /**
+     * 북마크를 삭제
+     * 북마크 삭제 시 해당 폰트의 북마크 카운트를 감소
+     * 
+     * @param memberId 북마크를 삭제하는 회원 ID
+     * @param fontId 북마크를 해제할 폰트 ID
+     * @return 삭제 결과
+     * @throws BookmarkNotFoundException 북마크가 존재하지 않는 경우
+     */
     @Override
     @Transactional
     public BookmarkDeleteResponse delete(Long memberId, Long fontId) {
@@ -65,12 +87,22 @@ public class BookmarkServiceImpl implements BookmarkService {
         return BookmarkDeleteResponse.from(bookmark.getId());
     }
 
+    /**
+     * 회원이 북마크한 폰트 목록을 페이지네이션과 함께 조회
+     * 키워드 검색 기능 포함 (폰트 이름 기준)
+     * 
+     * @param memberId 조회할 회원 ID
+     * @param page 페이지 번호 (0부터 시작)
+     * @param size 페이지 크기
+     * @param keyword 검색 키워드 (null 또는 빈 문자열일 경우 전체 조회)
+     * @return 북마크한 폰트 목록 (페이지네이션 적용)
+     */
     @Override
     @Transactional(readOnly = true)
     public Page<FontResponse> getBookmarkedFonts(Long memberId, int page, int size, String keyword) {
         Member member = memberLookupService.getOrThrowById(memberId);
 
-        // If no keyword, use normal pagination
+        // 키워드가 없으면 일반 페이지네이션 사용
         if (!StringUtils.hasText(keyword)) {
             PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Order.desc("createdAt")));
             Page<Bookmark> bookmarks = bookmarkRepository.findAllByMemberId(memberId, pageRequest);
