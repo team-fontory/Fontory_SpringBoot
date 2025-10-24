@@ -13,13 +13,19 @@ import lombok.Getter;
 public class FontCreateDTO {
 
     @NotBlank(message = "폰트 이름은 필수 입력 값입니다.")
-    @Size(min = 2, max = 30, message = "폰트 이름은 2자 이상 30자 이하로 입력해주세요.")
-    @Pattern(regexp = "^[가-힣0-9]{2,30}$", message = "한글과 숫자만 입력할 수 있습니다. (예: 가나다체123)")
+    @Size(min = 2, max = 30, message = "폰트 한글 이름은 2자 이상 30자 이하로 입력해주세요.")
+    @Pattern(
+            regexp = "^(?! )(?!.* {2})[가-힣0-9 ]{2,30}(?<! )$",
+            message = "한글, 숫자, 공백만 입력할 수 있습니다. (앞뒤 공백 불가)"
+    )
     private String name;
 
     @NotBlank(message = "폰트 영어 이름은 필수 입력 값입니다.")
-    @Size(min = 2, max = 30, message = "폰트 이름은 2자 이상 30자 이하로 입력해주세요.")
-    @Pattern(regexp = "^[a-zA-Z0-9]{2,30}$", message = "영문 대소문자와 숫자만 입력할 수 있습니다. (예: ABCD123)")
+    @Size(min = 2, max = 30, message = "폰트 영어 이름은 2자 이상 30자 이하로 입력해주세요.")
+    @Pattern(
+            regexp = "^(?! )(?!.* {2})[A-Za-z0-9 ]{2,30}(?<! )$",
+            message = "영문 대소문자, 숫자, 공백만 입력할 수 있습니다. (앞뒤 공백 불가)"
+    )
     private String engName;
 
     @NotBlank(message = "폰트 예시는 필수 입력 값입니다.")
