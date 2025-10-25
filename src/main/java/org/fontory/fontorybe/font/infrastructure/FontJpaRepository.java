@@ -16,7 +16,7 @@ public interface FontJpaRepository extends JpaRepository<FontEntity, Long> {
     @Query("SELECT f FROM FontEntity f WHERE f.memberId = :memberId ORDER BY f.createdAt DESC")
     List<FontEntity> findTop5ByMemberIdOrderByCreatedAtDesc(@Param("memberId") Long memberId, Pageable pageable);
     
-    List<FontEntity> findTop5ByMemberIdOrderByCreatedAtDesc(Long memberId);
+    List<FontEntity> findTop10ByMemberIdOrderByCreatedAtDesc(Long memberId);
     Page<FontEntity> findAllByMemberIdAndStatus(Long memberId, PageRequest pageRequest, FontStatus status);
     Page<FontEntity> findByNameContainingAndStatus(String name, PageRequest pageRequest, FontStatus status);
     List<FontEntity> findTop3ByMemberIdAndIdNotAndStatusOrderByCreatedAtDesc(Long memberId, Long fontId, FontStatus status);

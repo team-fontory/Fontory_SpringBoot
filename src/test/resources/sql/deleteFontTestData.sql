@@ -1,3 +1,3 @@
-truncate table font;
+truncate table `font`;
 truncate table `member`;
 truncate table `provide`;

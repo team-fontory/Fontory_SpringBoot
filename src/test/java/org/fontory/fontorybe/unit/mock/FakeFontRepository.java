@@ -58,11 +58,11 @@ public class FakeFontRepository implements FontRepository {
     }
 
     @Override
-    public List<Font> findTop5ByMemberIdOrderByCreatedAtDesc(Long memberId) {
+    public List<Font> findTop10ByMemberIdOrderByCreatedAtDesc(Long memberId) {
         return data.stream()
                 .filter(font -> font.getMemberId().equals(memberId))
                 .sorted((f1, f2) -> f2.getCreatedAt().compareTo(f1.getCreatedAt()))
-                .limit(5)
+                .limit(10)
                 .collect(Collectors.toList());
     }
 

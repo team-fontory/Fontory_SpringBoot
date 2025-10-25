@@ -49,8 +49,8 @@ public class FontRepositoryImpl implements FontRepository {
      * @return 최근 생성된 폰트 목록 (최대 5개)
      */
     @Override
-    public List<Font> findTop5ByMemberIdOrderByCreatedAtDesc(Long memberId) {
-        List<FontEntity> fontEntities = fontJpaRepository.findTop5ByMemberIdOrderByCreatedAtDesc(memberId);
+    public List<Font> findTop10ByMemberIdOrderByCreatedAtDesc(Long memberId) {
+        List<FontEntity> fontEntities = fontJpaRepository.findTop10ByMemberIdOrderByCreatedAtDesc(memberId);
 
         return fontEntities.stream()
                 .map(FontEntity::toModel)

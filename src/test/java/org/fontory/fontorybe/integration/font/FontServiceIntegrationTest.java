@@ -122,7 +122,7 @@ class FontServiceIntegrationTest {
     @Test
     @DisplayName("font - getFontProgress success test")
     void getFontProgressSuccess() {
-        for (int i = 1; i <= 6; i++) {
+        for (int i = 1; i <= 10; i++) {
             fontService.create(
                     existMemberId,
                     FontCreateDTO.builder()
@@ -139,7 +139,7 @@ class FontServiceIntegrationTest {
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result).hasSizeLessThanOrEqualTo(5);
+        assertThat(result).hasSizeLessThanOrEqualTo(10);
 
         result.forEach(font -> assertThat(font.getStatus()).isEqualTo(FontStatus.PROGRESS));
     }

@@ -9,7 +9,7 @@ import org.springframework.data.domain.PageRequest;
 
 public interface FontRepository {
     Font save(Font font);
-    List<Font> findTop5ByMemberIdOrderByCreatedAtDesc(Long memberId);
+    List<Font> findTop10ByMemberIdOrderByCreatedAtDesc(Long memberId);
     Optional<Font> findById(Long id);
     Page<Font> findAllByMemberIdAndStatus(Long memberId, PageRequest pageRequest, FontStatus status);
     void deleteById(Long id);

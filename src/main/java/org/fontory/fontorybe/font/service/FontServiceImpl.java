@@ -111,7 +111,7 @@ public class FontServiceImpl implements FontService {
     @Transactional(readOnly = true)
     public List<FontProgressResponse> getFontProgress(Long memberId) {
         log.info("Service executing: Fetching font progress for member ID: {}", memberId);
-        List<Font> fonts = fontRepository.findTop5ByMemberIdOrderByCreatedAtDesc(memberId);
+        List<Font> fonts = fontRepository.findTop10ByMemberIdOrderByCreatedAtDesc(memberId);
         log.debug("Service detail: Found {} fonts for progress display", fonts.size());
 
         List<FontProgressResponse> result = fonts.stream()
