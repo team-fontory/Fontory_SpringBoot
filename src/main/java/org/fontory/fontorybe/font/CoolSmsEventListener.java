@@ -45,4 +45,16 @@ public class CoolSmsEventListener {
 
         log.info("sms sent & phone number saved in redis - fontId={}, phoneNumber={}", font.getId(), phoneNumber);
     }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void resendFontCreateRequestSavePhoneNumber(FontCreateRequestNotificationEvent e) {
+        Font font = e.getFont();
+        String phoneNumber = phoneNumberStorage.getPhoneNumber(font);
+        log.info("save phone number in redis - fontId={}, phoneNumber={}", font.getId(), phoneNumber);
+
+        phoneNumberStorage.removePhoneNumber(font);
+
+        log.info("phone number saved in redis - fontId={}, phoneNumber={}", font.getId(), phoneNumber);
+    }
 }
