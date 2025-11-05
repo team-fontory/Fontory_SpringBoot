@@ -17,6 +17,7 @@ import org.fontory.fontorybe.font.service.port.FontRequestProducer;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.service.MemberLookupServiceImpl;
 import org.fontory.fontorybe.sms.application.port.PhoneNumberStorage;
+import org.fontory.fontorybe.sms.application.port.SmsService;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -40,6 +41,7 @@ public class DebugController {
     private final ApplicationEventPublisher eventPublisher;
     private final CookieUtils cookieUtils;
     private final PhoneNumberStorage phoneNumberStorage;
+    private final SmsService smsService;
 
     @Value("${commit.hash}")
     public String commitHash;
@@ -89,7 +91,17 @@ public class DebugController {
         devTokenInitializer.removeTestAccessCookies(res);
     }
 
-    @PostMapping("/debug/re_request/fonts")
+    @GetMapping("/debug/font-create-sms-test")
+    public Boolean fontCreateSmsTest(
+            String to,
+            String fontName,
+            Long fontId
+    ) {
+        smsService.sendFontCreateCompleteNotification(to, fontName, fontId);
+        return true;
+    }
+
+    @PostMapping("/debug/re-request/fonts")
     public Boolean reRequestFonts(
             Long fontId,
             String notificationPhoneNumber

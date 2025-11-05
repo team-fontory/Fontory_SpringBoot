@@ -19,8 +19,10 @@ public class SmsServiceImpl implements SmsService {
 
     private final DefaultMessageService messageService;
 
+    private static final String FONT_DETAILS_URL = "https://fontory.co.kr/fonts/%s";
     private static final String FONT_CREATION_MESSAGE_FORMAT = "[Fontory]\n\"%s\" 폰트가 제작중입니다.";
-    private static final String FONT_PROGRESS_MESSAGE_FORMAT = "[Fontory]\n\"%s\" 폰트 제작이 완료되었습니다.";
+    private static final String FONT_PROGRESS_MESSAGE_FORMAT =
+            "[Fontory]\n\"%s\" 폰트 제작이 완료되었습니다.\n" + FONT_DETAILS_URL;
 
     @Override
     public void sendFontCreateRequestNotification(String to, String fontName) {
@@ -28,8 +30,8 @@ public class SmsServiceImpl implements SmsService {
     }
 
     @Override
-    public void sendFontCreateCompleteNotification(String to, String fontName) {
-        sendSms(to, String.format(FONT_PROGRESS_MESSAGE_FORMAT, fontName));
+    public void sendFontCreateCompleteNotification(String to, String fontName, Long fontId) {
+        sendSms(to, String.format(FONT_PROGRESS_MESSAGE_FORMAT, fontName,  fontId));
     }
 
     private void sendSms(String toPhoneNumber, String content) {

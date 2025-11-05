@@ -40,7 +40,7 @@ public class CoolSmsEventListener {
 
         log.info("sms send start & save phone number in redis - fontId={}, phoneNumber={}", font.getId(), phoneNumber);
 
-        smsService.sendFontCreateCompleteNotification(phoneNumber, font.getName());
+        smsService.sendFontCreateCompleteNotification(phoneNumber, font.getName(), font.getId());
         phoneNumberStorage.removePhoneNumber(font);
 
         log.info("sms sent & phone number saved in redis - fontId={}, phoneNumber={}", font.getId(), phoneNumber);
