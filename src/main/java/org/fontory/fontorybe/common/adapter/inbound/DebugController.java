@@ -9,14 +9,14 @@ import org.fontory.fontorybe.authentication.application.port.CookieUtils;
 import org.fontory.fontorybe.authentication.domain.UserPrincipal;
 import org.fontory.fontorybe.common.application.DevTokenInitializer;
 import org.fontory.fontorybe.file.application.port.CloudStorageService;
-import org.fontory.fontorybe.font.FontCreateRequestNotificationEvent;
+import org.fontory.fontorybe.font.FontCreateResendRequestEvent;
 import org.fontory.fontorybe.font.domain.Font;
 import org.fontory.fontorybe.font.service.dto.FontRequestProduceDto;
 import org.fontory.fontorybe.font.service.port.FontRepository;
 import org.fontory.fontorybe.font.service.port.FontRequestProducer;
 import org.fontory.fontorybe.member.domain.Member;
 import org.fontory.fontorybe.member.service.MemberLookupServiceImpl;
-import org.fontory.fontorybe.member.service.port.MemberRepository;
+import org.fontory.fontorybe.sms.application.port.PhoneNumberStorage;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -39,6 +39,7 @@ public class DebugController {
     private final FontRequestProducer fontRequestProducer;
     private final ApplicationEventPublisher eventPublisher;
     private final CookieUtils cookieUtils;
+    private final PhoneNumberStorage phoneNumberStorage;
 
     @Value("${commit.hash}")
     public String commitHash;
@@ -106,8 +107,10 @@ public class DebugController {
         fontRequestProducer.sendFontRequest(FontRequestProduceDto.from(savedFont, member, fontPaperUrl));
 
         // SMS 알림을 위한 레디스에 폰번호 다시 저장
-        if (notificationPhoneNumber != null && notificationPhoneNumber.isBlank()) {
-            eventPublisher.publishEvent(new FontCreateRequestNotificationEvent(savedFont, notificationPhoneNumber));
+        if (notificationPhoneNumber != null && !notificationPhoneNumber.isBlank()) {
+            log.info("redis save start");
+            eventPublisher.publishEvent(new FontCreateResendRequestEvent(savedFont, notificationPhoneNumber));
+            log.info("redis save end");
         }
 
         log.info("Response sent: Font created with ID: {}, name: {}, phone: {}",

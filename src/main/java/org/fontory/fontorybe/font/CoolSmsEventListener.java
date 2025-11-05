@@ -47,13 +47,13 @@ public class CoolSmsEventListener {
     }
 
     @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void resendFontCreateRequestSavePhoneNumber(FontCreateRequestNotificationEvent e) {
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true) // db 커밋이 없는 로직이기에 트랜젝션 없이도 동작하도록
+    public void resendFontCreateRequestSavePhoneNumber(FontCreateResendRequestEvent e) {
         Font font = e.getFont();
-        String phoneNumber = phoneNumberStorage.getPhoneNumber(font);
-        log.info("save phone number in redis - fontId={}, phoneNumber={}", font.getId(), phoneNumber);
+        String phoneNumber = e.getPhoneNumber();
+        log.info("save phone number in redis - fontId={}, phoneNumber={}", font.getId(), e.getPhoneNumber());
 
-        phoneNumberStorage.removePhoneNumber(font);
+        phoneNumberStorage.savePhoneNumber(font, phoneNumber);
 
         log.info("phone number saved in redis - fontId={}, phoneNumber={}", font.getId(), phoneNumber);
     }
